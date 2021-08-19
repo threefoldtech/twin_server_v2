@@ -1,0 +1,9 @@
+{
+    "name": "twin-server",
+    "author": "Ahmed Hanafy",
+    "version": "0.0.1",
+    "dependencies": {
+        "grid3_client": "git+https://github.com/threefoldtech/grid3_client_ts.git",
+        "reflect-metadata": "^0.1.13"
+    }
+}
