@@ -10,7 +10,4 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.K8s = void 0;
-var k8s_1 = require("./k8s");
-Object.defineProperty(exports, "K8s", { enumerable: true, get: function () { return k8s_1.K8s; } });
-__exportStar(require("."), exports);
+__exportStar(require("./k8s"), exports);

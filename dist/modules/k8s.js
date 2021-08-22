@@ -11,8 +11,7 @@ var expose_1 = require("../helpers/expose");
 var K8s = /** @class */ (function () {
     function K8s() {
     }
-    K8s.prototype.deploy = function (message, payload) {
-        console.log(message, payload);
+    K8s.prototype.deploy = function (options) {
         return "deployed";
     };
     __decorate([

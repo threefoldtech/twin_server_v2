@@ -2,8 +2,7 @@ import { expose } from "../helpers/expose";
 
 class K8s {
     @expose
-    deploy(message, payload) {
-        console.log(message, payload);
+    deploy(options) {
         return "deployed"
     }
 }

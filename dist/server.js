@@ -36,13 +36,50 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deployMachine = void 0;
-function deployMachine(message, payload) {
-    return __awaiter(this, void 0, void 0, function () {
-        return __generator(this, function (_a) {
-            console.log("machine is deployed");
-            return [2 /*return*/, "done"];
+var grid3_client_1 = require("grid3_client");
+var expose_1 = require("./helpers/expose");
+var modules = require("./modules");
+var Server = /** @class */ (function () {
+    function Server(port) {
+        if (port === void 0) { port = 6379; }
+        this.server = new grid3_client_1.MessageBusServer(port);
+    }
+    Server.prototype.wrapFunc = function (message, payload) {
+        return __awaiter(this, void 0, void 0, function () {
+            var parts, module, method, obj;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        parts = message.cmd.split(".");
+                        module = parts[1];
+                        method = parts[2];
+                        obj = new modules[module]();
+                        console.log("Executing Method: " + method + " in Module:" + module + " with Payload: " + payload);
+                        return [4 /*yield*/, obj[method](JSON.parse(payload))];
+                    case 1: return [2 /*return*/, _a.sent()];
+                }
+            });
         });
-    });
-}
-exports.deployMachine = deployMachine;
+    };
+    Server.prototype.register = function () {
+        for (var _i = 0, _a = Object.getOwnPropertyNames(modules).filter(function (item) { return typeof modules[item] === 'function'; }); _i < _a.length; _i++) {
+            var module_1 = _a[_i];
+            var obj = new modules[module_1]();
+            var props = Object.getPrototypeOf(obj);
+            var methods = Object.getOwnPropertyNames(props);
+            for (var _b = 0, methods_1 = methods; _b < methods_1.length; _b++) {
+                var method = methods_1[_b];
+                if (expose_1.isExposed(obj, method) == true) {
+                    this.server.withHandler("twinserver." + module_1 + "." + method, this.wrapFunc);
+                }
+            }
+        }
+    };
+    Server.prototype.run = function () {
+        this.server.run();
+    };
+    return Server;
+}());
+var server = new Server();
+server.register();
+server.run();
