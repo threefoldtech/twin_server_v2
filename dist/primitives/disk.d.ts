@@ -1,5 +1,7 @@
+import { Workload, Mount } from "grid3_client";
 declare class Disk {
-    create(size: any, name: any, metadata: any, description: any, version: any): any;
-    update(size: any, name: any, metadata: any, description: any, old_version: any): any;
+    createMount(name: string, mountpoint: string): Mount;
+    create(size: number, name: string, metadata?: string, description?: string, version?: number): Workload;
+    update(size: number, name: string, metadata?: string, description?: string, old_version?: number): Workload;
 }
 export { Disk };
