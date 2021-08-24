@@ -1,6 +1,7 @@
 import { MessageBusServer } from "grid3_client";
 import { isExposed } from "./helpers/expose"
-import * as modules from "./modules"
+import * as modules from "./modules/index"
+import { default as config } from "../config.json"
 
 class Server {
     server: MessageBusServer;
@@ -13,7 +14,7 @@ class Server {
         const module = parts[1]
         const method = parts[2]
         const obj = new modules[module]()
-        console.log("Executing Method: " + method + " in Module:" + module + " with Payload: " + payload)
+        console.log(`Executing Method: ${method} in Module: ${module} with Payload: ${payload}`)
         return await obj[method](JSON.parse(payload));
     }
 
@@ -24,7 +25,7 @@ class Server {
             const methods = Object.getOwnPropertyNames(props)
             for (let method of methods) {
                 if (isExposed(obj, method) == true) {
-                    this.server.withHandler("twinserver." + module + "." + method, this.wrapFunc)
+                    this.server.withHandler(`twinserver.${module}.${method}`, this.wrapFunc)
                 }
             }
 
@@ -34,6 +35,11 @@ class Server {
         this.server.run()
     }
 }
+
+if (!(config.url && config.mnemonic)) {
+    throw new Error(`Invalid config`)
+}
+
 const server = new Server();
 server.register()
 server.run()

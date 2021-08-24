@@ -4,7 +4,9 @@
         "experimentalDecorators": true,
         "target": "ES5",
         "declaration": true,
-        "outDir": "./dist"
+        "outDir": "./dist",
+        "resolveJsonModule": true,
+        "esModuleInterop": true
     },
     "include": [
         "src/**/*"

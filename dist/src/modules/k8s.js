@@ -6,7 +6,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.K8s = void 0;
+exports.k8s = void 0;
 var expose_1 = require("../helpers/expose");
 var K8s = /** @class */ (function () {
     function K8s() {
@@ -19,4 +19,4 @@ var K8s = /** @class */ (function () {
     ], K8s.prototype, "deploy", null);
     return K8s;
 }());
-exports.K8s = K8s;
+exports.k8s = K8s;

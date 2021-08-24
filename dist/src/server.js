@@ -1,4 +1,23 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -35,10 +54,14 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 var grid3_client_1 = require("grid3_client");
 var expose_1 = require("./helpers/expose");
-var modules = require("./modules");
+var modules = __importStar(require("./modules/index"));
+var config_json_1 = __importDefault(require("../config.json"));
 var Server = /** @class */ (function () {
     function Server(port) {
         if (port === void 0) { port = 6379; }
@@ -54,7 +77,7 @@ var Server = /** @class */ (function () {
                         module = parts[1];
                         method = parts[2];
                         obj = new modules[module]();
-                        console.log("Executing Method: " + method + " in Module:" + module + " with Payload: " + payload);
+                        console.log("Executing Method: " + method + " in Module: " + module + " with Payload: " + payload);
                         return [4 /*yield*/, obj[method](JSON.parse(payload))];
                     case 1: return [2 /*return*/, _a.sent()];
                 }
@@ -80,6 +103,9 @@ var Server = /** @class */ (function () {
     };
     return Server;
 }());
+if (!(config_json_1.default.url && config_json_1.default.mnemonic)) {
+    throw new Error("Invalid config");
+}
 var server = new Server();
 server.register();
 server.run();

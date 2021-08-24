@@ -6,4 +6,4 @@ class K8s {
         return "deployed"
     }
 }
-export { K8s }
+export { K8s as k8s }

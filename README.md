@@ -17,8 +17,19 @@ npm install
 
 ```
 
+## Configuration
+
+Add substrate url and account's mnemonics in config.json before running the server.
+
+```json
+{
+    "url": "<substrate url>",
+    "mnemonic": "<your account mnemonics>"
+}
+```
+
 ## Running
 
 ```bash
-tsc --target ES5 --experimentalDecorators server.ts && node server.js
+tsc --build tsconfig.json && node dist/src/server.js
 ```
