@@ -14,3 +14,4 @@ __exportStar(require("./k8s"), exports);
 __exportStar(require("./machine"), exports);
 __exportStar(require("./twins"), exports);
 __exportStar(require("./contracts"), exports);
+__exportStar(require("./zos"), exports);

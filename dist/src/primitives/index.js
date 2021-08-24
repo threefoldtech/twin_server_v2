@@ -12,3 +12,5 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
 Object.defineProperty(exports, "__esModule", { value: true });
 __exportStar(require("./disk"), exports);
 __exportStar(require("./ipv4"), exports);
+__exportStar(require("./network"), exports);
+__exportStar(require("./vm"), exports);
