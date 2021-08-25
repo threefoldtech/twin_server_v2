@@ -54,19 +54,18 @@ var Zos = /** @class */ (function () {
     }
     Zos.prototype.deploy = function (options) {
         return __awaiter(this, void 0, void 0, function () {
-            var jsonObj, hash, node_id, node_twin_id, deployment, publicIPs, i, tfclient, contract_id, payload, rmb, msg, result;
+            var hash, node_id, node_twin_id, deployment, publicIPs, i, tfclient, contract, payload, rmb, msg, result;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        jsonObj = JSON.parse(options);
-                        hash = jsonObj.hash;
-                        node_id = jsonObj.node_id;
-                        node_twin_id = jsonObj.node_twin_id;
-                        delete jsonObj.hash;
-                        delete jsonObj.node_id;
-                        delete jsonObj.node_twin_id;
+                        hash = options.hash;
+                        node_id = options.node_id;
+                        node_twin_id = options.node_twin_id;
+                        delete options.hash;
+                        delete options.node_id;
+                        delete options.node_twin_id;
                         deployment = new grid3_client_1.Deployment();
-                        Object.assign(deployment, jsonObj);
+                        Object.assign(deployment, options);
                         publicIPs = 0;
                         for (i = 0; i < deployment.workloads.length; i++) {
                             if (deployment.workloads[i].type === grid3_client_1.WorkloadTypes.ipv4) {
@@ -74,26 +73,29 @@ var Zos = /** @class */ (function () {
                             }
                         }
                         tfclient = new grid3_client_1.TFClient(config_json_1.default.url, config_json_1.default.mnemonic);
-                        tfclient.connect();
-                        return [4 /*yield*/, tfclient.contracts.create(node_id, hash, "", publicIPs)];
+                        return [4 /*yield*/, tfclient.connect()];
                     case 1:
-                        contract_id = _a.sent();
-                        if (contract_id instanceof (Error)) {
-                            return [2 /*return*/, contract_id];
+                        _a.sent();
+                        return [4 /*yield*/, tfclient.contracts.create(node_id, hash, "", publicIPs)];
+                    case 2:
+                        contract = _a.sent();
+                        if (contract instanceof (Error)) {
+                            throw Error("Failed to create contract " + contract);
                         }
-                        deployment.contract_id = contract_id;
+                        console.log(contract);
+                        deployment.contract_id = contract["contract_id"];
                         deployment.sign(deployment.twin_id, config_json_1.default.mnemonic, hash);
                         payload = JSON.stringify(deployment);
                         rmb = new grid3_client_1.MessageBusClient();
                         msg = rmb.prepare("zos.deployment.deploy", [node_twin_id], 0, 2);
                         rmb.send(msg, payload);
                         return [4 /*yield*/, rmb.read(msg)];
-                    case 2:
+                    case 3:
                         result = _a.sent();
                         if (result[0].err) {
-                            return [2 /*return*/, result[0].err];
+                            throw Error(result[0].err);
                         }
-                        return [2 /*return*/, contract_id];
+                        return [2 /*return*/, contract];
                 }
             });
         });
