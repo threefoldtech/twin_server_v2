@@ -1,10 +1,4 @@
 "use strict";
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -45,44 +39,53 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.zos = void 0;
-var expose_1 = require("../helpers/expose");
+exports.createContractAndSendToZos = void 0;
 var grid3_client_1 = require("grid3_client");
 var config_json_1 = __importDefault(require("../../config.json"));
-var utils_1 = require("./utils");
-var Zos = /** @class */ (function () {
-    function Zos() {
-    }
-    Zos.prototype.deploy = function (options) {
-        return __awaiter(this, void 0, void 0, function () {
-            var deploymentHash, node_id, node_twin_id, deployment, publicIPs, i;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        deploymentHash = options.hash;
-                        node_id = options.node_id;
-                        node_twin_id = options.node_twin_id;
-                        delete options.hash;
-                        delete options.node_id;
-                        delete options.node_twin_id;
-                        deployment = new grid3_client_1.Deployment();
-                        Object.assign(deployment, options);
-                        deployment.sign(deployment.twin_id, config_json_1.default.mnemonic, deploymentHash);
-                        publicIPs = 0;
-                        for (i = 0; i < deployment.workloads.length; i++) {
-                            if (deployment.workloads[i].type === grid3_client_1.WorkloadTypes.ipv4) {
-                                publicIPs++;
-                            }
-                        }
-                        return [4 /*yield*/, utils_1.createContractAndSendToZos(deployment, node_id, node_twin_id, deploymentHash, publicIPs)];
-                    case 1: return [2 /*return*/, _a.sent()];
-                }
-            });
+function createContractAndSendToZos(deployment, node_id, node_twin_id, hash, publicIPs) {
+    return __awaiter(this, void 0, void 0, function () {
+        var tfclient, contract, payload, rmb, msg, result, err_1;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    tfclient = new grid3_client_1.TFClient(config_json_1.default.url, config_json_1.default.mnemonic);
+                    return [4 /*yield*/, tfclient.connect()];
+                case 1:
+                    _a.sent();
+                    return [4 /*yield*/, tfclient.contracts.create(node_id, hash, "", publicIPs)];
+                case 2:
+                    contract = _a.sent();
+                    if (contract instanceof (Error)) {
+                        throw Error("Failed to create contract " + contract);
+                    }
+                    console.log(contract);
+                    deployment.contract_id = contract["contract_id"];
+                    payload = JSON.stringify(deployment);
+                    _a.label = 3;
+                case 3:
+                    _a.trys.push([3, 5, 7, 8]);
+                    rmb = new grid3_client_1.MessageBusClient();
+                    msg = rmb.prepare("zos.deployment.deploy", [node_twin_id], 0, 2);
+                    rmb.send(msg, payload);
+                    return [4 /*yield*/, rmb.read(msg)];
+                case 4:
+                    result = _a.sent();
+                    if (result[0].err) {
+                        throw Error(result[0].err);
+                    }
+                    return [3 /*break*/, 8];
+                case 5:
+                    err_1 = _a.sent();
+                    return [4 /*yield*/, tfclient.contracts.cancel(contract["contract_id"])];
+                case 6:
+                    _a.sent();
+                    throw Error(err_1);
+                case 7:
+                    tfclient.disconnect();
+                    return [7 /*endfinally*/];
+                case 8: return [2 /*return*/, contract];
+            }
         });
-    };
-    __decorate([
-        expose_1.expose
-    ], Zos.prototype, "deploy", null);
-    return Zos;
-}());
-exports.zos = Zos;
+    });
+}
+exports.createContractAndSendToZos = createContractAndSendToZos;

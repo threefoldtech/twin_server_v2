@@ -1,4 +1,4 @@
 declare class Machine {
-    deploy(options: any): void;
+    deploy(options: any): Promise<any>;
 }
 export { Machine as machine };

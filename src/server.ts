@@ -36,9 +36,11 @@ class Server {
     }
 }
 
-if (!(config.url && config.mnemonic)) {
+if (!(config.url && config.mnemonic && config.twin_id)) {
     throw new Error(`Invalid config`)
 }
+
+// TODO: create a dir on Roaming dir for twin server if not exists and create network.json inside it if not exists
 
 const server = new Server();
 server.register()

@@ -8,7 +8,7 @@ var VM = /** @class */ (function () {
     VM.prototype._createComputeCapacity = function (cpu, memory) {
         var compute_capacity = new grid3_client_1.ComputeCapacity();
         compute_capacity.cpu = cpu;
-        compute_capacity.memory = 1024 * 1024 * 1024 * memory;
+        compute_capacity.memory = 1024 * 1024 * memory;
         return compute_capacity;
     };
     VM.prototype._createNetworkInterface = function (networkName, ip) {
@@ -25,10 +25,10 @@ var VM = /** @class */ (function () {
         zmachine_network.public_ip = public_ip;
         return zmachine_network;
     };
-    VM.prototype.create = function (name, flist, cpu, memory, disks, networkName, ip, planetary, public_ip, entrypoint, env, version, metadata, description) {
-        if (version === void 0) { version = 0; }
+    VM.prototype.create = function (name, flist, cpu, memory, disks, networkName, ip, planetary, public_ip, entrypoint, env, metadata, description, version) {
         if (metadata === void 0) { metadata = ""; }
         if (description === void 0) { description = ""; }
+        if (version === void 0) { version = 0; }
         var zmachine = new grid3_client_1.Zmachine();
         zmachine.flist = flist;
         zmachine.network = this._createMachineNetwork(networkName, ip, planetary, public_ip);

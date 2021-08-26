@@ -1,4 +1,23 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -39,6 +58,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Network = void 0;
 var grid3_client_1 = require("grid3_client");
 var Wg = require('wireguard-wrapper').Wg;
+var Addr = require('netaddr').Addr;
+var jsonfs_1 = require("../helpers/jsonfs");
+var PATH = __importStar(require("path"));
+// need to be gotten from proxy server
+var AccessNodeID = 2;
+// need to be gotten from rmb to the node
+var WireguardPort = 12334;
 var WireGuardKeys = /** @class */ (function () {
     function WireGuardKeys() {
     }
@@ -54,23 +80,37 @@ var Network = /** @class */ (function () {
         peer.allowed_ips = allowed_ips;
         this.peers.push(peer);
     };
-    Network.prototype.create = function (name, subnet, ip_range, wireguard_listen_port, metadata, description, version) {
+    Network.prototype.create = function (name, ip_range, machine_ip, node_id, metadata, description, version) {
         if (metadata === void 0) { metadata = ""; }
         if (description === void 0) { description = ""; }
         if (version === void 0) { version = 0; }
         return __awaiter(this, void 0, void 0, function () {
-            var znet, keys, znet_workload;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
+            var _a, userSubnet, NodeSubnet, accessNodeSubnet, znet, keys, znet_workload;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
                     case 0:
+                        _a = this.getUserNodeAccessNodeSubnets(name, ip_range, machine_ip, node_id), userSubnet = _a[0], NodeSubnet = _a[1], accessNodeSubnet = _a[2];
+                        if (NodeSubnet && accessNodeSubnet && this.getNetworkNames().includes(name)) {
+                            // update network on the access node and deploy network on the new node
+                        }
+                        else if (NodeSubnet && accessNodeSubnet && !this.getNetworkNames().includes(name)) {
+                            // deploy network on the access node and deploy network on the new node
+                        }
+                        else if (NodeSubnet && !accessNodeSubnet && !this.getNetworkNames().includes(name)) {
+                            // deploy only on the access node with is the new node as well
+                        }
+                        else {
+                            // do nothing
+                        }
                         znet = new grid3_client_1.Znet();
-                        znet.subnet = subnet;
+                        znet.subnet = NodeSubnet;
                         znet.ip_range = ip_range;
                         return [4 /*yield*/, this._generateWireguardKeypair()];
                     case 1:
-                        keys = _a.sent();
+                        keys = _b.sent();
                         znet.wireguard_private_key = keys.privateKey;
-                        znet.wireguard_listen_port = wireguard_listen_port;
+                        znet.wireguard_listen_port = WireguardPort;
+                        // Add peers before set them on the network workload
                         znet.peers = this.peers;
                         znet_workload = new grid3_client_1.Workload();
                         znet_workload.version = version || 0;
@@ -106,6 +146,75 @@ var Network = /** @class */ (function () {
                     })];
             });
         });
+    };
+    Network.prototype.getNetworks = function () {
+        var path = PATH.join(jsonfs_1.appPath, "network.json");
+        return jsonfs_1.loadFromFile(path);
+    };
+    Network.prototype.getNetworkNames = function () {
+        var networks = this.getNetworks();
+        return Object.keys(networks);
+    };
+    Network.prototype.getUserNodeAccessNodeSubnets = function (name, ip_range, machine_ip, node_id) {
+        var targetNodeSubnet = "";
+        if (!machine_ip) {
+            targetNodeSubnet = Addr(machine_ip).mask(24).toString();
+        }
+        var networkRange = new Addr(ip_range);
+        var subnet = networkRange.mask(24);
+        if (this.getNetworkNames().includes(name)) {
+            var network = this.getNetworks()[name];
+            if (ip_range !== network.ip_range) {
+                throw Error("There is another network with the same name and different IP range");
+            }
+            if (network.subnet === targetNodeSubnet) {
+                throw Error("Can't assign this subnet " + targetNodeSubnet + " to node " + node_id + ". Subnet already assign to your wireguard config");
+            }
+            if (network.subnet === subnet.toString()) {
+                subnet = subnet.nextSibling();
+            }
+            else {
+                for (var i = 0; i < network.nodes.length; i++) {
+                    if (network.nodes[i].subnet === targetNodeSubnet) {
+                        if (network.nodes[i].node_id !== node_id) {
+                            throw Error("Can't assign this subnet " + targetNodeSubnet + " to node " + node_id + ". Subnet already assign to node_id " + network.nodes[i].node_id);
+                        }
+                        else {
+                            return [network.subnet, "", ""];
+                        }
+                    }
+                    var accessNodeSubnet = "";
+                    if (network.nodes[i].node_id === AccessNodeID) {
+                        accessNodeSubnet = network.nodes[i].subnet;
+                    }
+                    if (network.nodes[i].subnet === subnet.toString()) {
+                        subnet = subnet.nextSibling();
+                    }
+                    else {
+                        return [network.subnet, subnet.toString(), accessNodeSubnet];
+                    }
+                }
+            }
+        }
+        else {
+            var subnets = void 0;
+            if (targetNodeSubnet === "") {
+                subnets = [subnet.toString(), subnet.nextSibling().nextSibling().toString(), subnet.nextSibling().toString()];
+            }
+            else {
+                if (targetNodeSubnet === subnet.toString()) {
+                    subnets = [subnet.nextSibling().toString(), subnet.toString(), subnet.nextSibling().nextSibling().toString()];
+                }
+                else {
+                    subnets = [subnet.toString(), targetNodeSubnet, Addr(targetNodeSubnet).nextSibling().nextSibling().toString()];
+                }
+            }
+            if (AccessNodeID === node_id) {
+                subnets.pop();
+                subnets.push("");
+            }
+            return subnets;
+        }
     };
     return Network;
 }());

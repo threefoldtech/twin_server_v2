@@ -3,7 +3,11 @@
     "author": "Ahmed Hanafy",
     "version": "0.0.1",
     "dependencies": {
+        "@types/request": "^2.48.7",
+        "@types/request-promise-native": "^1.0.18",
+        "appdata-path": "^1.0.0",
         "grid3_client": "git+https://github.com/threefoldtech/grid3_client_ts.git#development",
+        "netaddr": "^1.1.0",
         "reflect-metadata": "^0.1.13",
         "wireguard-wrapper": "^1.0.3"
     },

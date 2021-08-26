@@ -14,3 +14,4 @@ __exportStar(require("./disk"), exports);
 __exportStar(require("./ipv4"), exports);
 __exportStar(require("./network"), exports);
 __exportStar(require("./vm"), exports);
+__exportStar(require("./deployment"), exports);

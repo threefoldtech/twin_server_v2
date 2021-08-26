@@ -4,7 +4,7 @@ class VM {
     _createComputeCapacity(cpu: number, memory: number): ComputeCapacity {
         let compute_capacity = new ComputeCapacity();
         compute_capacity.cpu = cpu;
-        compute_capacity.memory = 1024 * 1024 * 1024 * memory;
+        compute_capacity.memory = 1024 * 1024 * memory;
         return compute_capacity;
     }
     _createNetworkInterface(networkName: string, ip: string): ZNetworkInterface {
@@ -21,7 +21,7 @@ class VM {
         zmachine_network.public_ip = public_ip;
         return zmachine_network
     }
-    create(name: string, flist: string, cpu: number, memory: number, disks: Mount[], networkName: string, ip: string, planetary: boolean, public_ip: string, entrypoint: string, env: Object, version: number = 0, metadata: string = "", description: string = ""): Workload {
+    create(name: string, flist: string, cpu: number, memory: number, disks: Mount[], networkName: string, ip: string, planetary: boolean, public_ip: string, entrypoint: string, env: Object, metadata: string = "", description: string = "", version: number = 0): Workload {
         let zmachine = new Zmachine();
         zmachine.flist = flist;
         zmachine.network = this._createMachineNetwork(networkName, ip, planetary, public_ip);

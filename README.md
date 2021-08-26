@@ -28,8 +28,14 @@ Add substrate url and account's mnemonics in config.json before running the serv
 }
 ```
 
+## Building
+
+```bash
+tsc --build tsconfig.json
+```
+
 ## Running
 
 ```bash
-tsc --build tsconfig.json && node dist/src/server.js
+node dist/src/server.js
 ```

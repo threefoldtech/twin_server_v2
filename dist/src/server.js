@@ -103,7 +103,7 @@ var Server = /** @class */ (function () {
     };
     return Server;
 }());
-if (!(config_json_1.default.url && config_json_1.default.mnemonic)) {
+if (!(config_json_1.default.url && config_json_1.default.mnemonic && config_json_1.default.twin_id)) {
     throw new Error("Invalid config");
 }
 var server = new Server();
