@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.generateString = void 0;
+exports.getRandomNumber = exports.generateString = void 0;
 function generateString(length) {
     var result = '';
     var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -11,3 +11,7 @@ function generateString(length) {
     return result;
 }
 exports.generateString = generateString;
+function getRandomNumber(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+exports.getRandomNumber = getRandomNumber;

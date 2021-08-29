@@ -52,7 +52,7 @@ var Machine = /** @class */ (function () {
     }
     Machine.prototype.deploy = function (options) {
         return __awaiter(this, void 0, void 0, function () {
-            var workloads, disks, i, d, dName, disk, ipName, publicIPs, ipv4, network, networkName, vm, vmName, deploymentFactory, _a, deployment, deploymentHash;
+            var workloads, disks, i, d, dName, disk, ipName, publicIPs, ipv4, networkName, network, znet_workload, vm, vmName, deploymentFactory, _a, deployment, deploymentHash;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
@@ -73,9 +73,12 @@ var Machine = /** @class */ (function () {
                             workloads.push(ipv4.create(ipName, options.metadata, options.description));
                             publicIPs++;
                         }
-                        network = new index_1.Network();
                         networkName = options.network_name;
-                        network.create(networkName, options.ip_range, options.ip, options.metadata, options.description);
+                        network = new index_1.Network(networkName);
+                        znet_workload = network.create(options.ip_range, options.ip, options.metadata, options.description);
+                        if (znet_workload) {
+                            workloads.push(znet_workload);
+                        }
                         vm = new index_1.VM();
                         vmName = utils_1.generateString(10);
                         workloads.push(vm.create(vmName, options.flist, options.cpu, options.memory, disks, networkName, options.ip, true, ipName, options.entrypoint, options.env, options.metadata, options.description));

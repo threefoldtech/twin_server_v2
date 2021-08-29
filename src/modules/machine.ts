@@ -26,10 +26,12 @@ class Machine {
             publicIPs++;
         }
         // network
-        let network = new Network()
         const networkName = options.network_name;
-        network.create(networkName, options.ip_range, options.ip, options.metadata, options.description)
-
+        let network = new Network(networkName)
+        const znet_workload = network.create(options.ip_range, options.ip, options.metadata, options.description)
+        if (znet_workload) {
+            workloads.push(znet_workload)
+        }
         // vm 
         // need to validate the ip, and check the planetary 
         const vm = new VM()

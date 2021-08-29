@@ -24,7 +24,8 @@ Add substrate url and account's mnemonics in config.json before running the serv
 ```json
 {
     "url": "<substrate url>",
-    "mnemonic": "<your account mnemonics>"
+    "mnemonic": "<your account mnemonics>", 
+    "twin_id": <your twin id created on substrate>
 }
 ```
 

@@ -1,2 +1,3 @@
 declare function generateString(length: any): string;
-export { generateString };
+declare function getRandomNumber(min: any, max: any): any;
+export { generateString, getRandomNumber };

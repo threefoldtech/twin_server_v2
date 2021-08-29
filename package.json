@@ -9,6 +9,8 @@
         "grid3_client": "git+https://github.com/threefoldtech/grid3_client_ts.git#development",
         "netaddr": "^1.1.0",
         "reflect-metadata": "^0.1.13",
+        "request": "^2.88.2",
+        "request-promise-native": "^1.0.9",
         "wireguard-wrapper": "^1.0.3"
     },
     "main": "dist/index.js",
