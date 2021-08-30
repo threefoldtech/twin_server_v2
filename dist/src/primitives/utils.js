@@ -36,7 +36,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getNodeTwinId = void 0;
+exports.getAccessNodes = exports.getNodeTwinId = void 0;
 var requests_1 = require("../helpers/requests");
 function getNodeTwinId(node_id) {
     return __awaiter(this, void 0, void 0, function () {
@@ -56,3 +56,50 @@ function getNodeTwinId(node_id) {
     });
 }
 exports.getNodeTwinId = getNodeTwinId;
+function getAccessNodes() {
+    return __awaiter(this, void 0, void 0, function () {
+        var headers, body, nodeResponse, nodeRes, nodes, nodeConfigs, configsIds, _i, nodes_1, node, pubConfigResponse, pubConfigRes, configs, accessNodes, _a, _b, nodeId, config, _c, configs_1, conf;
+        return __generator(this, function (_d) {
+            switch (_d.label) {
+                case 0:
+                    headers = { 'Content-Type': 'application/json' };
+                    body = "{\n        nodes {\n          nodeId\n          publicConfigId \n        }\n      }";
+                    return [4 /*yield*/, requests_1.send("post", "https://explorer.devnet.grid.tf/graphql/", JSON.stringify({ "query": body }), headers)];
+                case 1:
+                    nodeResponse = _d.sent();
+                    nodeRes = JSON.parse(nodeResponse);
+                    nodes = nodeRes["data"]["nodes"];
+                    nodeConfigs = {};
+                    configsIds = "";
+                    for (_i = 0, nodes_1 = nodes; _i < nodes_1.length; _i++) {
+                        node = nodes_1[_i];
+                        if (!node.publicConfigId) {
+                            continue;
+                        }
+                        nodeConfigs[node.nodeId] = node.publicConfigId;
+                        configsIds += "\"" + node.publicConfigId + "\", ";
+                    }
+                    body = "{\n        publicConfigs (where: {id_in: [" + configsIds + "]}) {\n          id\n          ipv4\n          ipv6    \n        }\n      }";
+                    return [4 /*yield*/, requests_1.send("post", "https://explorer.devnet.grid.tf/graphql/", JSON.stringify({ "query": body }), headers)];
+                case 2:
+                    pubConfigResponse = _d.sent();
+                    pubConfigRes = JSON.parse(pubConfigResponse);
+                    configs = pubConfigRes["data"]["publicConfigs"];
+                    accessNodes = {};
+                    for (_a = 0, _b = Object.keys(nodeConfigs); _a < _b.length; _a++) {
+                        nodeId = _b[_a];
+                        config = nodeConfigs[nodeId];
+                        for (_c = 0, configs_1 = configs; _c < configs_1.length; _c++) {
+                            conf = configs_1[_c];
+                            if (config === conf["id"]) {
+                                accessNodes[nodeId] = [conf["ipv4"], conf["ipv6"]];
+                            }
+                        }
+                    }
+                    console.log(accessNodes);
+                    return [2 /*return*/, accessNodes];
+            }
+        });
+    });
+}
+exports.getAccessNodes = getAccessNodes;

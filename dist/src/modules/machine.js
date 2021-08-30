@@ -74,7 +74,7 @@ var Machine = /** @class */ (function () {
                             publicIPs++;
                         }
                         networkName = options.network_name;
-                        network = new index_1.Network(networkName);
+                        network = new index_1.Network(networkName, options.ip_range);
                         znet_workload = network.create(options.ip_range, options.ip, options.metadata, options.description);
                         if (znet_workload) {
                             workloads.push(znet_workload);

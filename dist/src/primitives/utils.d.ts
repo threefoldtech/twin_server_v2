@@ -1,2 +1,3 @@
 declare function getNodeTwinId(node_id: any): Promise<any>;
-export { getNodeTwinId };
+declare function getAccessNodes(): Promise<{}>;
+export { getNodeTwinId, getAccessNodes };
