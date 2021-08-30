@@ -59,6 +59,7 @@ exports.Network = void 0;
 var grid3_client_1 = require("grid3_client");
 var Wg = require('wireguard-wrapper').Wg;
 var Addr = require('netaddr').Addr;
+var Private = require("private-ip");
 var jsonfs_1 = require("../helpers/jsonfs");
 var PATH = __importStar(require("path"));
 var utils_1 = require("../helpers/utils");
@@ -231,6 +232,62 @@ var Network = /** @class */ (function () {
             });
         });
     };
+    Network.prototype.isPrivateIP = function (ip) {
+        return Private(ip);
+    };
+    Network.prototype.getNodeEndpoint = function (node_id) {
+        return __awaiter(this, void 0, void 0, function () {
+            var node_twin_id, rmbCL, msg, result, data, ipv4, ipv6, data, _i, _a, iface, _b, _c, ip;
+            return __generator(this, function (_d) {
+                switch (_d.label) {
+                    case 0: return [4 /*yield*/, utils_2.getNodeTwinId(node_id)];
+                    case 1:
+                        node_twin_id = _d.sent();
+                        rmbCL = new grid3_client_1.MessageBusClient();
+                        msg = rmbCL.prepare("zos.network.public_config_get", [node_twin_id], 0, 2);
+                        rmbCL.send(msg, "");
+                        return [4 /*yield*/, rmbCL.read(msg)];
+                    case 2:
+                        result = _d.sent();
+                        console.log(result);
+                        if (!result[0].err && result[0].dat) {
+                            data = JSON.parse(result[0].dat);
+                            ipv4 = data.ipv4;
+                            if (!this.isPrivateIP(ipv4)) {
+                                return [2 /*return*/, ipv4.split("/")[0]];
+                            }
+                            ipv6 = data.ipv6;
+                            if (!this.isPrivateIP(ipv6)) {
+                                return [2 /*return*/, ipv6.split("/")[0]];
+                            }
+                        }
+                        console.log("node " + node_id + " has no public config");
+                        msg = rmbCL.prepare("zos.network.interfaces", [node_twin_id], 0, 2);
+                        rmbCL.send(msg, "");
+                        return [4 /*yield*/, rmbCL.read(msg)];
+                    case 3:
+                        result = _d.sent();
+                        console.log(result);
+                        if (!result[0].err && result[0].dat) {
+                            data = JSON.parse(result[0].dat);
+                            for (_i = 0, _a = Object.keys(data); _i < _a.length; _i++) {
+                                iface = _a[_i];
+                                if (iface === "ygg0") {
+                                    continue;
+                                }
+                                for (_b = 0, _c = data[iface]; _b < _c.length; _b++) {
+                                    ip = _c[_b];
+                                    if (!this.isPrivateIP(ip)) {
+                                        return [2 /*return*/, ip];
+                                    }
+                                }
+                            }
+                        }
+                        return [2 /*return*/];
+                }
+            });
+        });
+    };
     Network.prototype.getUserWireguardConfig = function () {
         var network = this.getNetworks()[this.name];
         var nodeSubnetParts = network.subnet.split(".");
@@ -295,32 +352,43 @@ var Network = /** @class */ (function () {
         });
     };
     Network.prototype.storeNetwork = function (contract_id, machine_ip) {
-        var networks = this.getNetworks();
-        if (this.getNetworkNames().includes(this.name)) {
-        }
-        else {
-            var accessNode = this.getAccessNodes()[this.node_id];
-            if (!accessNode) {
-                throw Error("Can't find the access node with id " + this.node_id);
-            }
-            var network = {
-                "ip_range": this.znet.ip_range,
-                "subnet": this.userSubnet,
-                "wireguard_private_key": this.userPrivateKey,
-                "endpoint": accessNode.slice(0, -3) + ":" + this.znet.wireguard_listen_port,
-                "nodes": []
-            };
-            var node = {
-                "contract_id": contract_id,
-                "node_id": this.node_id,
-                "subnet": this.znet.subnet,
-                "wireguard_private_key": this.znet.wireguard_private_key,
-                "reserved_ips": [machine_ip]
-                // endpoint to be added
-            };
-            networks[this.name] = network;
-            // save it back to the network file
-        }
+        return __awaiter(this, void 0, void 0, function () {
+            var networks, accessNode, endpoint, node, network, path;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        networks = this.getNetworks();
+                        if (!this.getNetworkNames().includes(this.name)) return [3 /*break*/, 1];
+                        // update network
+                        throw Error("Not implemented yet");
+                    case 1:
+                        accessNode = this.getAccessNodes()[this.node_id];
+                        if (!accessNode) {
+                            throw Error("Can't find the access node with id " + this.node_id);
+                        }
+                        return [4 /*yield*/, this.getNodeEndpoint(this.node_id)];
+                    case 2:
+                        endpoint = _a.sent();
+                        node = {
+                            "contract_id": contract_id,
+                            "node_id": this.node_id,
+                            "reserved_ips": [machine_ip],
+                        };
+                        network = {
+                            "ip_range": this.znet.ip_range,
+                            "subnet": this.userSubnet,
+                            "wireguard_private_key": this.userPrivateKey,
+                            "endpoint": accessNode.split("/")[0] + ":" + this.znet.wireguard_listen_port,
+                            "nodes": [node]
+                        };
+                        networks[this.name] = network;
+                        path = PATH.join(jsonfs_1.appPath, "network.json");
+                        jsonfs_1.dumpToFile(path, networks);
+                        _a.label = 3;
+                    case 3: return [2 /*return*/];
+                }
+            });
+        });
     };
     return Network;
 }());

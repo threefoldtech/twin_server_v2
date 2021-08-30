@@ -23,8 +23,10 @@ declare class Network {
         2: string;
     };
     getFreePort(node_id: any): Promise<number>;
+    isPrivateIP(ip: any): any;
+    getNodeEndpoint(node_id: any): Promise<any>;
     getUserWireguardConfig(): string;
     setupNetworkConfig(ip_range: any, machine_ip: any, node_id: any): Promise<Znet>;
-    storeNetwork(contract_id: any, machine_ip: any): void;
+    storeNetwork(contract_id: any, machine_ip: any): Promise<void>;
 }
 export { Network };

@@ -1,10 +1,12 @@
 import { Znet, Workload, WorkloadTypes, Peer, MessageBusClient } from 'grid3_client'
 const { Wg } = require('wireguard-wrapper');
 const Addr = require('netaddr').Addr;
-import { loadFromFile, appPath } from "../helpers/jsonfs"
+const Private = require("private-ip")
+import { loadFromFile, dumpToFile, appPath } from "../helpers/jsonfs"
 import * as PATH from "path"
 import { getRandomNumber } from "../helpers/utils"
 import { getNodeTwinId } from "./utils"
+
 
 class WireGuardKeys {
     privateKey: string;
@@ -18,6 +20,7 @@ class Network {
     name: string
     userSubnet: string
     node_id: number
+
     constructor(name) {
         this.name = name;
     }
@@ -153,6 +156,50 @@ class Network {
         }
         return port
     }
+    isPrivateIP(ip) {
+        return Private(ip)
+    }
+    async getNodeEndpoint(node_id) {
+        const node_twin_id = await getNodeTwinId(node_id);
+        const rmbCL = new MessageBusClient()
+        let msg = rmbCL.prepare("zos.network.public_config_get", [node_twin_id], 0, 2)
+        rmbCL.send(msg, "")
+        let result = await rmbCL.read(msg)
+        console.log(result)
+
+        if (!result[0].err && result[0].dat) {
+            const data = JSON.parse(result[0].dat)
+            const ipv4 = data.ipv4
+            if (!this.isPrivateIP(ipv4)) {
+                return ipv4.split("/")[0]
+            }
+            const ipv6 = data.ipv6
+            if (!this.isPrivateIP(ipv6)) {
+                return ipv6.split("/")[0]
+            }
+        }
+        console.log(`node ${node_id} has no public config`)
+
+        msg = rmbCL.prepare("zos.network.interfaces", [node_twin_id], 0, 2)
+        rmbCL.send(msg, "")
+        result = await rmbCL.read(msg)
+        console.log(result)
+
+        if (!result[0].err && result[0].dat) {
+            const data = JSON.parse(result[0].dat)
+            for (let iface of Object.keys(data)) {
+                if (iface === "ygg0") {
+                    continue
+                }
+                for (let ip of data[iface]) {
+                    if (!this.isPrivateIP(ip)) {
+                        return ip
+                    }
+                }
+            }
+        }
+    }
+
     getUserWireguardConfig() {
         const network = this.getNetworks()[this.name]
         const nodeSubnetParts = network.subnet.split(".")
@@ -213,38 +260,37 @@ class Network {
         }
 
     }
-    storeNetwork(contract_id, machine_ip) {
+    async storeNetwork(contract_id, machine_ip) {
         let networks = this.getNetworks();
         if (this.getNetworkNames().includes(this.name)) {
-
+            // update network
+            throw Error("Not implemented yet");
         }
         else {
             const accessNode = this.getAccessNodes()[this.node_id];
             if (!accessNode) {
                 throw Error(`Can't find the access node with id ${this.node_id}`)
             }
+            const endpoint = await this.getNodeEndpoint(this.node_id)
+            let node = {
+                "contract_id": contract_id,
+                "node_id": this.node_id,
+                "reserved_ips": [machine_ip],
+            }
 
             let network = {
                 "ip_range": this.znet.ip_range,
                 "subnet": this.userSubnet,
                 "wireguard_private_key": this.userPrivateKey,
-                "endpoint": `${accessNode.slice(0, -3)}:${this.znet.wireguard_listen_port}`,
-                "nodes": []
+                "endpoint": `${accessNode.split("/")[0]}:${this.znet.wireguard_listen_port}`,
+                "nodes": [node]
             }
 
-            let node = {
-                "contract_id": contract_id,
-                "node_id": this.node_id,
-                "subnet": this.znet.subnet,
-                "wireguard_private_key": this.znet.wireguard_private_key,
-                "reserved_ips": [machine_ip]
-                // endpoint to be added
-            }
             networks[this.name] = network;
-            // save it back to the network file
+            const path = PATH.join(appPath, "network.json")
+            dumpToFile(path, networks)
         }
     }
-
 }
 
 export { Network }
