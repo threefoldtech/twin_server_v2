@@ -38,6 +38,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getAccessNodes = exports.getNodeTwinId = void 0;
 var requests_1 = require("../helpers/requests");
+var graphqlURL = "https://explorer.devnet.grid.tf/graphql/";
 function getNodeTwinId(node_id) {
     return __awaiter(this, void 0, void 0, function () {
         var headers, body, response, res;
@@ -46,7 +47,7 @@ function getNodeTwinId(node_id) {
                 case 0:
                     headers = { 'Content-Type': 'application/json' };
                     body = "{\n            nodes(where: { nodeId_eq: " + node_id + " }) {\n            twinId\n            }\n        }";
-                    return [4 /*yield*/, requests_1.send("post", "https://explorer.devnet.grid.tf/graphql/", JSON.stringify({ "query": body }), headers)];
+                    return [4 /*yield*/, requests_1.send("post", graphqlURL, JSON.stringify({ "query": body }), headers)];
                 case 1:
                     response = _a.sent();
                     res = JSON.parse(response);
@@ -64,7 +65,7 @@ function getAccessNodes() {
                 case 0:
                     headers = { 'Content-Type': 'application/json' };
                     body = "{\n        nodes {\n          nodeId\n          publicConfigId \n        }\n      }";
-                    return [4 /*yield*/, requests_1.send("post", "https://explorer.devnet.grid.tf/graphql/", JSON.stringify({ "query": body }), headers)];
+                    return [4 /*yield*/, requests_1.send("post", graphqlURL, JSON.stringify({ "query": body }), headers)];
                 case 1:
                     nodeResponse = _d.sent();
                     nodeRes = JSON.parse(nodeResponse);
@@ -80,7 +81,7 @@ function getAccessNodes() {
                         configsIds += "\"" + node.publicConfigId + "\", ";
                     }
                     body = "{\n        publicConfigs (where: {id_in: [" + configsIds + "]}) {\n          id\n          ipv4\n          ipv6    \n        }\n      }";
-                    return [4 /*yield*/, requests_1.send("post", "https://explorer.devnet.grid.tf/graphql/", JSON.stringify({ "query": body }), headers)];
+                    return [4 /*yield*/, requests_1.send("post", graphqlURL, JSON.stringify({ "query": body }), headers)];
                 case 2:
                     pubConfigResponse = _d.sent();
                     pubConfigRes = JSON.parse(pubConfigResponse);

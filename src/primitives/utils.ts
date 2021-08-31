@@ -1,5 +1,7 @@
 import { send } from "../helpers/requests"
 
+const graphqlURL = "https://explorer.devnet.grid.tf/graphql/"
+
 
 async function getNodeTwinId(node_id) {
     const headers = { 'Content-Type': 'application/json' }
@@ -8,7 +10,7 @@ async function getNodeTwinId(node_id) {
             twinId
             }
         }`
-    const response = await send("post", "https://explorer.devnet.grid.tf/graphql/", JSON.stringify({ "query": body }), headers)
+    const response = await send("post", graphqlURL, JSON.stringify({ "query": body }), headers)
     const res = JSON.parse(response)
     return res["data"]["nodes"][0]["twinId"]
 }
@@ -21,7 +23,7 @@ async function getAccessNodes() {
           publicConfigId 
         }
       }`
-    const nodeResponse = await send("post", "https://explorer.devnet.grid.tf/graphql/", JSON.stringify({ "query": body }), headers)
+    const nodeResponse = await send("post", graphqlURL, JSON.stringify({ "query": body }), headers)
     const nodeRes = JSON.parse(nodeResponse)
     const nodes = nodeRes["data"]["nodes"]
     let nodeConfigs = {}
@@ -40,7 +42,7 @@ async function getAccessNodes() {
           ipv6    
         }
       }`
-    const pubConfigResponse = await send("post", "https://explorer.devnet.grid.tf/graphql/", JSON.stringify({ "query": body }), headers)
+    const pubConfigResponse = await send("post", graphqlURL, JSON.stringify({ "query": body }), headers)
     const pubConfigRes = JSON.parse(pubConfigResponse)
     const configs = pubConfigRes["data"]["publicConfigs"]
 

@@ -28,7 +28,7 @@ class Machine {
         // network
         const networkName = options.network_name;
         let network = new Network(networkName, options.ip_range)
-        const znet_workload = network.create(options.ip_range, options.ip, options.metadata, options.description)
+        const znet_workload = network.addNode(options.ip_range, options.metadata, options.description)
         if (znet_workload) {
             workloads.push(znet_workload)
         }

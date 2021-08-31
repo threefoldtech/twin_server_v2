@@ -1,7 +1,7 @@
-import { Znet, Workload, WorkloadTypes, Peer, MessageBusClient } from 'grid3_client'
 const { Wg } = require('wireguard-wrapper');
 const Addr = require('netaddr').Addr;
 const Private = require("private-ip")
+import { Znet, Workload, WorkloadTypes, Peer, MessageBusClient } from 'grid3_client'
 import { loadFromFile, dumpToFile, appPath } from "../helpers/jsonfs"
 import * as PATH from "path"
 import { getRandomNumber } from "../helpers/utils"
@@ -13,71 +13,129 @@ class WireGuardKeys {
     publicKey: string;
 }
 
-class Peers {
-    peers: Peer[];
-    addPeer(subnet: string, wireguard_public_key: string, allowed_ips: string[]) {
-        let peer = new Peer();
-        peer.subnet = subnet;
-        peer.wireguard_public_key = wireguard_public_key;
-        peer.allowed_ips = allowed_ips
-        this.peers.push(peer);
-    }
-}
-
 class Node {
     node_id: number;
     contract_id: number;
-    reserved_ip: string[];
+    reserved_ips: string[];
+}
+
+class AccessPoint {
+    subnet: string;
+    wireguard_public_key: string;
+    node_id: number;
 }
 
 class Network {
     name: string
-    ip_range: string
-    userPrivKey: string
-    accessPubKey: string
-    userSubnet: string
-    accessSubnet: string
+    ipRange: string
     nodes: Node[]
-    workloads: []
-    accessNodeId: number
-    endpoint: string
+    deployments: Object[]
+    reservedSubnets: string[]
+    networks: Znet[]
+    accessPoints: AccessPoint[]
 
     constructor(name, ip_range) {
         this.name = name;
-        this.ip_range = ip_range;
-        this.load()
+        this.ipRange = ip_range;
+        if (Addr(ip_range).prefix !== 16) {
+            throw Error("Network ip_range should be with prefix 16")
+        }
+        if (!this.isPrivateIP(ip_range)) {
+            throw Error("Network ip_range should be private range")
+        }
+        this.load(true)
     }
 
     addAccess() {
 
     }
 
-    addNode() {
+    async addNode(node_id, metadata, description) {
+        if (this.nodeExists(node_id)) {
+            return
+        }
+        const keypair = await this.generateWireguardKeypair()
+        let znet = new Znet();
+        znet.subnet = this.getFreeSubnet();
+        znet.ip_range = this.ipRange;
+        znet.wireguard_private_key = keypair.privateKey
+        znet.wireguard_listen_port = await this.getFreePort(node_id);
 
+        this.networks.push(znet);
+        this.generatePeers()
+        this.updateNetworkDeployments()
+
+        for (const net of this.networks) {
+            if (net.subnet === znet.subnet) {
+                znet = net;
+            }
+        }
+
+        let znet_workload = new Workload();
+        znet_workload.version = 0;
+        znet_workload.name = this.name;
+        znet_workload.type = WorkloadTypes.network;
+        znet_workload.data = znet;
+        znet_workload.metadata = metadata;
+        znet_workload.description = description;
+        return znet_workload;
     }
 
-    load(workloads = false) {
+    updateNetworkDeployments() {
+        for (const net of this.networks) {
+            for (let deployment of this.deployments) {
+                let workloads = deployment["workloads"]
+                for (let workload of workloads) {
+                    if (workload["type"] !== WorkloadTypes.network) {
+                        continue;
+                    }
+                    if (net.subnet !== workload["data"]["subnet"]) {
+                        continue;
+                    }
+                    workload["data"] = net
+                    break;
+                }
+                deployment["workloads"] = workloads
+            }
+        }
+    }
+
+    async load(deployments = false) {
         const networks = this.getNetworks()
         if (!Object.keys(networks).includes(this.name)) {
             return
         }
         const network = networks[this.name]
-        if (network.ip_range !== this.ip_range) {
-            throw Error("The same network name with different ip range is exist")
+        if (network.ip_range !== this.ipRange) {
+            throw Error(`The same network name ${this.name} with different ip range is already exist`)
         }
-        this.userPrivKey = network.wireguard_private_key
-        this.accessPubKey = network.access_node_public_key
-        this.userSubnet = network.subnet
-        this.accessSubnet = network.access_subnet
-        this.accessNodeId = network.access_node_id
-        this.endpoint = network.endpoint
-
         for (let node of network.nodes) {
             const n: Node = node
             this.nodes.push(n)
         }
-        if (workloads) {
-            // load workload from nodes
+        if (deployments) {
+            const rmbCL = new MessageBusClient()
+            for (let node of this.nodes) {
+                const node_twin_id = await getNodeTwinId(node.node_id);
+                const msg = rmbCL.prepare("zos.deployment.get", [node_twin_id], 0, 2)
+                rmbCL.send(msg, JSON.stringify({ "contract_id": node.contract_id }))
+                const result = await rmbCL.read(msg)
+                if (result[0].err) {
+                    console.error(`Could not load network deployment ${node.contract_id} due to error: ${result[0].err}`)
+                }
+                const res = JSON.parse(result[0].dat)
+                res["node_id"] = node.node_id
+                this.deployments.push(res)
+                for (const workload of res["workloads"]) {
+                    if (workload["type"] !== WorkloadTypes.network) {
+                        continue
+                    }
+                    let znet = workload["data"]
+                    znet["node_id"] = node.node_id
+                    this.networks.push(znet)
+                }
+            }
+            this.getAccessPoints()
         }
     }
 
@@ -86,29 +144,12 @@ class Network {
     }
 
     nodeExists(node_id) {
-        this.load();
         for (let node of this.nodes) {
             if (node.node_id === node_id) {
                 return true
             }
         }
         return false
-    }
-
-    async create(ip_range: string, machine_ip: string, node_id: number, metadata: string = "", description: string = "", version: number = 0): Promise<Workload> {
-        const znet = await this.setupNetworkConfig(ip_range, machine_ip, node_id)
-        if (!znet) {
-            return
-        }
-
-        let znet_workload = new Workload();
-        znet_workload.version = version || 0;
-        znet_workload.name = this.name;
-        znet_workload.type = WorkloadTypes.network;
-        znet_workload.data = znet;
-        znet_workload.metadata = metadata;
-        znet_workload.description = description;
-        return znet_workload;
     }
 
     async generateWireguardKeypair(): Promise<WireGuardKeys> {
@@ -128,6 +169,110 @@ class Network {
         });
     }
 
+    getFreeIP(node_id: number, subnet: string = "") {
+        let ip;
+        if (!this.nodeExists(node_id) && subnet) {
+            ip = Addr(subnet).mask(32)
+        }
+        else if (this.nodeExists(node_id)) {
+            ip = Addr(this.getNodeSubnet(node_id)).mask(32)
+            const reserved_ips = this.getNodeReservedIps(node_id)
+            while (reserved_ips.includes(ip.toString().split("/")[0])) {
+                ip = ip.increment()
+            }
+        }
+        else {
+            throw Error("node_id or subnet must be specified")
+        }
+        if (ip) {
+            ip = ip.toString().split("/")[0]
+            let found = false
+            for (const node of this.nodes) {
+                if (node.node_id === node_id) {
+                    node.reserved_ips.push(ip)
+                    found = true
+                    break
+                }
+            }
+            if (!found) {
+                let node = new Node()
+                node.node_id = node_id
+                node.reserved_ips = [ip]
+                this.nodes.push(node)
+            }
+            return ip
+        }
+    }
+
+    getNodeReservedIps(node_id: number) {
+        for (const node of this.nodes) {
+            if (node.node_id !== node_id) {
+                continue
+            }
+            return node.reserved_ips
+        }
+    }
+
+    getNodeSubnet(node_id) {
+        for (const deployment of this.deployments) {
+            if (deployment["node_id"] !== node_id) {
+                continue
+            }
+            for (const workload of deployment["workloads"]) {
+                if (workload["type"] !== WorkloadTypes.network) {
+                    continue
+                }
+                return workload["data"]["subnet"]
+            }
+        }
+    }
+
+    getReservedSubnets() {
+        for (const node of this.nodes) {
+            const subnet = this.getNodeSubnet(node.node_id)
+            if (subnet && !this.reservedSubnets.includes(subnet)) {
+                this.reservedSubnets.push(subnet)
+            }
+        }
+        for (const network of this.networks) {
+            if (!this.reservedSubnets.includes(network.subnet)) {
+                this.reservedSubnets.push(network.subnet)
+            }
+        }
+        return this.reservedSubnets
+    }
+
+    getFreeSubnet() {
+        const reservedSubnets = this.getReservedSubnets()
+        let subnet = Addr(this.ipRange).mask(24)
+        while (reservedSubnets.includes(subnet.toString())) {
+            subnet = subnet.increment()
+        }
+        this.reservedSubnets.push(subnet.toString())
+        return subnet.toString()
+    }
+
+    getAccessPoints() {
+        let nodesWGPubkeys = []
+        for (const network of this.networks) {
+            const pubkey = this.getPublicKey(network.wireguard_private_key)
+            nodesWGPubkeys.push(pubkey)
+        }
+        for (const network of this.networks) {
+            for (const peer of network.peers) {
+                if (nodesWGPubkeys.includes(peer.wireguard_public_key)) {
+                    continue
+                }
+                let accessPoint = new AccessPoint()
+                accessPoint.subnet = peer.subnet
+                accessPoint.wireguard_public_key = peer.wireguard_public_key
+                accessPoint.node_id = network["node_id"]
+                this.accessPoints.push(accessPoint)
+            }
+        }
+        return this.accessPoints
+    }
+
     getNetworks(): Object {
         const path = PATH.join(appPath, "network.json")
         return loadFromFile(path)
@@ -137,71 +282,6 @@ class Network {
     getNetworkNames(): string[] {
         let networks = this.getNetworks()
         return Object.keys(networks)
-    }
-
-    getUserNodeAccessNodeSubnets(ip_range, machine_ip, node_id) {
-        let targetNodeSubnet = ""
-        if (!machine_ip) {
-            targetNodeSubnet = Addr(machine_ip).mask(24).toString()
-        }
-        let networkRange = new Addr(ip_range)
-        let subnet = networkRange.mask(24)
-        if (this.getNetworkNames().includes(this.name)) {
-            let network = this.getNetworks()[this.name]
-            if (ip_range !== network.ip_range) {
-                throw Error(`There is another network with the same name and different IP range`)
-            }
-            if (network.subnet === targetNodeSubnet) {
-                throw Error(`Can't assign this subnet ${targetNodeSubnet} to node ${node_id}. Subnet already assign to your wireguard config`)
-            }
-            if (network.subnet === subnet.toString()) {
-                subnet = subnet.nextSibling()
-            }
-            else {
-                for (let i = 0; i < network.nodes.length; i++) {
-                    if (network.nodes[i].subnet === targetNodeSubnet) {
-                        if (network.nodes[i].node_id !== node_id) {
-                            throw Error(`Can't assign this subnet ${targetNodeSubnet} to node ${node_id}. Subnet already assign to node_id ${network.nodes[i].node_id}`)
-                        }
-                        else {
-                            if (network.nodes[i].reserved_ips.includes(machine_ip)) {
-                                throw Error("Can't assign this ip to the machine. it's already reserved")
-                            }
-                            return [network.subnet, "", ""]
-                        }
-                    }
-                    let accessNodeSubnet = ""
-                    if (Object.keys(getAccessNodes()).includes(network.nodes[i].node_id)) {
-                        accessNodeSubnet = network.nodes[i].subnet
-                    }
-                    if (network.nodes[i].subnet === subnet.toString()) {
-                        subnet = subnet.nextSibling()
-                    }
-                    else {
-                        return [network.subnet, subnet.toString(), accessNodeSubnet]
-                    }
-                }
-            }
-        }
-        else {
-            let subnets;
-            if (targetNodeSubnet === "") {
-                subnets = [subnet.toString(), subnet.nextSibling().nextSibling().toString(), subnet.nextSibling().toString()]
-            }
-            else {
-                if (targetNodeSubnet === subnet.toString()) {
-                    subnets = [subnet.nextSibling().toString(), subnet.toString(), subnet.nextSibling().nextSibling().toString()]
-                }
-                else {
-                    subnets = [subnet.toString(), targetNodeSubnet, Addr(targetNodeSubnet).nextSibling().nextSibling().toString()]
-                }
-            }
-            if (Object.keys(getAccessNodes()).includes(node_id)) {
-                subnets.pop()
-                subnets.push("")
-            }
-            return subnets
-        }
     }
 
     async getFreePort(node_id) {
@@ -264,55 +344,18 @@ class Network {
         }
     }
 
-    getUserWireguardConfig() {
-        this.load()
-        const nodeSubnetParts = this.userSubnet.split(".")
-        const accessNodeSubnetParts = this.accessSubnet.split(".")
-        return `[Interface]\nAddress = 100.64.${nodeSubnetParts[2]}.${nodeSubnetParts[3].split("/")[0]}/32\n
-        PrivateKey = ${this.userPrivKey}\n[Peer]\nPublicKey = ${this.accessPubKey}\n
-        AllowedIPs = ${this.accessSubnet}, 100.64.${accessNodeSubnetParts[2]}.${accessNodeSubnetParts[3].split("/")[0]}/32\n
-        PersistentKeepalive = 25\nEndpoint = ${this.endpoint}`
+    wgRoutingIP(subnet) {
+        const subnetsParts = subnet.split(".")
+        return `100.64.${subnetsParts[1]}.${subnetsParts[2].split("/")[0]}/32`
     }
 
-    async setupNetworkConfig(ip_range, machine_ip, node_id) {
-        let [userSubnet, NodeSubnet, accessNodeSubnet] = this.getUserNodeAccessNodeSubnets(ip_range, machine_ip, node_id)
-        this.userSubnet = userSubnet;
-        if (NodeSubnet && accessNodeSubnet && this.getNetworkNames().includes(this.name)) {
-            // update network on the access node and deploy network on the new node
-            throw Error("Update network is not implemented yet.")
-        }
-        else if (NodeSubnet && accessNodeSubnet && !this.getNetworkNames().includes(this.name)) {
-            // deploy network on the access node and deploy network on the new node
-            throw Error("Deploy network on 2 different nodes is not implemented yet.")
-        }
-        else if (NodeSubnet && !accessNodeSubnet && !this.getNetworkNames().includes(this.name)) {
-            // deploy only on the access node which is the new node as well
-            const userKeypair = await this.generateWireguardKeypair()
-            const nodeKeypair = await this.generateWireguardKeypair()
-            this.userPrivKey = userKeypair.privateKey
-            this.accessPubKey = nodeKeypair.publicKey
-            this.accessSubnet = NodeSubnet
-
-            let znet = new Znet();
-            znet.subnet = NodeSubnet;
-            znet.ip_range = ip_range;
-            znet.wireguard_private_key = nodeKeypair.privateKey
-            znet.wireguard_listen_port = await this.getFreePort(node_id);
-
-            // Add peers before set them on the network workload
-            const parts = userSubnet.split(".")
-            const allowed_ips = [userSubnet, `100.64.${parts[2]}.${parts[3].split("/")[0]}/32`]
-            let peers = new Peers()
-            peers.addPeer(userSubnet, userKeypair.publicKey, allowed_ips)
-            znet.peers = peers.peers;
-
-            // store this config on network config on filesystem
-            return znet
-        }
-        else {
-            // do nothing
-            return
-        }
+    getWireguardConfig(subnet, userprivKey, peerPubkey, endpoint) {
+        const userIP = this.wgRoutingIP(subnet)
+        const networkIP = this.wgRoutingIP(this.ipRange)
+        return `[Interface]\nAddress = ${userIP}\n
+        PrivateKey = ${userprivKey}\n[Peer]\nPublicKey = ${peerPubkey}\n
+        AllowedIPs = ${this.ipRange}, ${networkIP}\n
+        PersistentKeepalive = 25\nEndpoint = ${endpoint}`
     }
 
     async save(contract_id: string, machine_ip: string, node_id: number) {
@@ -322,13 +365,7 @@ class Network {
         }
         else {
             network = {
-                "access_node_id": this.accessNodeId,
-                "ip_range": this.ip_range,
-                "subnet": this.userSubnet,
-                "access_subnet": this.accessSubnet,
-                "wireguard_private_key": this.userPrivKey,
-                "access_node_public_key": this.accessPubKey,
-                "endpoint": this.endpoint,
+                "ip_range": this.ipRange,
                 "nodes": []
             }
         }
@@ -353,6 +390,48 @@ class Network {
         networks[this.name] = network;
         const path = PATH.join(appPath, "network.json")
         dumpToFile(path, networks)
+    }
+
+    async generatePeers() {
+        for (let n of this.networks) {
+            n.peers = []
+            for (const net of this.networks) {
+                if (n["node_id"] === net["node_id"]) {
+                    continue
+                }
+                let allowed_ips = []
+                allowed_ips.push(net.subnet)
+                allowed_ips.push(this.wgRoutingIP(net.subnet))
+
+                // add access points as allowed ips if this node "net" is the access node and has access point to it
+                for (const accessPoint of this.accessPoints) {
+                    if (accessPoint.node_id === net["node_id"]) {
+                        allowed_ips.push(accessPoint.subnet)
+                        allowed_ips.push(this.wgRoutingIP(accessPoint.subnet))
+                    }
+                }
+                let accessIP = await this.getNodeEndpoint(net["node_id"])
+                let peer = new Peer();
+                peer.subnet = net.subnet;
+                peer.wireguard_public_key = await this.getPublicKey(net.wireguard_private_key);
+                peer.allowed_ips = allowed_ips
+                peer.endpoint = `${accessIP}:${net.wireguard_listen_port}`;
+                n.peers.push(peer);
+            }
+            for (const accessPoint of this.accessPoints) {
+                if (n["node_id"] === accessPoint.node_id) {
+                    let allowed_ips = []
+                    allowed_ips.push(accessPoint.subnet)
+                    allowed_ips.push(this.wgRoutingIP(accessPoint.subnet))
+                    let peer = new Peer();
+                    peer.subnet = accessPoint.subnet;
+                    peer.wireguard_public_key = accessPoint.wireguard_public_key;
+                    peer.allowed_ips = allowed_ips
+                    peer.endpoint = "";
+                    n.peers.push(peer);
+                }
+            }
+        }
     }
 }
 
