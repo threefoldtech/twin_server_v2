@@ -7,7 +7,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.k8s = void 0;
-var expose_1 = require("../helpers/expose");
+var index_1 = require("../helpers/index");
 var K8s = /** @class */ (function () {
     function K8s() {
     }
@@ -15,7 +15,7 @@ var K8s = /** @class */ (function () {
         return "deployed";
     };
     __decorate([
-        expose_1.expose
+        index_1.expose
     ], K8s.prototype, "deploy", null);
     return K8s;
 }());

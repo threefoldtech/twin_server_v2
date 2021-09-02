@@ -23,9 +23,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.appPath = exports.dumpToFile = exports.loadFromFile = void 0;
-var appdata_path_1 = __importDefault(require("appdata-path"));
 var FS = __importStar(require("fs"));
 var PATH = __importStar(require("path"));
+var appdata_path_1 = __importDefault(require("appdata-path"));
 var appsPath = appdata_path_1.default();
 var appPath = PATH.join(appsPath, "twinserver");
 exports.appPath = appPath;

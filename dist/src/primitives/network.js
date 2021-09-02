@@ -59,9 +59,9 @@ exports.Network = void 0;
 var Wg = require('wireguard-wrapper').Wg;
 var Addr = require('netaddr').Addr;
 var Private = require("private-ip");
+var PATH = __importStar(require("path"));
 var grid3_client_1 = require("grid3_client");
 var jsonfs_1 = require("../helpers/jsonfs");
-var PATH = __importStar(require("path"));
 var utils_1 = require("../helpers/utils");
 var nodes_1 = require("./nodes");
 var WireGuardKeys = /** @class */ (function () {
@@ -147,6 +147,8 @@ var Network = /** @class */ (function () {
         });
     };
     Network.prototype.addNode = function (node_id, metadata, description) {
+        if (metadata === void 0) { metadata = ""; }
+        if (description === void 0) { description = ""; }
         return __awaiter(this, void 0, void 0, function () {
             var keypair, znet, _a, znet_workload;
             return __generator(this, function (_b) {
@@ -558,10 +560,10 @@ var Network = /** @class */ (function () {
         var networkIP = this.wgRoutingIP(this.ipRange);
         return "[Interface]\nAddress = " + userIP + "\nPrivateKey = " + userprivKey + "\n\n[Peer]\nPublicKey = " + peerPubkey + "\nAllowedIPs = " + this.ipRange + ", " + networkIP + "\nPersistentKeepalive = 25\nEndpoint = " + endpoint;
     };
-    Network.prototype.save = function (contract_id, machine_ips, node_id) {
+    Network.prototype.save = function (contract_id, node_id) {
         return __awaiter(this, void 0, void 0, function () {
-            var network, nodeFound, node, node, networks, path;
-            return __generator(this, function (_a) {
+            var network, nodeFound, _i, _a, node, node, networks, path;
+            return __generator(this, function (_b) {
                 if (this.exists()) {
                     network = this.getNetworks()[this.name];
                 }
@@ -572,9 +574,10 @@ var Network = /** @class */ (function () {
                     };
                 }
                 nodeFound = false;
-                for (node in network.nodes) {
+                for (_i = 0, _a = network.nodes; _i < _a.length; _i++) {
+                    node = _a[_i];
                     if (node["node_id"] === node_id) {
-                        node["reserved_ips"] = node["reserved_ips"].concat(machine_ips);
+                        node["reserved_ips"] = this.getNodeReservedIps(node_id);
                         nodeFound = true;
                         break;
                     }
@@ -583,7 +586,7 @@ var Network = /** @class */ (function () {
                     node = {
                         "contract_id": contract_id,
                         "node_id": node_id,
-                        "reserved_ips": machine_ips,
+                        "reserved_ips": this.getNodeReservedIps(node_id),
                     };
                     network.nodes.push(node);
                 }

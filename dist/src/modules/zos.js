@@ -46,42 +46,42 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.zos = void 0;
-var expose_1 = require("../helpers/expose");
 var grid3_client_1 = require("grid3_client");
+var index_1 = require("../helpers/index");
 var config_json_1 = __importDefault(require("../../config.json"));
-var utils_1 = require("./utils");
+var deploymentFactory_1 = require("../high_level/deploymentFactory");
 var Zos = /** @class */ (function () {
     function Zos() {
     }
     Zos.prototype.deploy = function (options) {
         return __awaiter(this, void 0, void 0, function () {
-            var deploymentHash, node_id, node_twin_id, deployment, publicIPs, i;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
+            var deploymentHash, node_id, deployment, publicIPs, _i, _a, workload, deploymentFactory;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
                     case 0:
                         deploymentHash = options.hash;
                         node_id = options.node_id;
-                        node_twin_id = options.node_twin_id;
                         delete options.hash;
                         delete options.node_id;
-                        delete options.node_twin_id;
                         deployment = new grid3_client_1.Deployment();
                         Object.assign(deployment, options);
                         deployment.sign(deployment.twin_id, config_json_1.default.mnemonic, deploymentHash);
                         publicIPs = 0;
-                        for (i = 0; i < deployment.workloads.length; i++) {
-                            if (deployment.workloads[i].type === grid3_client_1.WorkloadTypes.ipv4) {
+                        for (_i = 0, _a = deployment.workloads; _i < _a.length; _i++) {
+                            workload = _a[_i];
+                            if (workload.type === grid3_client_1.WorkloadTypes.ipv4) {
                                 publicIPs++;
                             }
                         }
-                        return [4 /*yield*/, utils_1.createContractAndSendToZos(deployment, node_id, deploymentHash, publicIPs)];
-                    case 1: return [2 /*return*/, _a.sent()];
+                        deploymentFactory = new deploymentFactory_1.DeploymentFactory();
+                        return [4 /*yield*/, deploymentFactory.createContractAndSendToZos(deployment, node_id, deploymentHash, publicIPs)];
+                    case 1: return [2 /*return*/, _b.sent()];
                 }
             });
         });
     };
     __decorate([
-        expose_1.expose
+        index_1.expose
     ], Zos.prototype, "deploy", null);
     return Zos;
 }());

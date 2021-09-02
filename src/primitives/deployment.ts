@@ -1,5 +1,7 @@
 import { Deployment, Workload, SignatureRequest, SignatureRequirement } from "grid3_client"
+
 import { default as config } from "../../config.json"
+
 
 class DeploymentFactory {
     create(workloads: Workload[], expiration: number, metadata: string = "", description: string = "", version: number = 0): [Deployment, string] {

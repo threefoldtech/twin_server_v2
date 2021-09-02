@@ -1,4 +1,4 @@
-import { expose } from "../helpers/expose";
+import { expose } from "../helpers/index";
 
 class K8s {
     @expose

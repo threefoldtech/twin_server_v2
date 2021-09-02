@@ -45,102 +45,30 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.machine = void 0;
 var index_1 = require("../primitives/index");
 var expose_1 = require("../helpers/expose");
-var utils_1 = require("../helpers/utils");
-var utils_2 = require("./utils");
-var nodes_1 = require("../primitives/nodes");
+var machine_1 = require("../high_level/machine");
+var deploymentFactory_1 = require("../high_level/deploymentFactory");
 var Machine = /** @class */ (function () {
     function Machine() {
     }
     Machine.prototype.deploy = function (options) {
         return __awaiter(this, void 0, void 0, function () {
-            var contracts, workloads, disks, i, d, dName, disk, ipName, publicIPs, ipv4, networkName, network, accessNodes, access_net_workload, wgConfig, filteredAccessNodes, _i, _a, accessNodeId, node_id, znet_workload, deploymentFactory, accessNodeId, _b, deployment_1, deploymentHash_1, net_contract, vm, vmName, machine_ip, _c, deployment, deploymentHash, machine_contract;
-            return __generator(this, function (_d) {
-                switch (_d.label) {
+            var networkName, network, vm, _a, twinDeployments, wgConfig, deploymentFactory, contracts;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
                     case 0:
-                        contracts = [];
-                        workloads = [];
-                        disks = [];
-                        for (i = 0; i < options.disks.length; i++) {
-                            d = options.disks[i];
-                            dName = utils_1.generateString(10);
-                            disk = new index_1.Disk();
-                            workloads.push(disk.create(d.size, dName, options.metadata, options.description));
-                            disks.push(disk.createMount(dName, d.mountpoint));
-                        }
-                        ipName = "";
-                        publicIPs = 0;
-                        if (options.public_ip) {
-                            ipv4 = new index_1.IPv4();
-                            ipName = utils_1.generateString(10);
-                            workloads.push(ipv4.create(ipName, options.metadata, options.description));
-                            publicIPs++;
-                        }
                         networkName = options.network.name;
                         network = new index_1.Network(networkName, options.network.ip_range);
                         return [4 /*yield*/, network.load(true)];
                     case 1:
-                        _d.sent();
-                        return [4 /*yield*/, nodes_1.getAccessNodes()];
+                        _b.sent();
+                        vm = new machine_1.VirtualMachine();
+                        return [4 /*yield*/, vm.create(options.name, options.node_id, options.flist, options.cpu, options.memory, options.disks, options.public_ip, network, options.entrypoint, options.env, options.metadata, options.description)];
                     case 2:
-                        accessNodes = _d.sent();
-                        wgConfig = "";
-                        if (!!Object.keys(accessNodes).includes(options.node_id.toString())) return [3 /*break*/, 5];
-                        filteredAccessNodes = [];
-                        for (_i = 0, _a = Object.keys(accessNodes); _i < _a.length; _i++) {
-                            accessNodeId = _a[_i];
-                            if (accessNodes[accessNodeId]["ipv4"]) {
-                                filteredAccessNodes.push(accessNodeId);
-                            }
-                        }
-                        node_id = utils_1.randomChoice(filteredAccessNodes);
-                        return [4 /*yield*/, network.addNode(node_id, options.metadata, options.description)];
+                        _a = _b.sent(), twinDeployments = _a[0], wgConfig = _a[1];
+                        deploymentFactory = new deploymentFactory_1.DeploymentFactory();
+                        return [4 /*yield*/, deploymentFactory.deploy(twinDeployments, network)];
                     case 3:
-                        access_net_workload = _d.sent();
-                        return [4 /*yield*/, network.addAccess(node_id, true)];
-                    case 4:
-                        wgConfig = _d.sent();
-                        _d.label = 5;
-                    case 5: return [4 /*yield*/, network.addNode(options.node_id, options.metadata, options.description)];
-                    case 6:
-                        znet_workload = _d.sent();
-                        if (!znet_workload) return [3 /*break*/, 9];
-                        if (!!access_net_workload) return [3 /*break*/, 8];
-                        return [4 /*yield*/, network.addAccess(options.node_id, true)];
-                    case 7:
-                        wgConfig = _d.sent();
-                        znet_workload["data"] = network.updateNetwork(znet_workload.data);
-                        _d.label = 8;
-                    case 8:
-                        workloads.push(znet_workload);
-                        return [3 /*break*/, 10];
-                    case 9: throw Error("Network workload is not generated");
-                    case 10:
-                        deploymentFactory = new index_1.DeploymentFactory();
-                        if (!access_net_workload) return [3 /*break*/, 13];
-                        accessNodeId = access_net_workload.data["node_id"];
-                        access_net_workload["data"] = network.updateNetwork(access_net_workload.data);
-                        _b = deploymentFactory.create([access_net_workload], 1626394539, options.metadata, options.description), deployment_1 = _b[0], deploymentHash_1 = _b[1];
-                        return [4 /*yield*/, utils_2.createContractAndSendToZos(deployment_1, accessNodeId, deploymentHash_1, 0)];
-                    case 11:
-                        net_contract = _d.sent();
-                        return [4 /*yield*/, network.save(net_contract["contract_id"], [], accessNodeId)];
-                    case 12:
-                        _d.sent();
-                        contracts.push(net_contract);
-                        _d.label = 13;
-                    case 13:
-                        vm = new index_1.VM();
-                        vmName = utils_1.generateString(10);
-                        machine_ip = network.getFreeIP(options.node_id);
-                        workloads.push(vm.create(vmName, options.flist, options.cpu, options.memory, disks, networkName, machine_ip, true, ipName, options.entrypoint, options.env, options.metadata, options.description));
-                        _c = deploymentFactory.create(workloads, 1626394539, options.metadata, options.description), deployment = _c[0], deploymentHash = _c[1];
-                        return [4 /*yield*/, utils_2.createContractAndSendToZos(deployment, options.node_id, deploymentHash, publicIPs)];
-                    case 14:
-                        machine_contract = _d.sent();
-                        contracts.push(machine_contract);
-                        return [4 /*yield*/, network.save(machine_contract["contract_id"], [machine_ip], options.node_id)];
-                    case 15:
-                        _d.sent();
+                        contracts = _b.sent();
                         return [2 /*return*/, { "contracts": contracts, "wireguard_config": wgConfig }];
                 }
             });

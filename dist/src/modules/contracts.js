@@ -47,8 +47,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.contracts = void 0;
 var grid3_client_1 = require("grid3_client");
+var index_1 = require("../helpers/index");
 var config_json_1 = __importDefault(require("../../config.json"));
-var expose_1 = require("../helpers/expose");
 var Contracts = /** @class */ (function () {
     function Contracts() {
         this.client = new grid3_client_1.TFClient(config_json_1.default.url, config_json_1.default.mnemonic);
@@ -106,16 +106,16 @@ var Contracts = /** @class */ (function () {
         });
     };
     __decorate([
-        expose_1.expose
+        index_1.expose
     ], Contracts.prototype, "create", null);
     __decorate([
-        expose_1.expose
+        index_1.expose
     ], Contracts.prototype, "get", null);
     __decorate([
-        expose_1.expose
+        index_1.expose
     ], Contracts.prototype, "update", null);
     __decorate([
-        expose_1.expose
+        index_1.expose
     ], Contracts.prototype, "cancel", null);
     return Contracts;
 }());

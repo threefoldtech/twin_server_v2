@@ -15,3 +15,4 @@ __exportStar(require("./ipv4"), exports);
 __exportStar(require("./network"), exports);
 __exportStar(require("./vm"), exports);
 __exportStar(require("./deployment"), exports);
+__exportStar(require("./nodes"), exports);

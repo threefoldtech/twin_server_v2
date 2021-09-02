@@ -1,11 +1,12 @@
 const isPrivateIP = require("private-ip")
 const IP = require("ip")
+
 import { send } from "../helpers/requests"
 
 const graphqlURL = "https://explorer.devnet.grid.tf/graphql/"
 
 
-async function getNodeTwinId(node_id) {
+async function getNodeTwinId(node_id: number) {
     const headers = { 'Content-Type': 'application/json' }
     const body = `{
             nodes(where: { nodeId_eq: ${node_id} }) {

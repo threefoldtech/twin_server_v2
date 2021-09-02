@@ -1,5 +1,6 @@
+import { Machines } from "./models";
 declare class Machine {
-    deploy(options: any): Promise<{
+    deploy(options: Machines): Promise<{
         contracts: any[];
         wireguard_config: string;
     }>;

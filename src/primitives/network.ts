@@ -1,9 +1,12 @@
 const { Wg } = require('wireguard-wrapper');
 const Addr = require('netaddr').Addr;
 const Private = require("private-ip")
-import { Znet, Workload, WorkloadTypes, Peer, MessageBusClient } from 'grid3_client'
-import { loadFromFile, dumpToFile, appPath } from "../helpers/jsonfs"
+
 import * as PATH from "path"
+
+import { Znet, Workload, WorkloadTypes, Peer, MessageBusClient } from 'grid3_client'
+
+import { loadFromFile, dumpToFile, appPath } from "../helpers/jsonfs"
 import { getRandomNumber } from "../helpers/utils"
 import { getNodeTwinId, getAccessNodes } from "./nodes"
 
@@ -34,7 +37,7 @@ class Network {
     networks: Znet[] = []
     accessPoints: AccessPoint[] = []
 
-    constructor(name, ip_range) {
+    constructor(name: string, ip_range: string) {
         this.name = name;
         this.ipRange = ip_range;
         if (Addr(ip_range).prefix !== 16) {
@@ -45,7 +48,7 @@ class Network {
         }
     }
 
-    async addAccess(node_id: number, ipv4: boolean) {
+    async addAccess(node_id: number, ipv4: boolean): Promise<string> {
         if (!this.nodeExists(node_id)) {
             throw Error(`Node ${node_id} does not exist in the network. Please add it first`)
         }
@@ -85,7 +88,7 @@ class Network {
 
     }
 
-    async addNode(node_id, metadata, description) {
+    async addNode(node_id: number, metadata: string = "", description: string = ""): Promise<Workload> {
         if (this.nodeExists(node_id)) {
             return
         }
@@ -112,7 +115,7 @@ class Network {
         return znet_workload;
     }
 
-    updateNetwork(znet) {
+    updateNetwork(znet): Znet {
         for (const net of this.networks) {
             if (net.subnet === znet.subnet) {
                 return znet
@@ -139,7 +142,7 @@ class Network {
         }
     }
 
-    async load(deployments = false) {
+    async load(deployments: boolean = false) {
         const networks = this.getNetworks()
         if (!Object.keys(networks).includes(this.name)) {
             return
@@ -178,11 +181,11 @@ class Network {
         }
     }
 
-    exists() {
+    exists(): boolean {
         return this.getNetworkNames().includes(this.name)
     }
 
-    nodeExists(node_id) {
+    nodeExists(node_id: number): boolean {
         for (let net of this.networks) {
             if (net["node_id"] === node_id) {
                 return true
@@ -208,7 +211,7 @@ class Network {
         });
     }
 
-    async getNodeWGPublicKey(node_id) {
+    async getNodeWGPublicKey(node_id: number): Promise<string> {
         for (const net of this.networks) {
             if (net["node_id"] == node_id) {
                 return await this.getPublicKey(net.wireguard_private_key)
@@ -216,7 +219,7 @@ class Network {
         }
     }
 
-    getNodeWGListeningPort(node_id) {
+    getNodeWGListeningPort(node_id: number): number {
         for (const net of this.networks) {
             if (net["node_id"] == node_id) {
                 return net.wireguard_listen_port
@@ -224,7 +227,7 @@ class Network {
         }
     }
 
-    getFreeIP(node_id: number, subnet: string = "") {
+    getFreeIP(node_id: number, subnet: string = ""): string {
         let ip;
         if (!this.nodeExists(node_id) && subnet) {
             ip = Addr(subnet).mask(32).increment().increment();
@@ -259,7 +262,7 @@ class Network {
         }
     }
 
-    getNodeReservedIps(node_id: number) {
+    getNodeReservedIps(node_id: number): string[] {
         for (const node of this.nodes) {
             if (node.node_id !== node_id) {
                 continue
@@ -269,7 +272,7 @@ class Network {
         return []
     }
 
-    getNodeSubnet(node_id) {
+    getNodeSubnet(node_id: number): string {
         for (const net of this.networks) {
             if (net["node_id"] === node_id) {
                 return net.subnet
@@ -277,7 +280,7 @@ class Network {
         }
     }
 
-    getReservedSubnets() {
+    getReservedSubnets(): string[] {
         for (const node of this.nodes) {
             const subnet = this.getNodeSubnet(node.node_id)
             if (subnet && !this.reservedSubnets.includes(subnet)) {
@@ -292,7 +295,7 @@ class Network {
         return this.reservedSubnets
     }
 
-    getFreeSubnet() {
+    getFreeSubnet(): string {
         const reservedSubnets = this.getReservedSubnets()
         let subnet = Addr(this.ipRange).mask(24).nextSibling().nextSibling()
         while (reservedSubnets.includes(subnet.toString())) {
@@ -302,7 +305,7 @@ class Network {
         return subnet.toString()
     }
 
-    async getAccessPoints() {
+    async getAccessPoints(): Promise<AccessPoint[]> {
         let nodesWGPubkeys = []
         for (const network of this.networks) {
             const pubkey = await this.getPublicKey(network.wireguard_private_key)
@@ -334,7 +337,7 @@ class Network {
         return Object.keys(networks)
     }
 
-    async getFreePort(node_id) {
+    async getFreePort(node_id: number): Promise<number> {
         const node_twin_id = await getNodeTwinId(node_id);
         const rmbCL = new MessageBusClient()
         let msg = rmbCL.prepare("zos.network.list_wg_ports", [node_twin_id], 0, 2)
@@ -349,11 +352,11 @@ class Network {
         return port
     }
 
-    isPrivateIP(ip) {
+    isPrivateIP(ip: string): boolean {
         return Private(ip)
     }
 
-    async getNodeEndpoint(node_id) {
+    async getNodeEndpoint(node_id: number): Promise<string> {
         const node_twin_id = await getNodeTwinId(node_id);
         const rmbCL = new MessageBusClient()
         let msg = rmbCL.prepare("zos.network.public_config_get", [node_twin_id], 0, 2)
@@ -394,12 +397,12 @@ class Network {
         }
     }
 
-    wgRoutingIP(subnet) {
+    wgRoutingIP(subnet: string): string {
         const subnetsParts = subnet.split(".")
         return `100.64.${subnetsParts[1]}.${subnetsParts[2].split("/")[0]}/32`
     }
 
-    getWireguardConfig(subnet, userprivKey, peerPubkey, endpoint) {
+    getWireguardConfig(subnet: string, userprivKey: string, peerPubkey: string, endpoint: string): string {
         const userIP = this.wgRoutingIP(subnet)
         const networkIP = this.wgRoutingIP(this.ipRange)
         return `[Interface]\nAddress = ${userIP}
@@ -408,7 +411,7 @@ AllowedIPs = ${this.ipRange}, ${networkIP}
 PersistentKeepalive = 25\nEndpoint = ${endpoint}`
     }
 
-    async save(contract_id: string, machine_ips: string[], node_id: number) {
+    async save(contract_id: string, node_id: number) {
         let network;
         if (this.exists()) {
             network = this.getNetworks()[this.name];
@@ -420,9 +423,9 @@ PersistentKeepalive = 25\nEndpoint = ${endpoint}`
             }
         }
         let nodeFound = false
-        for (let node in network.nodes) {
+        for (let node of network.nodes) {
             if (node["node_id"] === node_id) {
-                node["reserved_ips"] = node["reserved_ips"].concat(machine_ips)
+                node["reserved_ips"] = this.getNodeReservedIps(node_id)
                 nodeFound = true
                 break
             }
@@ -431,7 +434,7 @@ PersistentKeepalive = 25\nEndpoint = ${endpoint}`
             const node = {
                 "contract_id": contract_id,
                 "node_id": node_id,
-                "reserved_ips": machine_ips,
+                "reserved_ips": this.getNodeReservedIps(node_id),
             }
             network.nodes.push(node)
         }
