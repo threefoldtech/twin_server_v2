@@ -37,6 +37,8 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getAccessNodes = exports.getNodeTwinId = void 0;
+var isPrivateIP = require("private-ip");
+var IP = require("ip");
 var requests_1 = require("../helpers/requests");
 var graphqlURL = "https://explorer.devnet.grid.tf/graphql/";
 function getNodeTwinId(node_id) {
@@ -59,7 +61,7 @@ function getNodeTwinId(node_id) {
 exports.getNodeTwinId = getNodeTwinId;
 function getAccessNodes() {
     return __awaiter(this, void 0, void 0, function () {
-        var headers, body, nodeResponse, nodeRes, nodes, nodeConfigs, configsIds, _i, nodes_1, node, pubConfigResponse, pubConfigRes, configs, accessNodes, _a, _b, nodeId, config, _c, configs_1, conf;
+        var headers, body, nodeResponse, nodeRes, nodes, nodeConfigs, configsIds, _i, nodes_1, node, pubConfigResponse, pubConfigRes, configs, accessNodes, _a, _b, nodeId, config, _c, configs_1, conf, ipv4, ipv6;
         return __generator(this, function (_d) {
             switch (_d.label) {
                 case 0:
@@ -93,7 +95,11 @@ function getAccessNodes() {
                         for (_c = 0, configs_1 = configs; _c < configs_1.length; _c++) {
                             conf = configs_1[_c];
                             if (config === conf["id"]) {
-                                accessNodes[nodeId] = [conf["ipv4"], conf["ipv6"]];
+                                ipv4 = conf["ipv4"];
+                                ipv6 = conf["ipv6"];
+                                if ((IP.isV4Format(ipv4.split("/")[0]) && !isPrivateIP(ipv4)) || (IP.isV6Format(ipv6.split("/")[0]) && !isPrivateIP(ipv6))) {
+                                    accessNodes[nodeId] = { "ipv4": ipv4, "ipv6": ipv6 };
+                                }
                             }
                         }
                     }

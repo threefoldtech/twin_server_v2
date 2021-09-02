@@ -1,3 +1,5 @@
+const isPrivateIP = require("private-ip")
+const IP = require("ip")
 import { send } from "../helpers/requests"
 
 const graphqlURL = "https://explorer.devnet.grid.tf/graphql/"
@@ -51,7 +53,11 @@ async function getAccessNodes() {
         const config = nodeConfigs[nodeId]
         for (let conf of configs) {
             if (config === conf["id"]) {
-                accessNodes[nodeId] = [conf["ipv4"], conf["ipv6"]]
+                const ipv4 = conf["ipv4"]
+                const ipv6 = conf["ipv6"]
+                if ((IP.isV4Format(ipv4.split("/")[0]) && !isPrivateIP(ipv4)) || (IP.isV6Format(ipv6.split("/")[0]) && !isPrivateIP(ipv6))) {
+                    accessNodes[nodeId] = { "ipv4": ipv4, "ipv6": ipv6 }
+                }
             }
         }
     }

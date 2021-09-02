@@ -5,7 +5,7 @@ import { Znet, Workload, WorkloadTypes, Peer, MessageBusClient } from 'grid3_cli
 import { loadFromFile, dumpToFile, appPath } from "../helpers/jsonfs"
 import * as PATH from "path"
 import { getRandomNumber } from "../helpers/utils"
-import { getNodeTwinId, getAccessNodes } from "./utils"
+import { getNodeTwinId, getAccessNodes } from "./nodes"
 
 
 class WireGuardKeys {
@@ -28,11 +28,11 @@ class AccessPoint {
 class Network {
     name: string
     ipRange: string
-    nodes: Node[]
-    deployments: Object[]
-    reservedSubnets: string[]
-    networks: Znet[]
-    accessPoints: AccessPoint[]
+    nodes: Node[] = []
+    deployments: Object[] = []
+    reservedSubnets: string[] = []
+    networks: Znet[] = []
+    accessPoints: AccessPoint[] = []
 
     constructor(name, ip_range) {
         this.name = name;
@@ -43,10 +43,45 @@ class Network {
         if (!this.isPrivateIP(ip_range)) {
             throw Error("Network ip_range should be private range")
         }
-        this.load(true)
     }
 
-    addAccess() {
+    async addAccess(node_id: number, ipv4: boolean) {
+        if (!this.nodeExists(node_id)) {
+            throw Error(`Node ${node_id} does not exist in the network. Please add it first`)
+        }
+        const accessNodes = await getAccessNodes()
+        if (Object.keys(accessNodes).includes(node_id.toString())) {
+            if (ipv4 && !accessNodes[node_id]["ipv4"]) {
+                throw Error(`Node ${node_id} does not have ipv4 public config.`)
+            }
+        }
+        else {
+            throw Error(`Node ${node_id} is not an access node.`)
+        }
+
+        const nodeWGListeningPort = this.getNodeWGListeningPort(node_id)
+        let endpoint = ""
+        if (accessNodes[node_id]["ipv4"]) {
+            endpoint = `${accessNodes[node_id]["ipv4"].split("/")[0]}:${nodeWGListeningPort}`
+        }
+        else if (accessNodes[node_id]["ipv6"]) {
+            endpoint = `[${accessNodes[node_id]["ipv6"].split("/")[0]}]:${nodeWGListeningPort}`
+        }
+        else {
+            throw Error(`Couldn't find ipv4 or ipv6 in the node ${node_id} public config`)
+        }
+
+        const nodesWGPubkey = await this.getNodeWGPublicKey(node_id)
+        const keypair = await this.generateWireguardKeypair()
+        let accessPoint = new AccessPoint()
+        accessPoint.node_id = node_id
+        accessPoint.subnet = this.getFreeSubnet()
+        accessPoint.wireguard_public_key = keypair.publicKey
+
+        this.accessPoints.push(accessPoint)
+        await this.generatePeers()
+        this.updateNetworkDeployments()
+        return this.getWireguardConfig(accessPoint.subnet, keypair.privateKey, nodesWGPubkey, endpoint)
 
     }
 
@@ -60,16 +95,12 @@ class Network {
         znet.ip_range = this.ipRange;
         znet.wireguard_private_key = keypair.privateKey
         znet.wireguard_listen_port = await this.getFreePort(node_id);
+        znet["node_id"] = node_id;
 
         this.networks.push(znet);
-        this.generatePeers()
+        await this.generatePeers()
         this.updateNetworkDeployments()
-
-        for (const net of this.networks) {
-            if (net.subnet === znet.subnet) {
-                znet = net;
-            }
-        }
+        znet = this.updateNetwork(znet)
 
         let znet_workload = new Workload();
         znet_workload.version = 0;
@@ -79,6 +110,14 @@ class Network {
         znet_workload.metadata = metadata;
         znet_workload.description = description;
         return znet_workload;
+    }
+
+    updateNetwork(znet) {
+        for (const net of this.networks) {
+            if (net.subnet === znet.subnet) {
+                return znet
+            }
+        }
     }
 
     updateNetworkDeployments() {
@@ -121,7 +160,7 @@ class Network {
                 rmbCL.send(msg, JSON.stringify({ "contract_id": node.contract_id }))
                 const result = await rmbCL.read(msg)
                 if (result[0].err) {
-                    console.error(`Could not load network deployment ${node.contract_id} due to error: ${result[0].err}`)
+                    console.error(`Could not load network deployment ${node.contract_id} due to error: ${result[0].err} `)
                 }
                 const res = JSON.parse(result[0].dat)
                 res["node_id"] = node.node_id
@@ -135,7 +174,7 @@ class Network {
                     this.networks.push(znet)
                 }
             }
-            this.getAccessPoints()
+            await this.getAccessPoints()
         }
     }
 
@@ -144,8 +183,8 @@ class Network {
     }
 
     nodeExists(node_id) {
-        for (let node of this.nodes) {
-            if (node.node_id === node_id) {
+        for (let net of this.networks) {
+            if (net["node_id"] === node_id) {
                 return true
             }
         }
@@ -169,13 +208,29 @@ class Network {
         });
     }
 
+    async getNodeWGPublicKey(node_id) {
+        for (const net of this.networks) {
+            if (net["node_id"] == node_id) {
+                return await this.getPublicKey(net.wireguard_private_key)
+            }
+        }
+    }
+
+    getNodeWGListeningPort(node_id) {
+        for (const net of this.networks) {
+            if (net["node_id"] == node_id) {
+                return net.wireguard_listen_port
+            }
+        }
+    }
+
     getFreeIP(node_id: number, subnet: string = "") {
         let ip;
         if (!this.nodeExists(node_id) && subnet) {
-            ip = Addr(subnet).mask(32)
+            ip = Addr(subnet).mask(32).increment().increment();
         }
         else if (this.nodeExists(node_id)) {
-            ip = Addr(this.getNodeSubnet(node_id)).mask(32)
+            ip = Addr(this.getNodeSubnet(node_id)).mask(32).increment().increment();
             const reserved_ips = this.getNodeReservedIps(node_id)
             while (reserved_ips.includes(ip.toString().split("/")[0])) {
                 ip = ip.increment()
@@ -211,18 +266,13 @@ class Network {
             }
             return node.reserved_ips
         }
+        return []
     }
 
     getNodeSubnet(node_id) {
-        for (const deployment of this.deployments) {
-            if (deployment["node_id"] !== node_id) {
-                continue
-            }
-            for (const workload of deployment["workloads"]) {
-                if (workload["type"] !== WorkloadTypes.network) {
-                    continue
-                }
-                return workload["data"]["subnet"]
+        for (const net of this.networks) {
+            if (net["node_id"] === node_id) {
+                return net.subnet
             }
         }
     }
@@ -244,18 +294,18 @@ class Network {
 
     getFreeSubnet() {
         const reservedSubnets = this.getReservedSubnets()
-        let subnet = Addr(this.ipRange).mask(24)
+        let subnet = Addr(this.ipRange).mask(24).nextSibling().nextSibling()
         while (reservedSubnets.includes(subnet.toString())) {
-            subnet = subnet.increment()
+            subnet = subnet.nextSibling()
         }
         this.reservedSubnets.push(subnet.toString())
         return subnet.toString()
     }
 
-    getAccessPoints() {
+    async getAccessPoints() {
         let nodesWGPubkeys = []
         for (const network of this.networks) {
-            const pubkey = this.getPublicKey(network.wireguard_private_key)
+            const pubkey = await this.getPublicKey(network.wireguard_private_key)
             nodesWGPubkeys.push(pubkey)
         }
         for (const network of this.networks) {
@@ -294,7 +344,7 @@ class Network {
 
         let port = 0;
         while (!port || JSON.parse(result[0].dat).includes(port)) {
-            port = getRandomNumber(1000, 65536)
+            port = getRandomNumber(2000, 8000)
         }
         return port
     }
@@ -352,13 +402,13 @@ class Network {
     getWireguardConfig(subnet, userprivKey, peerPubkey, endpoint) {
         const userIP = this.wgRoutingIP(subnet)
         const networkIP = this.wgRoutingIP(this.ipRange)
-        return `[Interface]\nAddress = ${userIP}\n
-        PrivateKey = ${userprivKey}\n[Peer]\nPublicKey = ${peerPubkey}\n
-        AllowedIPs = ${this.ipRange}, ${networkIP}\n
-        PersistentKeepalive = 25\nEndpoint = ${endpoint}`
+        return `[Interface]\nAddress = ${userIP}
+PrivateKey = ${userprivKey}\n\n[Peer]\nPublicKey = ${peerPubkey}
+AllowedIPs = ${this.ipRange}, ${networkIP}
+PersistentKeepalive = 25\nEndpoint = ${endpoint}`
     }
 
-    async save(contract_id: string, machine_ip: string, node_id: number) {
+    async save(contract_id: string, machine_ips: string[], node_id: number) {
         let network;
         if (this.exists()) {
             network = this.getNetworks()[this.name];
@@ -372,7 +422,7 @@ class Network {
         let nodeFound = false
         for (let node in network.nodes) {
             if (node["node_id"] === node_id) {
-                node["reserved_ips"].append(machine_ip)
+                node["reserved_ips"] = node["reserved_ips"].concat(machine_ips)
                 nodeFound = true
                 break
             }
@@ -381,7 +431,7 @@ class Network {
             const node = {
                 "contract_id": contract_id,
                 "node_id": node_id,
-                "reserved_ips": [machine_ip],
+                "reserved_ips": machine_ips,
             }
             network.nodes.push(node)
         }
@@ -411,6 +461,9 @@ class Network {
                     }
                 }
                 let accessIP = await this.getNodeEndpoint(net["node_id"])
+                if (accessIP.includes(":")) {
+                    accessIP = `[${accessIP}]`
+                }
                 let peer = new Peer();
                 peer.subnet = net.subnet;
                 peer.wireguard_public_key = await this.getPublicKey(net.wireguard_private_key);

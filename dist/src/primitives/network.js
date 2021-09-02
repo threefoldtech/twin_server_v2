@@ -63,7 +63,7 @@ var grid3_client_1 = require("grid3_client");
 var jsonfs_1 = require("../helpers/jsonfs");
 var PATH = __importStar(require("path"));
 var utils_1 = require("../helpers/utils");
-var utils_2 = require("./utils");
+var nodes_1 = require("./nodes");
 var WireGuardKeys = /** @class */ (function () {
     function WireGuardKeys() {
     }
@@ -81,6 +81,11 @@ var AccessPoint = /** @class */ (function () {
 }());
 var Network = /** @class */ (function () {
     function Network(name, ip_range) {
+        this.nodes = [];
+        this.deployments = [];
+        this.reservedSubnets = [];
+        this.networks = [];
+        this.accessPoints = [];
         this.name = name;
         this.ipRange = ip_range;
         if (Addr(ip_range).prefix !== 16) {
@@ -89,22 +94,70 @@ var Network = /** @class */ (function () {
         if (!this.isPrivateIP(ip_range)) {
             throw Error("Network ip_range should be private range");
         }
-        this.load(true);
     }
-    Network.prototype.addAccess = function () {
+    Network.prototype.addAccess = function (node_id, ipv4) {
+        return __awaiter(this, void 0, void 0, function () {
+            var accessNodes, nodeWGListeningPort, endpoint, nodesWGPubkey, keypair, accessPoint;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        if (!this.nodeExists(node_id)) {
+                            throw Error("Node " + node_id + " does not exist in the network. Please add it first");
+                        }
+                        return [4 /*yield*/, nodes_1.getAccessNodes()];
+                    case 1:
+                        accessNodes = _a.sent();
+                        if (Object.keys(accessNodes).includes(node_id.toString())) {
+                            if (ipv4 && !accessNodes[node_id]["ipv4"]) {
+                                throw Error("Node " + node_id + " does not have ipv4 public config.");
+                            }
+                        }
+                        else {
+                            throw Error("Node " + node_id + " is not an access node.");
+                        }
+                        nodeWGListeningPort = this.getNodeWGListeningPort(node_id);
+                        endpoint = "";
+                        if (accessNodes[node_id]["ipv4"]) {
+                            endpoint = accessNodes[node_id]["ipv4"].split("/")[0] + ":" + nodeWGListeningPort;
+                        }
+                        else if (accessNodes[node_id]["ipv6"]) {
+                            endpoint = "[" + accessNodes[node_id]["ipv6"].split("/")[0] + "]:" + nodeWGListeningPort;
+                        }
+                        else {
+                            throw Error("Couldn't find ipv4 or ipv6 in the node " + node_id + " public config");
+                        }
+                        return [4 /*yield*/, this.getNodeWGPublicKey(node_id)];
+                    case 2:
+                        nodesWGPubkey = _a.sent();
+                        return [4 /*yield*/, this.generateWireguardKeypair()];
+                    case 3:
+                        keypair = _a.sent();
+                        accessPoint = new AccessPoint();
+                        accessPoint.node_id = node_id;
+                        accessPoint.subnet = this.getFreeSubnet();
+                        accessPoint.wireguard_public_key = keypair.publicKey;
+                        this.accessPoints.push(accessPoint);
+                        return [4 /*yield*/, this.generatePeers()];
+                    case 4:
+                        _a.sent();
+                        this.updateNetworkDeployments();
+                        return [2 /*return*/, this.getWireguardConfig(accessPoint.subnet, keypair.privateKey, nodesWGPubkey, endpoint)];
+                }
+            });
+        });
     };
     Network.prototype.addNode = function (node_id, metadata, description) {
         return __awaiter(this, void 0, void 0, function () {
-            var keypair, znet, _a, _i, _b, net, znet_workload;
-            return __generator(this, function (_c) {
-                switch (_c.label) {
+            var keypair, znet, _a, znet_workload;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
                     case 0:
                         if (this.nodeExists(node_id)) {
                             return [2 /*return*/];
                         }
                         return [4 /*yield*/, this.generateWireguardKeypair()];
                     case 1:
-                        keypair = _c.sent();
+                        keypair = _b.sent();
                         znet = new grid3_client_1.Znet();
                         znet.subnet = this.getFreeSubnet();
                         znet.ip_range = this.ipRange;
@@ -112,16 +165,14 @@ var Network = /** @class */ (function () {
                         _a = znet;
                         return [4 /*yield*/, this.getFreePort(node_id)];
                     case 2:
-                        _a.wireguard_listen_port = _c.sent();
+                        _a.wireguard_listen_port = _b.sent();
+                        znet["node_id"] = node_id;
                         this.networks.push(znet);
-                        this.generatePeers();
+                        return [4 /*yield*/, this.generatePeers()];
+                    case 3:
+                        _b.sent();
                         this.updateNetworkDeployments();
-                        for (_i = 0, _b = this.networks; _i < _b.length; _i++) {
-                            net = _b[_i];
-                            if (net.subnet === znet.subnet) {
-                                znet = net;
-                            }
-                        }
+                        znet = this.updateNetwork(znet);
                         znet_workload = new grid3_client_1.Workload();
                         znet_workload.version = 0;
                         znet_workload.name = this.name;
@@ -133,6 +184,14 @@ var Network = /** @class */ (function () {
                 }
             });
         });
+    };
+    Network.prototype.updateNetwork = function (znet) {
+        for (var _i = 0, _a = this.networks; _i < _a.length; _i++) {
+            var net = _a[_i];
+            if (net.subnet === znet.subnet) {
+                return znet;
+            }
+        }
     };
     Network.prototype.updateNetworkDeployments = function () {
         for (var _i = 0, _a = this.networks; _i < _a.length; _i++) {
@@ -175,14 +234,14 @@ var Network = /** @class */ (function () {
                             n = node;
                             this.nodes.push(n);
                         }
-                        if (!deployments) return [3 /*break*/, 6];
+                        if (!deployments) return [3 /*break*/, 7];
                         rmbCL = new grid3_client_1.MessageBusClient();
                         _b = 0, _c = this.nodes;
                         _f.label = 1;
                     case 1:
                         if (!(_b < _c.length)) return [3 /*break*/, 5];
                         node = _c[_b];
-                        return [4 /*yield*/, utils_2.getNodeTwinId(node.node_id)];
+                        return [4 /*yield*/, nodes_1.getNodeTwinId(node.node_id)];
                     case 2:
                         node_twin_id = _f.sent();
                         msg = rmbCL.prepare("zos.deployment.get", [node_twin_id], 0, 2);
@@ -191,7 +250,7 @@ var Network = /** @class */ (function () {
                     case 3:
                         result = _f.sent();
                         if (result[0].err) {
-                            console.error("Could not load network deployment " + node.contract_id + " due to error: " + result[0].err);
+                            console.error("Could not load network deployment " + node.contract_id + " due to error: " + result[0].err + " ");
                         }
                         res = JSON.parse(result[0].dat);
                         res["node_id"] = node.node_id;
@@ -209,10 +268,11 @@ var Network = /** @class */ (function () {
                     case 4:
                         _b++;
                         return [3 /*break*/, 1];
-                    case 5:
-                        this.getAccessPoints();
-                        _f.label = 6;
-                    case 6: return [2 /*return*/];
+                    case 5: return [4 /*yield*/, this.getAccessPoints()];
+                    case 6:
+                        _f.sent();
+                        _f.label = 7;
+                    case 7: return [2 /*return*/];
                 }
             });
         });
@@ -221,9 +281,9 @@ var Network = /** @class */ (function () {
         return this.getNetworkNames().includes(this.name);
     };
     Network.prototype.nodeExists = function (node_id) {
-        for (var _i = 0, _a = this.nodes; _i < _a.length; _i++) {
-            var node = _a[_i];
-            if (node.node_id === node_id) {
+        for (var _i = 0, _a = this.networks; _i < _a.length; _i++) {
+            var net = _a[_i];
+            if (net["node_id"] === node_id) {
                 return true;
             }
         }
@@ -252,14 +312,44 @@ var Network = /** @class */ (function () {
             });
         });
     };
+    Network.prototype.getNodeWGPublicKey = function (node_id) {
+        return __awaiter(this, void 0, void 0, function () {
+            var _i, _a, net;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0:
+                        _i = 0, _a = this.networks;
+                        _b.label = 1;
+                    case 1:
+                        if (!(_i < _a.length)) return [3 /*break*/, 4];
+                        net = _a[_i];
+                        if (!(net["node_id"] == node_id)) return [3 /*break*/, 3];
+                        return [4 /*yield*/, this.getPublicKey(net.wireguard_private_key)];
+                    case 2: return [2 /*return*/, _b.sent()];
+                    case 3:
+                        _i++;
+                        return [3 /*break*/, 1];
+                    case 4: return [2 /*return*/];
+                }
+            });
+        });
+    };
+    Network.prototype.getNodeWGListeningPort = function (node_id) {
+        for (var _i = 0, _a = this.networks; _i < _a.length; _i++) {
+            var net = _a[_i];
+            if (net["node_id"] == node_id) {
+                return net.wireguard_listen_port;
+            }
+        }
+    };
     Network.prototype.getFreeIP = function (node_id, subnet) {
         if (subnet === void 0) { subnet = ""; }
         var ip;
         if (!this.nodeExists(node_id) && subnet) {
-            ip = Addr(subnet).mask(32);
+            ip = Addr(subnet).mask(32).increment().increment();
         }
         else if (this.nodeExists(node_id)) {
-            ip = Addr(this.getNodeSubnet(node_id)).mask(32);
+            ip = Addr(this.getNodeSubnet(node_id)).mask(32).increment().increment();
             var reserved_ips = this.getNodeReservedIps(node_id);
             while (reserved_ips.includes(ip.toString().split("/")[0])) {
                 ip = ip.increment();
@@ -296,19 +386,13 @@ var Network = /** @class */ (function () {
             }
             return node.reserved_ips;
         }
+        return [];
     };
     Network.prototype.getNodeSubnet = function (node_id) {
-        for (var _i = 0, _a = this.deployments; _i < _a.length; _i++) {
-            var deployment = _a[_i];
-            if (deployment["node_id"] !== node_id) {
-                continue;
-            }
-            for (var _b = 0, _c = deployment["workloads"]; _b < _c.length; _b++) {
-                var workload = _c[_b];
-                if (workload["type"] !== grid3_client_1.WorkloadTypes.network) {
-                    continue;
-                }
-                return workload["data"]["subnet"];
+        for (var _i = 0, _a = this.networks; _i < _a.length; _i++) {
+            var net = _a[_i];
+            if (net["node_id"] === node_id) {
+                return net.subnet;
             }
         }
     };
@@ -330,35 +414,52 @@ var Network = /** @class */ (function () {
     };
     Network.prototype.getFreeSubnet = function () {
         var reservedSubnets = this.getReservedSubnets();
-        var subnet = Addr(this.ipRange).mask(24);
+        var subnet = Addr(this.ipRange).mask(24).nextSibling().nextSibling();
         while (reservedSubnets.includes(subnet.toString())) {
-            subnet = subnet.increment();
+            subnet = subnet.nextSibling();
         }
         this.reservedSubnets.push(subnet.toString());
         return subnet.toString();
     };
     Network.prototype.getAccessPoints = function () {
-        var nodesWGPubkeys = [];
-        for (var _i = 0, _a = this.networks; _i < _a.length; _i++) {
-            var network = _a[_i];
-            var pubkey = this.getPublicKey(network.wireguard_private_key);
-            nodesWGPubkeys.push(pubkey);
-        }
-        for (var _b = 0, _c = this.networks; _b < _c.length; _b++) {
-            var network = _c[_b];
-            for (var _d = 0, _e = network.peers; _d < _e.length; _d++) {
-                var peer = _e[_d];
-                if (nodesWGPubkeys.includes(peer.wireguard_public_key)) {
-                    continue;
+        return __awaiter(this, void 0, void 0, function () {
+            var nodesWGPubkeys, _i, _a, network, pubkey, _b, _c, network, _d, _e, peer, accessPoint;
+            return __generator(this, function (_f) {
+                switch (_f.label) {
+                    case 0:
+                        nodesWGPubkeys = [];
+                        _i = 0, _a = this.networks;
+                        _f.label = 1;
+                    case 1:
+                        if (!(_i < _a.length)) return [3 /*break*/, 4];
+                        network = _a[_i];
+                        return [4 /*yield*/, this.getPublicKey(network.wireguard_private_key)];
+                    case 2:
+                        pubkey = _f.sent();
+                        nodesWGPubkeys.push(pubkey);
+                        _f.label = 3;
+                    case 3:
+                        _i++;
+                        return [3 /*break*/, 1];
+                    case 4:
+                        for (_b = 0, _c = this.networks; _b < _c.length; _b++) {
+                            network = _c[_b];
+                            for (_d = 0, _e = network.peers; _d < _e.length; _d++) {
+                                peer = _e[_d];
+                                if (nodesWGPubkeys.includes(peer.wireguard_public_key)) {
+                                    continue;
+                                }
+                                accessPoint = new AccessPoint();
+                                accessPoint.subnet = peer.subnet;
+                                accessPoint.wireguard_public_key = peer.wireguard_public_key;
+                                accessPoint.node_id = network["node_id"];
+                                this.accessPoints.push(accessPoint);
+                            }
+                        }
+                        return [2 /*return*/, this.accessPoints];
                 }
-                var accessPoint = new AccessPoint();
-                accessPoint.subnet = peer.subnet;
-                accessPoint.wireguard_public_key = peer.wireguard_public_key;
-                accessPoint.node_id = network["node_id"];
-                this.accessPoints.push(accessPoint);
-            }
-        }
-        return this.accessPoints;
+            });
+        });
     };
     Network.prototype.getNetworks = function () {
         var path = PATH.join(jsonfs_1.appPath, "network.json");
@@ -373,7 +474,7 @@ var Network = /** @class */ (function () {
             var node_twin_id, rmbCL, msg, result, port;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, utils_2.getNodeTwinId(node_id)];
+                    case 0: return [4 /*yield*/, nodes_1.getNodeTwinId(node_id)];
                     case 1:
                         node_twin_id = _a.sent();
                         rmbCL = new grid3_client_1.MessageBusClient();
@@ -385,7 +486,7 @@ var Network = /** @class */ (function () {
                         console.log(result);
                         port = 0;
                         while (!port || JSON.parse(result[0].dat).includes(port)) {
-                            port = utils_1.getRandomNumber(1000, 65536);
+                            port = utils_1.getRandomNumber(2000, 8000);
                         }
                         return [2 /*return*/, port];
                 }
@@ -400,7 +501,7 @@ var Network = /** @class */ (function () {
             var node_twin_id, rmbCL, msg, result, data, ipv4, ipv6, data, _i, _a, iface, _b, _c, ip;
             return __generator(this, function (_d) {
                 switch (_d.label) {
-                    case 0: return [4 /*yield*/, utils_2.getNodeTwinId(node_id)];
+                    case 0: return [4 /*yield*/, nodes_1.getNodeTwinId(node_id)];
                     case 1:
                         node_twin_id = _d.sent();
                         rmbCL = new grid3_client_1.MessageBusClient();
@@ -455,9 +556,9 @@ var Network = /** @class */ (function () {
     Network.prototype.getWireguardConfig = function (subnet, userprivKey, peerPubkey, endpoint) {
         var userIP = this.wgRoutingIP(subnet);
         var networkIP = this.wgRoutingIP(this.ipRange);
-        return "[Interface]\nAddress = " + userIP + "\n\n        PrivateKey = " + userprivKey + "\n[Peer]\nPublicKey = " + peerPubkey + "\n\n        AllowedIPs = " + this.ipRange + ", " + networkIP + "\n\n        PersistentKeepalive = 25\nEndpoint = " + endpoint;
+        return "[Interface]\nAddress = " + userIP + "\nPrivateKey = " + userprivKey + "\n\n[Peer]\nPublicKey = " + peerPubkey + "\nAllowedIPs = " + this.ipRange + ", " + networkIP + "\nPersistentKeepalive = 25\nEndpoint = " + endpoint;
     };
-    Network.prototype.save = function (contract_id, machine_ip, node_id) {
+    Network.prototype.save = function (contract_id, machine_ips, node_id) {
         return __awaiter(this, void 0, void 0, function () {
             var network, nodeFound, node, node, networks, path;
             return __generator(this, function (_a) {
@@ -473,7 +574,7 @@ var Network = /** @class */ (function () {
                 nodeFound = false;
                 for (node in network.nodes) {
                     if (node["node_id"] === node_id) {
-                        node["reserved_ips"].append(machine_ip);
+                        node["reserved_ips"] = node["reserved_ips"].concat(machine_ips);
                         nodeFound = true;
                         break;
                     }
@@ -482,7 +583,7 @@ var Network = /** @class */ (function () {
                     node = {
                         "contract_id": contract_id,
                         "node_id": node_id,
-                        "reserved_ips": [machine_ip],
+                        "reserved_ips": machine_ips,
                     };
                     network.nodes.push(node);
                 }
@@ -528,6 +629,9 @@ var Network = /** @class */ (function () {
                         return [4 /*yield*/, this.getNodeEndpoint(net["node_id"])];
                     case 3:
                         accessIP = _j.sent();
+                        if (accessIP.includes(":")) {
+                            accessIP = "[" + accessIP + "]";
+                        }
                         peer = new grid3_client_1.Peer();
                         peer.subnet = net.subnet;
                         _f = peer;

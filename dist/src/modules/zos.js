@@ -74,7 +74,7 @@ var Zos = /** @class */ (function () {
                                 publicIPs++;
                             }
                         }
-                        return [4 /*yield*/, utils_1.createContractAndSendToZos(deployment, node_id, node_twin_id, deploymentHash, publicIPs)];
+                        return [4 /*yield*/, utils_1.createContractAndSendToZos(deployment, node_id, deploymentHash, publicIPs)];
                     case 1: return [2 /*return*/, _a.sent()];
                 }
             });

@@ -25,7 +25,7 @@ class Zos {
                 publicIPs++;
             }
         }
-        return await createContractAndSendToZos(deployment, node_id, node_twin_id, deploymentHash, publicIPs)
+        return await createContractAndSendToZos(deployment, node_id, deploymentHash, publicIPs)
     }
 }
 

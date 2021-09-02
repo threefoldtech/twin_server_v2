@@ -13,4 +13,9 @@ function getRandomNumber(min, max) {
 
 }
 
-export { generateString, getRandomNumber }
+function randomChoice(choices) {
+    const random = Math.floor(Math.random() * choices.length);
+    return choices[random];
+}
+
+export { generateString, getRandomNumber, randomChoice }

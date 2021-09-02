@@ -42,9 +42,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.createContractAndSendToZos = void 0;
 var grid3_client_1 = require("grid3_client");
 var config_json_1 = __importDefault(require("../../config.json"));
-function createContractAndSendToZos(deployment, node_id, node_twin_id, hash, publicIPs) {
+var nodes_1 = require("../primitives/nodes");
+function createContractAndSendToZos(deployment, node_id, hash, publicIPs) {
     return __awaiter(this, void 0, void 0, function () {
-        var tfclient, contract, payload, rmb, msg, result, err_1;
+        var tfclient, contract, payload, node_twin_id, rmb, msg, result, err_1;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -61,29 +62,32 @@ function createContractAndSendToZos(deployment, node_id, node_twin_id, hash, pub
                     console.log(contract);
                     deployment.contract_id = contract["contract_id"];
                     payload = JSON.stringify(deployment);
-                    _a.label = 3;
+                    return [4 /*yield*/, nodes_1.getNodeTwinId(node_id)];
                 case 3:
-                    _a.trys.push([3, 5, 7, 8]);
+                    node_twin_id = _a.sent();
+                    _a.label = 4;
+                case 4:
+                    _a.trys.push([4, 6, 8, 9]);
                     rmb = new grid3_client_1.MessageBusClient();
                     msg = rmb.prepare("zos.deployment.deploy", [node_twin_id], 0, 2);
                     rmb.send(msg, payload);
                     return [4 /*yield*/, rmb.read(msg)];
-                case 4:
+                case 5:
                     result = _a.sent();
                     if (result[0].err) {
                         throw Error(result[0].err);
                     }
-                    return [3 /*break*/, 8];
-                case 5:
+                    return [3 /*break*/, 9];
+                case 6:
                     err_1 = _a.sent();
                     return [4 /*yield*/, tfclient.contracts.cancel(contract["contract_id"])];
-                case 6:
+                case 7:
                     _a.sent();
                     throw Error(err_1);
-                case 7:
+                case 8:
                     tfclient.disconnect();
                     return [7 /*endfinally*/];
-                case 8: return [2 /*return*/, contract];
+                case 9: return [2 /*return*/, contract];
             }
         });
     });
