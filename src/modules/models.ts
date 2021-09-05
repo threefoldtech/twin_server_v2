@@ -25,6 +25,20 @@ class Machines {
     env: Object
 }
 
+class K8S {
+    node_ids: number[];
+    disk_size: number
+    public_ip: boolean
+    cpu: number
+    memory: number
+    name: string
+    secret: string
+    workers: number
+    metadata: string;
+    description: string
+    ssh_key: string
+}
+
 class ContractCreate {
     node_id: number;
     hash: string;
@@ -69,6 +83,7 @@ class TwinDelete {
 
 export {
     Machines,
+    K8S,
     ContractCreate,
     ContractGet,
     ContractUpdate,

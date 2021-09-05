@@ -27,9 +27,7 @@ var DeploymentFactory = /** @class */ (function () {
         deployment.expiration = expiration;
         deployment.workloads = workloads;
         deployment.signature_requirement = signature_requirement;
-        var hash = deployment.challenge_hash();
-        deployment.sign(config_json_1.default.twin_id, config_json_1.default.mnemonic);
-        return [deployment, hash];
+        return deployment;
     };
     return DeploymentFactory;
 }());

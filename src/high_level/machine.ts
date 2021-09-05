@@ -10,7 +10,7 @@ class VirtualMachine {
         cpu: number,
         memory: number,
         disks: Object[],
-        publicIP: boolean,
+        publicIp: boolean,
         network: Network,
         entrypoint: string,
         env: Object,
@@ -29,19 +29,28 @@ class VirtualMachine {
         }
         // ipv4
         let ipName = "";
-        let publicIPs = 0;
-        if (publicIP) {
+        let publicIps = 0;
+        if (publicIp) {
             const ipv4 = new IPv4();
             ipName = generateString(10);
             workloads.push(ipv4.create(ipName, metadata, description))
-            publicIPs++;
+            publicIps++;
         }
 
         // network
         const accessNodes = await getAccessNodes()
         let access_net_workload
         let wgConfig = ""
-        if (!Object.keys(accessNodes).includes(nodeId.toString())) {
+
+        let hasAccessNode = false;
+        for (let accessNode of Object.keys(accessNodes)) {
+            if (network.nodeExists(Number(accessNode))) {
+                hasAccessNode = true;
+                break;
+            }
+        }
+
+        if (!Object.keys(accessNodes).includes(nodeId.toString()) && !hasAccessNode) {
             // add node to any access node and deploy it
             let filteredAccessNodes = []
             for (const accessNodeId of Object.keys(accessNodes)) {
@@ -54,23 +63,23 @@ class VirtualMachine {
             wgConfig = await network.addAccess(access_node_id, true)
         }
         const znet_workload = await network.addNode(nodeId, metadata, description)
-        if (znet_workload) {
-            if (!access_net_workload) {
+        if (znet_workload && network.exists()) {
+            throw Error("Network update is not implemented")
+        }
+        else if (znet_workload) {
+            if (!access_net_workload && !hasAccessNode) {
                 wgConfig = await network.addAccess(nodeId, true)
                 znet_workload["data"] = network.updateNetwork(znet_workload.data)
             }
             workloads.push(znet_workload)
-        }
-        else {
-            throw Error("Network update is not implemented")
         }
 
         let deploymentFactory = new DeploymentFactory();
         if (access_net_workload) {
             const accessNodeId = access_net_workload.data["node_id"]
             access_net_workload["data"] = network.updateNetwork(access_net_workload.data)
-            let [deployment, deploymentHash] = deploymentFactory.create([access_net_workload], 1626394539, metadata, description)
-            deployments.push(new TwinDeployment(deployment, deploymentHash, Operations.deploy, 0, accessNodeId))
+            let deployment = deploymentFactory.create([access_net_workload], 1626394539, metadata, description)
+            deployments.push(new TwinDeployment(deployment, Operations.deploy, 0, accessNodeId))
         }
         // vm 
         // check the planetary 
@@ -80,9 +89,9 @@ class VirtualMachine {
 
         // deployment
         // NOTE: expiration is not used for zos deployment
-        let [deployment, deploymentHash] = deploymentFactory.create(workloads, 1626394539, metadata, description)
+        let deployment = deploymentFactory.create(workloads, 1626394539, metadata, description)
 
-        deployments.push(new TwinDeployment(deployment, deploymentHash, Operations.deploy, publicIPs, nodeId))
+        deployments.push(new TwinDeployment(deployment, Operations.deploy, publicIps, nodeId))
         return [deployments, wgConfig]
     }
 }

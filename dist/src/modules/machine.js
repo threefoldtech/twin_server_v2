@@ -66,7 +66,7 @@ var Machine = /** @class */ (function () {
                     case 2:
                         _a = _b.sent(), twinDeployments = _a[0], wgConfig = _a[1];
                         deploymentFactory = new deploymentFactory_1.DeploymentFactory();
-                        return [4 /*yield*/, deploymentFactory.deploy(twinDeployments, network)];
+                        return [4 /*yield*/, deploymentFactory.handle(twinDeployments, network)];
                     case 3:
                         contracts = _b.sent();
                         return [2 /*return*/, { "contracts": contracts, "wireguard_config": wgConfig }];

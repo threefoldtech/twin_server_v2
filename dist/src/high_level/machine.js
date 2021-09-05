@@ -43,11 +43,11 @@ var utils_1 = require("../helpers/utils");
 var VirtualMachine = /** @class */ (function () {
     function VirtualMachine() {
     }
-    VirtualMachine.prototype.create = function (name, nodeId, flist, cpu, memory, disks, publicIP, network, entrypoint, env, metadata, description) {
+    VirtualMachine.prototype.create = function (name, nodeId, flist, cpu, memory, disks, publicIp, network, entrypoint, env, metadata, description) {
         if (metadata === void 0) { metadata = ""; }
         if (description === void 0) { description = ""; }
         return __awaiter(this, void 0, void 0, function () {
-            var deployments, workloads, diskMounts, _i, disks_1, d, dName, disk, ipName, publicIPs, ipv4, accessNodes, access_net_workload, wgConfig, filteredAccessNodes, _a, _b, accessNodeId, access_node_id, znet_workload, deploymentFactory, accessNodeId, _c, deployment_1, deploymentHash_1, vm, machine_ip, _d, deployment, deploymentHash;
+            var deployments, workloads, diskMounts, _i, disks_1, d, dName, disk, ipName, publicIps, ipv4, accessNodes, access_net_workload, wgConfig, hasAccessNode, _a, _b, accessNode, filteredAccessNodes, _c, _d, accessNodeId, access_node_id, znet_workload, deploymentFactory, accessNodeId, deployment_1, vm, machine_ip, deployment;
             return __generator(this, function (_e) {
                 switch (_e.label) {
                     case 0:
@@ -62,21 +62,29 @@ var VirtualMachine = /** @class */ (function () {
                             diskMounts.push(disk.createMount(dName, d["mountpoint"]));
                         }
                         ipName = "";
-                        publicIPs = 0;
-                        if (publicIP) {
+                        publicIps = 0;
+                        if (publicIp) {
                             ipv4 = new index_1.IPv4();
                             ipName = utils_1.generateString(10);
                             workloads.push(ipv4.create(ipName, metadata, description));
-                            publicIPs++;
+                            publicIps++;
                         }
                         return [4 /*yield*/, index_1.getAccessNodes()];
                     case 1:
                         accessNodes = _e.sent();
                         wgConfig = "";
-                        if (!!Object.keys(accessNodes).includes(nodeId.toString())) return [3 /*break*/, 4];
-                        filteredAccessNodes = [];
+                        hasAccessNode = false;
                         for (_a = 0, _b = Object.keys(accessNodes); _a < _b.length; _a++) {
-                            accessNodeId = _b[_a];
+                            accessNode = _b[_a];
+                            if (network.nodeExists(Number(accessNode))) {
+                                hasAccessNode = true;
+                                break;
+                            }
+                        }
+                        if (!(!Object.keys(accessNodes).includes(nodeId.toString()) && !hasAccessNode)) return [3 /*break*/, 4];
+                        filteredAccessNodes = [];
+                        for (_c = 0, _d = Object.keys(accessNodes); _c < _d.length; _c++) {
+                            accessNodeId = _d[_c];
                             if (accessNodes[accessNodeId]["ipv4"]) {
                                 filteredAccessNodes.push(accessNodeId);
                             }
@@ -92,30 +100,32 @@ var VirtualMachine = /** @class */ (function () {
                     case 4: return [4 /*yield*/, network.addNode(nodeId, metadata, description)];
                     case 5:
                         znet_workload = _e.sent();
-                        if (!znet_workload) return [3 /*break*/, 8];
-                        if (!!access_net_workload) return [3 /*break*/, 7];
-                        return [4 /*yield*/, network.addAccess(nodeId, true)];
+                        if (!(znet_workload && network.exists())) return [3 /*break*/, 6];
+                        throw Error("Network update is not implemented");
                     case 6:
+                        if (!znet_workload) return [3 /*break*/, 9];
+                        if (!(!access_net_workload && !hasAccessNode)) return [3 /*break*/, 8];
+                        return [4 /*yield*/, network.addAccess(nodeId, true)];
+                    case 7:
                         wgConfig = _e.sent();
                         znet_workload["data"] = network.updateNetwork(znet_workload.data);
-                        _e.label = 7;
-                    case 7:
+                        _e.label = 8;
+                    case 8:
                         workloads.push(znet_workload);
-                        return [3 /*break*/, 9];
-                    case 8: throw Error("Network update is not implemented");
+                        _e.label = 9;
                     case 9:
                         deploymentFactory = new index_1.DeploymentFactory();
                         if (access_net_workload) {
                             accessNodeId = access_net_workload.data["node_id"];
                             access_net_workload["data"] = network.updateNetwork(access_net_workload.data);
-                            _c = deploymentFactory.create([access_net_workload], 1626394539, metadata, description), deployment_1 = _c[0], deploymentHash_1 = _c[1];
-                            deployments.push(new models_1.TwinDeployment(deployment_1, deploymentHash_1, models_1.Operations.deploy, 0, accessNodeId));
+                            deployment_1 = deploymentFactory.create([access_net_workload], 1626394539, metadata, description);
+                            deployments.push(new models_1.TwinDeployment(deployment_1, models_1.Operations.deploy, 0, accessNodeId));
                         }
                         vm = new index_1.VM();
                         machine_ip = network.getFreeIP(nodeId);
                         workloads.push(vm.create(name, flist, cpu, memory, diskMounts, network.name, machine_ip, true, ipName, entrypoint, env, metadata, description));
-                        _d = deploymentFactory.create(workloads, 1626394539, metadata, description), deployment = _d[0], deploymentHash = _d[1];
-                        deployments.push(new models_1.TwinDeployment(deployment, deploymentHash, models_1.Operations.deploy, publicIPs, nodeId));
+                        deployment = deploymentFactory.create(workloads, 1626394539, metadata, description);
+                        deployments.push(new models_1.TwinDeployment(deployment, models_1.Operations.deploy, publicIps, nodeId));
                         return [2 /*return*/, [deployments, wgConfig]];
                 }
             });

@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.TwinDelete = exports.TwinList = exports.TwinGet = exports.TwinCreate = exports.ContractCancel = exports.ContractUpdate = exports.ContractGet = exports.ContractCreate = exports.Machines = void 0;
+exports.TwinDelete = exports.TwinList = exports.TwinGet = exports.TwinCreate = exports.ContractCancel = exports.ContractUpdate = exports.ContractGet = exports.ContractCreate = exports.K8S = exports.Machines = void 0;
 var Disks = /** @class */ (function () {
     function Disks() {
     }
@@ -17,6 +17,12 @@ var Machines = /** @class */ (function () {
     return Machines;
 }());
 exports.Machines = Machines;
+var K8S = /** @class */ (function () {
+    function K8S() {
+    }
+    return K8S;
+}());
+exports.K8S = K8S;
 var ContractCreate = /** @class */ (function () {
     function ContractCreate() {
     }

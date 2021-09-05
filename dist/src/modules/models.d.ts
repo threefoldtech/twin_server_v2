@@ -20,6 +20,19 @@ declare class Machines {
     description: string;
     env: Object;
 }
+declare class K8S {
+    node_ids: number[];
+    disk_size: number;
+    public_ip: boolean;
+    cpu: number;
+    memory: number;
+    name: string;
+    secret: string;
+    workers: number;
+    metadata: string;
+    description: string;
+    ssh_key: string;
+}
 declare class ContractCreate {
     node_id: number;
     hash: string;
@@ -48,4 +61,4 @@ declare class TwinList {
 declare class TwinDelete {
     id: number;
 }
-export { Machines, ContractCreate, ContractGet, ContractUpdate, ContractCancel, TwinCreate, TwinGet, TwinList, TwinDelete };
+export { Machines, K8S, ContractCreate, ContractGet, ContractUpdate, ContractCancel, TwinCreate, TwinGet, TwinList, TwinDelete };

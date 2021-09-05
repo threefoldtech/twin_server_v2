@@ -29,7 +29,7 @@ class Machine {
             options.description)
 
         let deploymentFactory = new DeploymentFactory()
-        const contracts = await deploymentFactory.deploy(twinDeployments, network)
+        const contracts = await deploymentFactory.handle(twinDeployments, network)
 
         return { "contracts": contracts, "wireguard_config": wgConfig }
     }

@@ -41,6 +41,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DeploymentFactory = void 0;
 var grid3_client_1 = require("grid3_client");
+var models_1 = require("./models");
 var index_1 = require("../primitives/index");
 var config_json_1 = __importDefault(require("../../config.json"));
 var DeploymentFactory = /** @class */ (function () {
@@ -94,9 +95,9 @@ var DeploymentFactory = /** @class */ (function () {
             });
         });
     };
-    DeploymentFactory.prototype.deploy = function (deployments, network) {
+    DeploymentFactory.prototype.handle = function (deployments, network) {
         return __awaiter(this, void 0, void 0, function () {
-            var contracts, _i, deployments_1, twinDeployment, _a, _b, workload, contract;
+            var contracts, _i, deployments_1, twinDeployment, _a, _b, workload, hash, contract;
             return __generator(this, function (_c) {
                 switch (_c.label) {
                     case 0:
@@ -112,7 +113,10 @@ var DeploymentFactory = /** @class */ (function () {
                                 workload["data"] = network.updateNetwork(workload.data);
                             }
                         }
-                        return [4 /*yield*/, this.createContractAndSendToZos(twinDeployment.deployment, twinDeployment.nodeId, twinDeployment.hash, twinDeployment.publicIPs)];
+                        hash = twinDeployment.deployment.challenge_hash();
+                        twinDeployment.deployment.sign(config_json_1.default.twin_id, config_json_1.default.mnemonic);
+                        if (!(twinDeployment.operation === models_1.Operations.deploy)) return [3 /*break*/, 4];
+                        return [4 /*yield*/, this.createContractAndSendToZos(twinDeployment.deployment, twinDeployment.nodeId, hash, twinDeployment.publicIPs)];
                     case 2:
                         contract = _c.sent();
                         return [4 /*yield*/, network.save(contract["contract_id"], twinDeployment.nodeId)];

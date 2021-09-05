@@ -4,7 +4,7 @@ import { default as config } from "../../config.json"
 
 
 class DeploymentFactory {
-    create(workloads: Workload[], expiration: number, metadata: string = "", description: string = "", version: number = 0): [Deployment, string] {
+    create(workloads: Workload[], expiration: number, metadata: string = "", description: string = "", version: number = 0): Deployment {
         let signature_request = new SignatureRequest();
         signature_request.twin_id = config.twin_id;
         signature_request.weight = 1;
@@ -22,9 +22,7 @@ class DeploymentFactory {
         deployment.workloads = workloads;
         deployment.signature_requirement = signature_requirement;
 
-        const hash = deployment.challenge_hash();
-        deployment.sign(config.twin_id, config.mnemonic)
-        return [deployment, hash]
+        return deployment
     }
 }
 export { DeploymentFactory }

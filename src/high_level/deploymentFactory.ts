@@ -1,6 +1,6 @@
 import { TFClient, WorkloadTypes, Deployment, MessageBusClient } from "grid3_client"
 
-import { TwinDeployment } from "./models";
+import { Operations, TwinDeployment } from "./models";
 import { Network, getNodeTwinId } from "../primitives/index";
 import { default as config } from "../../config.json"
 
@@ -42,7 +42,7 @@ class DeploymentFactory {
         return contract
     }
 
-    async deploy(deployments: TwinDeployment[], network: Network) {
+    async handle(deployments: TwinDeployment[], network: Network) {
         let contracts = []
         for (let twinDeployment of deployments) {
             for (let workload of twinDeployment.deployment.workloads) {
@@ -50,12 +50,16 @@ class DeploymentFactory {
                     workload["data"] = network.updateNetwork(workload.data);
                 }
             }
-            const contract = await this.createContractAndSendToZos(twinDeployment.deployment,
-                twinDeployment.nodeId,
-                twinDeployment.hash,
-                twinDeployment.publicIPs)
-            await network.save(contract["contract_id"], twinDeployment.nodeId)
-            contracts.push(contract)
+            const hash = twinDeployment.deployment.challenge_hash()
+            twinDeployment.deployment.sign(config.twin_id, config.mnemonic)
+            if (twinDeployment.operation === Operations.deploy) {
+                const contract = await this.createContractAndSendToZos(twinDeployment.deployment,
+                    twinDeployment.nodeId,
+                    hash,
+                    twinDeployment.publicIPs)
+                await network.save(contract["contract_id"], twinDeployment.nodeId)
+                contracts.push(contract)
+            }
         }
         return contracts
     }

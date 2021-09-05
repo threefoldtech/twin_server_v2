@@ -5,10 +5,9 @@ declare enum Operations {
 }
 declare class TwinDeployment {
     deployment: Deployment;
-    hash: string;
     operation: Operations;
     publicIPs: number;
     nodeId: number;
-    constructor(deployment: Deployment, hash: string, operation: Operations, publicIPs: number, nodeId: number);
+    constructor(deployment: Deployment, operation: Operations, publicIPs: number, nodeId: number);
 }
 export { TwinDeployment, Operations };

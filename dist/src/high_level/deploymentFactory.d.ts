@@ -6,6 +6,6 @@ declare class DeploymentFactory {
     rmb: MessageBusClient;
     constructor();
     createContractAndSendToZos(deployment: Deployment, node_id: number, hash: string, publicIPs: number): Promise<any>;
-    deploy(deployments: TwinDeployment[], network: Network): Promise<any[]>;
+    handle(deployments: TwinDeployment[], network: Network): Promise<any[]>;
 }
 export { DeploymentFactory };
