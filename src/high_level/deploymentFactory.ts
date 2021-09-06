@@ -42,7 +42,29 @@ class DeploymentFactory {
         return contract
     }
 
-    async handle(deployments: TwinDeployment[], network: Network) {
+    merge(twinDeployments: TwinDeployment[]): TwinDeployment[] {
+        let deploymentMap = {}
+        for (let twinDeployment of twinDeployments) {
+            if (twinDeployment.operation !== Operations.deploy) {
+                continue
+            }
+            if (Object.keys(deploymentMap).includes(twinDeployment.nodeId.toString())) {
+                deploymentMap[twinDeployment.nodeId].deployment.workloads = deploymentMap[twinDeployment.nodeId].deployment.workloads.concat(twinDeployment.deployment.workloads)
+            }
+            else {
+                deploymentMap[twinDeployment.nodeId] = twinDeployment
+            }
+        }
+
+        let deployments = []
+        for (let key of Object.keys(deploymentMap)) {
+            deployments.push(deploymentMap[key])
+        }
+        return deployments
+    }
+
+    async handle(deployments: TwinDeployment[], network: Network = null) {
+        deployments = this.merge(deployments)
         let contracts = []
         for (let twinDeployment of deployments) {
             for (let workload of twinDeployment.deployment.workloads) {
@@ -57,7 +79,9 @@ class DeploymentFactory {
                     twinDeployment.nodeId,
                     hash,
                     twinDeployment.publicIPs)
-                await network.save(contract["contract_id"], twinDeployment.nodeId)
+                if (network) {
+                    await network.save(contract["contract_id"], twinDeployment.nodeId)
+                }
                 contracts.push(contract)
             }
         }

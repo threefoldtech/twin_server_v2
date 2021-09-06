@@ -16,3 +16,4 @@ __exportStar(require("./twins"), exports);
 __exportStar(require("./contracts"), exports);
 __exportStar(require("./zos"), exports);
 __exportStar(require("./models"), exports);
+__exportStar(require("./zdb"), exports);

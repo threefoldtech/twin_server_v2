@@ -1,4 +1,4 @@
-import { Deployment } from "grid3_client"
+import { Deployment, ZdbModes, DeviceTypes } from "grid3_client"
 
 class Disks {
     size: number;
@@ -10,6 +10,14 @@ class Network {
     ip_range: string;
 }
 
+class KubernetesNode {
+    node_id: number
+    cpu: number;
+    memory: number;
+    disk_size: number;
+    public_ip: boolean;
+
+}
 class Machines {
     name: string;
     node_id: number;
@@ -26,17 +34,26 @@ class Machines {
 }
 
 class K8S {
-    node_ids: number[];
-    disk_size: number
-    public_ip: boolean
-    cpu: number
-    memory: number
     name: string
     secret: string
-    workers: number
+    masters: KubernetesNode[]
+    workers: KubernetesNode[]
     metadata: string;
     description: string
     ssh_key: string
+}
+
+class ZDB {
+    node_id: number
+    mode: ZdbModes
+    disk_size: number
+    disk_type: DeviceTypes
+    public: boolean
+    name: string
+    namespace: string
+    password: string
+    metadata: string
+    description: string
 }
 
 class ContractCreate {
@@ -84,6 +101,7 @@ class TwinDelete {
 export {
     Machines,
     K8S,
+    ZDB,
     ContractCreate,
     ContractGet,
     ContractUpdate,

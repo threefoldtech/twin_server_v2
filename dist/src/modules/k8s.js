@@ -48,51 +48,50 @@ var index_1 = require("../helpers/index");
 var deploymentFactory_1 = require("../high_level/deploymentFactory");
 var kubernetes_1 = require("../high_level/kubernetes");
 var network_1 = require("../primitives/network");
-var nodes_1 = require("../primitives/nodes");
 var ipRange = "10.200.0.0/16";
 var K8s = /** @class */ (function () {
     function K8s() {
     }
     K8s.prototype.deploy = function (options) {
         return __awaiter(this, void 0, void 0, function () {
-            var networkName, network, masterNodeId, accessNodes, _i, _a, accessNode, workerNodeIds, deployments, kubernetes, _b, twinDeployments, wgConfig, masterIp, _c, twinDeployments_1, twinDeployment, _d, _e, workload, i, _f, twinDeployments_2, _, deploymentFactory, contracts;
-            return __generator(this, function (_g) {
-                switch (_g.label) {
+            var networkName, network, deployments, wireguardConfig, kubernetes, _i, _a, master, _b, twinDeployments, wgConfig, masterIp, _c, deployments_1, twinDeployment, _d, _e, workload, _f, _g, worker, _h, twinDeployments, _, deploymentFactory, contracts;
+            return __generator(this, function (_j) {
+                switch (_j.label) {
                     case 0:
-                        if (options.node_ids.length < options.workers + 1) {
-                            throw Error("Number of nodes specified less than the required number for deploying 1 master and " + options.workers + " workers");
+                        if (options.masters.length > 1) {
+                            throw Error("Multi master is not supported");
                         }
                         networkName = options.name + "_k8s_network";
                         network = new network_1.Network(networkName, ipRange);
                         return [4 /*yield*/, network.load(true)];
                     case 1:
-                        _g.sent();
+                        _j.sent();
                         if (network.exists()) {
                             throw Error("A kubernetes cluster with same name " + options.name + " already exists");
                         }
-                        masterNodeId = 0;
-                        return [4 /*yield*/, nodes_1.getAccessNodes()];
-                    case 2:
-                        accessNodes = _g.sent();
-                        for (_i = 0, _a = Object.keys(accessNodes); _i < _a.length; _i++) {
-                            accessNode = _a[_i];
-                            if (options.node_ids.includes(Number(accessNode))) {
-                                masterNodeId = Number(accessNode);
-                                break;
-                            }
-                        }
-                        if (!masterNodeId) {
-                            masterNodeId = options.node_ids.pop();
-                        }
-                        workerNodeIds = options.node_ids.filter(function (id) { return id !== masterNodeId; });
                         deployments = [];
+                        wireguardConfig = "";
                         kubernetes = new kubernetes_1.Kubernetes();
-                        return [4 /*yield*/, kubernetes.add_master(masterNodeId, options.secret, options.cpu, options.memory, options.disk_size, options.public_ip, network, options.ssh_key, options.metadata, options.description)];
+                        _i = 0, _a = options.masters;
+                        _j.label = 2;
+                    case 2:
+                        if (!(_i < _a.length)) return [3 /*break*/, 5];
+                        master = _a[_i];
+                        return [4 /*yield*/, kubernetes.add_master(master.node_id, options.secret, master.cpu, master.memory, master.disk_size, master.public_ip, network, options.ssh_key, options.metadata, options.description)];
                     case 3:
-                        _b = _g.sent(), twinDeployments = _b[0], wgConfig = _b[1];
+                        _b = _j.sent(), twinDeployments = _b[0], wgConfig = _b[1];
+                        deployments = deployments.concat(twinDeployments);
+                        if (wgConfig) {
+                            wireguardConfig = wgConfig;
+                        }
+                        _j.label = 4;
+                    case 4:
+                        _i++;
+                        return [3 /*break*/, 2];
+                    case 5:
                         masterIp = "";
-                        for (_c = 0, twinDeployments_1 = twinDeployments; _c < twinDeployments_1.length; _c++) {
-                            twinDeployment = twinDeployments_1[_c];
+                        for (_c = 0, deployments_1 = deployments; _c < deployments_1.length; _c++) {
+                            twinDeployment = deployments_1[_c];
                             for (_d = 0, _e = twinDeployment.deployment.workloads; _d < _e.length; _d++) {
                                 workload = _e[_d];
                                 if (workload.type === grid3_client_1.WorkloadTypes.zmachine) {
@@ -101,25 +100,25 @@ var K8s = /** @class */ (function () {
                                 }
                             }
                         }
-                        deployments = twinDeployments;
-                        i = 0;
-                        _g.label = 4;
-                    case 4:
-                        if (!(i < options.workers)) return [3 /*break*/, 7];
-                        return [4 /*yield*/, kubernetes.add_worker(workerNodeIds[i], options.secret, masterIp, options.cpu, options.memory, options.disk_size, false, network, options.ssh_key, options.metadata, options.description)];
-                    case 5:
-                        _f = _g.sent(), twinDeployments_2 = _f[0], _ = _f[1];
-                        deployments = deployments.concat(twinDeployments_2);
-                        _g.label = 6;
+                        _f = 0, _g = options.workers;
+                        _j.label = 6;
                     case 6:
-                        i++;
-                        return [3 /*break*/, 4];
+                        if (!(_f < _g.length)) return [3 /*break*/, 9];
+                        worker = _g[_f];
+                        return [4 /*yield*/, kubernetes.add_worker(worker.node_id, options.secret, masterIp, worker.cpu, worker.memory, worker.disk_size, worker.public_ip, network, options.ssh_key, options.metadata, options.description)];
                     case 7:
+                        _h = _j.sent(), twinDeployments = _h[0], _ = _h[1];
+                        deployments = deployments.concat(twinDeployments);
+                        _j.label = 8;
+                    case 8:
+                        _f++;
+                        return [3 /*break*/, 6];
+                    case 9:
                         deploymentFactory = new deploymentFactory_1.DeploymentFactory();
                         return [4 /*yield*/, deploymentFactory.handle(deployments, network)];
-                    case 8:
-                        contracts = _g.sent();
-                        return [2 /*return*/, { "contracts": contracts, "wireguard_config": wgConfig }];
+                    case 10:
+                        contracts = _j.sent();
+                        return [2 /*return*/, { "contracts": contracts, "wireguard_config": wireguardConfig }];
                 }
             });
         });

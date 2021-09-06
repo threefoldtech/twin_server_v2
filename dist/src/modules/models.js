@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.TwinDelete = exports.TwinList = exports.TwinGet = exports.TwinCreate = exports.ContractCancel = exports.ContractUpdate = exports.ContractGet = exports.ContractCreate = exports.K8S = exports.Machines = void 0;
+exports.TwinDelete = exports.TwinList = exports.TwinGet = exports.TwinCreate = exports.ContractCancel = exports.ContractUpdate = exports.ContractGet = exports.ContractCreate = exports.ZDB = exports.K8S = exports.Machines = void 0;
 var Disks = /** @class */ (function () {
     function Disks() {
     }
@@ -10,6 +10,11 @@ var Network = /** @class */ (function () {
     function Network() {
     }
     return Network;
+}());
+var KubernetesNode = /** @class */ (function () {
+    function KubernetesNode() {
+    }
+    return KubernetesNode;
 }());
 var Machines = /** @class */ (function () {
     function Machines() {
@@ -23,6 +28,12 @@ var K8S = /** @class */ (function () {
     return K8S;
 }());
 exports.K8S = K8S;
+var ZDB = /** @class */ (function () {
+    function ZDB() {
+    }
+    return ZDB;
+}());
+exports.ZDB = ZDB;
 var ContractCreate = /** @class */ (function () {
     function ContractCreate() {
     }

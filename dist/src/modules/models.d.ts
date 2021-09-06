@@ -1,3 +1,4 @@
+import { ZdbModes, DeviceTypes } from "grid3_client";
 declare class Disks {
     size: number;
     mountpoint: string;
@@ -5,6 +6,13 @@ declare class Disks {
 declare class Network {
     name: string;
     ip_range: string;
+}
+declare class KubernetesNode {
+    node_id: number;
+    cpu: number;
+    memory: number;
+    disk_size: number;
+    public_ip: boolean;
 }
 declare class Machines {
     name: string;
@@ -21,17 +29,25 @@ declare class Machines {
     env: Object;
 }
 declare class K8S {
-    node_ids: number[];
-    disk_size: number;
-    public_ip: boolean;
-    cpu: number;
-    memory: number;
     name: string;
     secret: string;
-    workers: number;
+    masters: KubernetesNode[];
+    workers: KubernetesNode[];
     metadata: string;
     description: string;
     ssh_key: string;
+}
+declare class ZDB {
+    node_id: number;
+    mode: ZdbModes;
+    disk_size: number;
+    disk_type: DeviceTypes;
+    public: boolean;
+    name: string;
+    namespace: string;
+    password: string;
+    metadata: string;
+    description: string;
 }
 declare class ContractCreate {
     node_id: number;
@@ -61,4 +77,4 @@ declare class TwinList {
 declare class TwinDelete {
     id: number;
 }
-export { Machines, K8S, ContractCreate, ContractGet, ContractUpdate, ContractCancel, TwinCreate, TwinGet, TwinList, TwinDelete };
+export { Machines, K8S, ZDB, ContractCreate, ContractGet, ContractUpdate, ContractCancel, TwinCreate, TwinGet, TwinList, TwinDelete };

@@ -95,17 +95,40 @@ var DeploymentFactory = /** @class */ (function () {
             });
         });
     };
+    DeploymentFactory.prototype.merge = function (twinDeployments) {
+        var deploymentMap = {};
+        for (var _i = 0, twinDeployments_1 = twinDeployments; _i < twinDeployments_1.length; _i++) {
+            var twinDeployment = twinDeployments_1[_i];
+            if (twinDeployment.operation !== models_1.Operations.deploy) {
+                continue;
+            }
+            if (Object.keys(deploymentMap).includes(twinDeployment.nodeId.toString())) {
+                deploymentMap[twinDeployment.nodeId].deployment.workloads = deploymentMap[twinDeployment.nodeId].deployment.workloads.concat(twinDeployment.deployment.workloads);
+            }
+            else {
+                deploymentMap[twinDeployment.nodeId] = twinDeployment;
+            }
+        }
+        var deployments = [];
+        for (var _a = 0, _b = Object.keys(deploymentMap); _a < _b.length; _a++) {
+            var key = _b[_a];
+            deployments.push(deploymentMap[key]);
+        }
+        return deployments;
+    };
     DeploymentFactory.prototype.handle = function (deployments, network) {
+        if (network === void 0) { network = null; }
         return __awaiter(this, void 0, void 0, function () {
             var contracts, _i, deployments_1, twinDeployment, _a, _b, workload, hash, contract;
             return __generator(this, function (_c) {
                 switch (_c.label) {
                     case 0:
+                        deployments = this.merge(deployments);
                         contracts = [];
                         _i = 0, deployments_1 = deployments;
                         _c.label = 1;
                     case 1:
-                        if (!(_i < deployments_1.length)) return [3 /*break*/, 5];
+                        if (!(_i < deployments_1.length)) return [3 /*break*/, 6];
                         twinDeployment = deployments_1[_i];
                         for (_a = 0, _b = twinDeployment.deployment.workloads; _a < _b.length; _a++) {
                             workload = _b[_a];
@@ -115,19 +138,22 @@ var DeploymentFactory = /** @class */ (function () {
                         }
                         hash = twinDeployment.deployment.challenge_hash();
                         twinDeployment.deployment.sign(config_json_1.default.twin_id, config_json_1.default.mnemonic);
-                        if (!(twinDeployment.operation === models_1.Operations.deploy)) return [3 /*break*/, 4];
+                        if (!(twinDeployment.operation === models_1.Operations.deploy)) return [3 /*break*/, 5];
                         return [4 /*yield*/, this.createContractAndSendToZos(twinDeployment.deployment, twinDeployment.nodeId, hash, twinDeployment.publicIPs)];
                     case 2:
                         contract = _c.sent();
+                        if (!network) return [3 /*break*/, 4];
                         return [4 /*yield*/, network.save(contract["contract_id"], twinDeployment.nodeId)];
                     case 3:
                         _c.sent();
-                        contracts.push(contract);
                         _c.label = 4;
                     case 4:
+                        contracts.push(contract);
+                        _c.label = 5;
+                    case 5:
                         _i++;
                         return [3 /*break*/, 1];
-                    case 5: return [2 /*return*/, contracts];
+                    case 6: return [2 /*return*/, contracts];
                 }
             });
         });

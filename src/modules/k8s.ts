@@ -12,8 +12,8 @@ const ipRange = "10.200.0.0/16"
 class K8s {
     @expose
     async deploy(options: K8S) {
-        if (options.node_ids.length < options.workers + 1) {
-            throw Error(`Number of nodes specified less than the required number for deploying 1 master and ${options.workers} workers`)
+        if (options.masters.length > 1) {
+            throw Error("Multi master is not supported")
         }
 
         const networkName = `${options.name}_k8s_network`;
@@ -23,35 +23,30 @@ class K8s {
             throw Error(`A kubernetes cluster with same name ${options.name} already exists`)
         }
 
-        let masterNodeId = 0;
-        const accessNodes = await getAccessNodes()
-        for (const accessNode of Object.keys(accessNodes)) {
-            if (options.node_ids.includes(Number(accessNode))) {
-                masterNodeId = Number(accessNode)
-                break;
+        let deployments = []
+        let wireguardConfig = ""
+        const kubernetes = new Kubernetes()
+
+        for (const master of options.masters) {
+            const [twinDeployments, wgConfig] = await kubernetes.add_master(master.node_id,
+                options.secret,
+                master.cpu,
+                master.memory,
+                master.disk_size,
+                master.public_ip,
+                network,
+                options.ssh_key,
+                options.metadata,
+                options.description)
+
+            deployments = deployments.concat(twinDeployments)
+            if (wgConfig) {
+                wireguardConfig = wgConfig
             }
         }
 
-        if (!masterNodeId) {
-            masterNodeId = options.node_ids.pop()
-        }
-        const workerNodeIds = options.node_ids.filter(id => id !== masterNodeId)
-
-        let deployments = []
-        const kubernetes = new Kubernetes()
-        const [twinDeployments, wgConfig] = await kubernetes.add_master(masterNodeId,
-            options.secret,
-            options.cpu,
-            options.memory,
-            options.disk_size,
-            options.public_ip,
-            network,
-            options.ssh_key,
-            options.metadata,
-            options.description)
-
         let masterIp = ""
-        for (const twinDeployment of twinDeployments) {
+        for (const twinDeployment of deployments) {
             for (const workload of twinDeployment.deployment.workloads) {
                 if (workload.type === WorkloadTypes.zmachine) {
                     masterIp = workload.data["network"]["interfaces"][0]["ip"]
@@ -60,16 +55,14 @@ class K8s {
             }
         }
 
-        deployments = twinDeployments
-
-        for (let i = 0; i < options.workers; i++) {
-            const [twinDeployments, _] = await kubernetes.add_worker(workerNodeIds[i],
+        for (const worker of options.workers) {
+            const [twinDeployments, _] = await kubernetes.add_worker(worker.node_id,
                 options.secret,
                 masterIp,
-                options.cpu,
-                options.memory,
-                options.disk_size,
-                false,
+                worker.cpu,
+                worker.memory,
+                worker.disk_size,
+                worker.public_ip,
                 network,
                 options.ssh_key,
                 options.metadata,
@@ -80,7 +73,7 @@ class K8s {
         let deploymentFactory = new DeploymentFactory()
         const contracts = await deploymentFactory.handle(deployments, network)
 
-        return { "contracts": contracts, "wireguard_config": wgConfig }
+        return { "contracts": contracts, "wireguard_config": wireguardConfig }
     }
 }
 
