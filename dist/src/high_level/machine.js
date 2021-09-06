@@ -89,7 +89,7 @@ var VirtualMachine = /** @class */ (function () {
                                 filteredAccessNodes.push(accessNodeId);
                             }
                         }
-                        access_node_id = utils_1.randomChoice(filteredAccessNodes);
+                        access_node_id = Number(utils_1.randomChoice(filteredAccessNodes));
                         return [4 /*yield*/, network.addNode(access_node_id, metadata, description)];
                     case 2:
                         access_net_workload = _e.sent();

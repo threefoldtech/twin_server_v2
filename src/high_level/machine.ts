@@ -58,7 +58,7 @@ class VirtualMachine {
                     filteredAccessNodes.push(accessNodeId)
                 }
             }
-            const access_node_id = randomChoice(filteredAccessNodes)
+            const access_node_id = Number(randomChoice(filteredAccessNodes))
             access_net_workload = await network.addNode(access_node_id, metadata, description)
             wgConfig = await network.addAccess(access_node_id, true)
         }

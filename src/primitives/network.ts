@@ -151,13 +151,13 @@ class Network {
         if (network.ip_range !== this.ipRange) {
             throw Error(`The same network name ${this.name} with different ip range is already exist`)
         }
-        for (let node of network.nodes) {
+        for (const node of network.nodes) {
             const n: Node = node
             this.nodes.push(n)
         }
         if (deployments) {
             const rmbCL = new MessageBusClient()
-            for (let node of this.nodes) {
+            for (const node of this.nodes) {
                 const node_twin_id = await getNodeTwinId(node.node_id);
                 const msg = rmbCL.prepare("zos.deployment.get", [node_twin_id], 0, 2)
                 rmbCL.send(msg, JSON.stringify({ "contract_id": node.contract_id }))
@@ -186,7 +186,7 @@ class Network {
     }
 
     nodeExists(node_id: number): boolean {
-        for (let net of this.networks) {
+        for (const net of this.networks) {
             if (net["node_id"] === node_id) {
                 return true
             }
@@ -384,11 +384,11 @@ class Network {
 
         if (!result[0].err && result[0].dat) {
             const data = JSON.parse(result[0].dat)
-            for (let iface of Object.keys(data)) {
+            for (const iface of Object.keys(data)) {
                 if (iface === "ygg0") {
                     continue
                 }
-                for (let ip of data[iface]) {
+                for (const ip of data[iface]) {
                     if (!this.isPrivateIP(ip)) {
                         return ip
                     }
