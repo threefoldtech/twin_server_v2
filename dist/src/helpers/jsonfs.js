@@ -22,7 +22,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.appPath = exports.dumpToFile = exports.loadFromFile = void 0;
+exports.appPath = exports.updatejson = exports.dumpToFile = exports.loadFromFile = void 0;
 var FS = __importStar(require("fs"));
 var PATH = __importStar(require("path"));
 var appdata_path_1 = __importDefault(require("appdata-path"));
@@ -38,3 +38,16 @@ function dumpToFile(path, data) {
     return FS.writeFileSync(path, JSON.stringify(data));
 }
 exports.dumpToFile = dumpToFile;
+function updatejson(path, name, data, action) {
+    if (data === void 0) { data = null; }
+    if (action === void 0) { action = "add"; }
+    var storedData = loadFromFile(path);
+    if (action === "add") {
+        storedData[name] = data;
+    }
+    else if (action === "delete") {
+        delete storedData[name];
+    }
+    dumpToFile(path, storedData);
+}
+exports.updatejson = updatejson;

@@ -1,5 +1,10 @@
+import * as FS from "fs";
+import * as PATH from "path";
+
 import { MessageBusServer } from "grid3_client";
+
 import { isExposed } from "./helpers/expose"
+import { dumpToFile, appPath } from "./helpers/jsonfs"
 import * as modules from "./modules/index"
 import { default as config } from "../config.json"
 
@@ -40,7 +45,16 @@ if (!(config.url && config.mnemonic && config.twin_id)) {
     throw new Error(`Invalid config`)
 }
 
-// TODO: create a dir on Roaming dir for twin server if not exists and create network.json inside it if not exists
+const requiredFiles = ["network.json", "zdbs.json", "machines.json", "kubernetes.json"]
+if (!FS.existsSync(appPath)) {
+    FS.mkdirSync(appPath)
+}
+for (const file of requiredFiles) {
+    const path = PATH.join(appPath, file)
+    if (!FS.existsSync(path)) {
+        dumpToFile(path, {})
+    }
+}
 
 const server = new Server();
 server.register()

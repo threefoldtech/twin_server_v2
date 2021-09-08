@@ -1,15 +1,18 @@
 import { WorkloadTypes } from "grid3_client"
 
 import { K8S } from "./models"
+import { BaseModule } from "./base"
 import { expose } from "../helpers/index";
 import { DeploymentFactory } from "../high_level/deploymentFactory";
 import { Kubernetes } from "../high_level/kubernetes"
 import { Network } from "../primitives/network";
-import { getAccessNodes } from "../primitives/nodes"
+import { getNodeTwinId } from "../primitives/nodes";
 
 const ipRange = "10.200.0.0/16"
 
-class K8s {
+class K8s extends BaseModule {
+    fileName: string = "kubernetes.json";
+
     @expose
     async deploy(options: K8S) {
         if (options.masters.length > 1) {
@@ -72,8 +75,18 @@ class K8s {
         }
         let deploymentFactory = new DeploymentFactory()
         const contracts = await deploymentFactory.handle(deployments, network)
+        const data = this.save(options.name, contracts, wireguardConfig)
+        return data
+    }
 
-        return { "contracts": contracts, "wireguard_config": wireguardConfig }
+    @expose
+    async get(options) {
+        return await this._get(options.name)
+    }
+
+    @expose
+    async delete(options) {
+        return await this._delete(options.name)
     }
 }
 

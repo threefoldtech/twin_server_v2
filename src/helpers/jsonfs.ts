@@ -14,4 +14,15 @@ function dumpToFile(path: string, data) {
     return FS.writeFileSync(path, JSON.stringify(data))
 }
 
-export { loadFromFile, dumpToFile, appPath }
+function updatejson(path: string, name: string, data: Object = null, action: string = "add") {
+    let storedData = loadFromFile(path)
+    if (action === "add") {
+        storedData[name] = data
+    }
+    else if (action === "delete") {
+        delete storedData[name]
+    }
+    dumpToFile(path, storedData)
+}
+
+export { loadFromFile, dumpToFile, updatejson, appPath }

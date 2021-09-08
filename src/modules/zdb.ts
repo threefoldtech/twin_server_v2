@@ -1,3 +1,4 @@
+import { BaseModule } from "./base"
 import { ZDB } from "./models"
 import { expose } from "../helpers/expose"
 import { zdb } from "../primitives/zdb"
@@ -5,7 +6,9 @@ import { DeploymentFactory } from "../primitives/deployment"
 import { TwinDeployment, Operations } from "../high_level/models"
 import { DeploymentFactory as TwinDeploymentFactory } from "../high_level/deploymentFactory"
 
-class Zdb {
+class Zdb extends BaseModule {
+    fileName: string = "zdbs.json";
+
     @expose
     async deploy(options: ZDB) {
         const zdbFactory = new zdb()
@@ -25,7 +28,18 @@ class Zdb {
         const twinDeployment = new TwinDeployment(deployment, Operations.deploy, 0, options.node_id)
         let twinDeploymentFactory = new TwinDeploymentFactory()
         const contracts = await twinDeploymentFactory.handle([twinDeployment])
-        return { "contracts": contracts }
+        const data = this.save(options.name, contracts)
+        return data
+    }
+
+    @expose
+    async get(options) {
+        return await this._get(options.name)
+    }
+
+    @expose
+    async delete(options) {
+        return await this._delete(options.name)
     }
 }
 

@@ -58,8 +58,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+var FS = __importStar(require("fs"));
+var PATH = __importStar(require("path"));
 var grid3_client_1 = require("grid3_client");
 var expose_1 = require("./helpers/expose");
+var jsonfs_1 = require("./helpers/jsonfs");
 var modules = __importStar(require("./modules/index"));
 var config_json_1 = __importDefault(require("../config.json"));
 var Server = /** @class */ (function () {
@@ -106,7 +109,17 @@ var Server = /** @class */ (function () {
 if (!(config_json_1.default.url && config_json_1.default.mnemonic && config_json_1.default.twin_id)) {
     throw new Error("Invalid config");
 }
-// TODO: create a dir on Roaming dir for twin server if not exists and create network.json inside it if not exists
+var requiredFiles = ["network.json", "zdbs.json", "machines.json", "kubernetes.json"];
+if (!FS.existsSync(jsonfs_1.appPath)) {
+    FS.mkdirSync(jsonfs_1.appPath);
+}
+for (var _i = 0, requiredFiles_1 = requiredFiles; _i < requiredFiles_1.length; _i++) {
+    var file = requiredFiles_1[_i];
+    var path = PATH.join(jsonfs_1.appPath, file);
+    if (!FS.existsSync(path)) {
+        jsonfs_1.dumpToFile(path, {});
+    }
+}
 var server = new Server();
 server.register();
 server.run();

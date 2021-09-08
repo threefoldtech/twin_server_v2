@@ -1,8 +1,11 @@
 import { K8S } from "./models";
-declare class K8s {
+import { BaseModule } from "./base";
+declare class K8s extends BaseModule {
+    fileName: string;
     deploy(options: K8S): Promise<{
         contracts: any[];
-        wireguard_config: string;
     }>;
+    get(options: any): Promise<any[]>;
+    delete(options: any): Promise<any[]>;
 }
 export { K8s as k8s };

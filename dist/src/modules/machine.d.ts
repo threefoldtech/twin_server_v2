@@ -1,8 +1,11 @@
+import { BaseModule } from "./base";
 import { Machines } from "./models";
-declare class Machine {
+declare class Machine extends BaseModule {
+    fileName: string;
     deploy(options: Machines): Promise<{
         contracts: any[];
-        wireguard_config: string;
     }>;
+    get(options: any): Promise<any[]>;
+    delete(options: any): Promise<any[]>;
 }
 export { Machine as machine };

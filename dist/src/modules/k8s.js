@@ -1,4 +1,19 @@
 "use strict";
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -44,17 +59,22 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.k8s = void 0;
 var grid3_client_1 = require("grid3_client");
+var base_1 = require("./base");
 var index_1 = require("../helpers/index");
 var deploymentFactory_1 = require("../high_level/deploymentFactory");
 var kubernetes_1 = require("../high_level/kubernetes");
 var network_1 = require("../primitives/network");
 var ipRange = "10.200.0.0/16";
-var K8s = /** @class */ (function () {
+var K8s = /** @class */ (function (_super) {
+    __extends(K8s, _super);
     function K8s() {
+        var _this = _super !== null && _super.apply(this, arguments) || this;
+        _this.fileName = "kubernetes.json";
+        return _this;
     }
     K8s.prototype.deploy = function (options) {
         return __awaiter(this, void 0, void 0, function () {
-            var networkName, network, deployments, wireguardConfig, kubernetes, _i, _a, master, _b, twinDeployments, wgConfig, masterIp, _c, deployments_1, twinDeployment, _d, _e, workload, _f, _g, worker, _h, twinDeployments, _, deploymentFactory, contracts;
+            var networkName, network, deployments, wireguardConfig, kubernetes, _i, _a, master, _b, twinDeployments, wgConfig, masterIp, _c, deployments_1, twinDeployment, _d, _e, workload, _f, _g, worker, _h, twinDeployments, _, deploymentFactory, contracts, data;
             return __generator(this, function (_j) {
                 switch (_j.label) {
                     case 0:
@@ -118,7 +138,28 @@ var K8s = /** @class */ (function () {
                         return [4 /*yield*/, deploymentFactory.handle(deployments, network)];
                     case 10:
                         contracts = _j.sent();
-                        return [2 /*return*/, { "contracts": contracts, "wireguard_config": wireguardConfig }];
+                        data = this.save(options.name, contracts, wireguardConfig);
+                        return [2 /*return*/, data];
+                }
+            });
+        });
+    };
+    K8s.prototype.get = function (options) {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this._get(options.name)];
+                    case 1: return [2 /*return*/, _a.sent()];
+                }
+            });
+        });
+    };
+    K8s.prototype.delete = function (options) {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this._delete(options.name)];
+                    case 1: return [2 /*return*/, _a.sent()];
                 }
             });
         });
@@ -126,6 +167,12 @@ var K8s = /** @class */ (function () {
     __decorate([
         index_1.expose
     ], K8s.prototype, "deploy", null);
+    __decorate([
+        index_1.expose
+    ], K8s.prototype, "get", null);
+    __decorate([
+        index_1.expose
+    ], K8s.prototype, "delete", null);
     return K8s;
-}());
+}(base_1.BaseModule));
 exports.k8s = K8s;

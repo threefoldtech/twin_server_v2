@@ -1,11 +1,14 @@
+import { BaseModule } from "./base"
+import { Machines } from "./models"
 import { Network } from "../primitives/index"
 import { expose } from "../helpers/expose"
 import { VirtualMachine } from "../high_level/machine"
 import { DeploymentFactory } from "../high_level/deploymentFactory"
-import { Machines } from "./models"
 
 
-class Machine {
+class Machine extends BaseModule {
+    fileName: string = "machines.json";
+
     @expose
     async deploy(options: Machines) {
 
@@ -30,8 +33,18 @@ class Machine {
 
         let deploymentFactory = new DeploymentFactory()
         const contracts = await deploymentFactory.handle(twinDeployments, network)
+        const data = this.save(options.name, contracts, wgConfig)
+        return data
+    }
 
-        return { "contracts": contracts, "wireguard_config": wgConfig }
+    @expose
+    async get(options) {
+        return await this._get(options.name)
+    }
+
+    @expose
+    async delete(options) {
+        return await this._delete(options.name)
     }
 }
 

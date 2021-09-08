@@ -1,4 +1,19 @@
 "use strict";
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -43,17 +58,22 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.zdb = void 0;
+var base_1 = require("./base");
 var expose_1 = require("../helpers/expose");
 var zdb_1 = require("../primitives/zdb");
 var deployment_1 = require("../primitives/deployment");
 var models_1 = require("../high_level/models");
 var deploymentFactory_1 = require("../high_level/deploymentFactory");
-var Zdb = /** @class */ (function () {
+var Zdb = /** @class */ (function (_super) {
+    __extends(Zdb, _super);
     function Zdb() {
+        var _this = _super !== null && _super.apply(this, arguments) || this;
+        _this.fileName = "zdbs.json";
+        return _this;
     }
     Zdb.prototype.deploy = function (options) {
         return __awaiter(this, void 0, void 0, function () {
-            var zdbFactory, zdbWorkload, deploymentFactory, deployment, twinDeployment, twinDeploymentFactory, contracts;
+            var zdbFactory, zdbWorkload, deploymentFactory, deployment, twinDeployment, twinDeploymentFactory, contracts, data;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -66,7 +86,28 @@ var Zdb = /** @class */ (function () {
                         return [4 /*yield*/, twinDeploymentFactory.handle([twinDeployment])];
                     case 1:
                         contracts = _a.sent();
-                        return [2 /*return*/, { "contracts": contracts }];
+                        data = this.save(options.name, contracts);
+                        return [2 /*return*/, data];
+                }
+            });
+        });
+    };
+    Zdb.prototype.get = function (options) {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this._get(options.name)];
+                    case 1: return [2 /*return*/, _a.sent()];
+                }
+            });
+        });
+    };
+    Zdb.prototype.delete = function (options) {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this._delete(options.name)];
+                    case 1: return [2 /*return*/, _a.sent()];
                 }
             });
         });
@@ -74,6 +115,12 @@ var Zdb = /** @class */ (function () {
     __decorate([
         expose_1.expose
     ], Zdb.prototype, "deploy", null);
+    __decorate([
+        expose_1.expose
+    ], Zdb.prototype, "get", null);
+    __decorate([
+        expose_1.expose
+    ], Zdb.prototype, "delete", null);
     return Zdb;
-}());
+}(base_1.BaseModule));
 exports.zdb = Zdb;
