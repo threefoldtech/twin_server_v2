@@ -19,6 +19,10 @@ class K8s extends BaseModule {
             throw Error("Multi master is not supported")
         }
 
+        if (this.exists(options.name)) {
+            throw Error(`Another k8s deployment with the same name ${options.name} is already exist`)
+        }
+
         const networkName = `${options.name}_k8s_network`;
         let network = new Network(networkName, ipRange)
         await network.load(true)

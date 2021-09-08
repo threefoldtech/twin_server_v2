@@ -20,6 +20,9 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -59,6 +62,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.k8s = void 0;
 var grid3_client_1 = require("grid3_client");
+var models_1 = require("./models");
 var base_1 = require("./base");
 var index_1 = require("../helpers/index");
 var deploymentFactory_1 = require("../high_level/deploymentFactory");
@@ -80,6 +84,9 @@ var K8s = /** @class */ (function (_super) {
                     case 0:
                         if (options.masters.length > 1) {
                             throw Error("Multi master is not supported");
+                        }
+                        if (this._get(options.name)) {
+                            throw Error("Another k8s deployment with the same name " + options.name + " is already exist");
                         }
                         networkName = options.name + "_k8s_network";
                         network = new network_1.Network(networkName, ipRange);
@@ -165,13 +172,22 @@ var K8s = /** @class */ (function (_super) {
         });
     };
     __decorate([
-        index_1.expose
+        index_1.expose,
+        __metadata("design:type", Function),
+        __metadata("design:paramtypes", [models_1.K8S]),
+        __metadata("design:returntype", Promise)
     ], K8s.prototype, "deploy", null);
     __decorate([
-        index_1.expose
+        index_1.expose,
+        __metadata("design:type", Function),
+        __metadata("design:paramtypes", [Object]),
+        __metadata("design:returntype", Promise)
     ], K8s.prototype, "get", null);
     __decorate([
-        index_1.expose
+        index_1.expose,
+        __metadata("design:type", Function),
+        __metadata("design:paramtypes", [Object]),
+        __metadata("design:returntype", Promise)
     ], K8s.prototype, "delete", null);
     return K8s;
 }(base_1.BaseModule));

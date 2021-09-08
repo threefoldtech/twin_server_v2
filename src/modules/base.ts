@@ -1,6 +1,6 @@
 import * as PATH from "path"
 
-import { MessageBusClient, TFClient } from "grid3_client"
+import { Deployment, MessageBusClient, TFClient } from "grid3_client"
 
 import { loadFromFile, updatejson, appPath } from "../helpers/jsonfs"
 import { getNodeTwinId } from "../primitives/nodes";
@@ -25,11 +25,15 @@ class BaseModule {
         return data
     }
 
-    async _get(name) {
+    exists(name) {
         const path = PATH.join(appPath, this.fileName)
         const data = loadFromFile(path)
-        console.log(name)
-        console.log(data)
+        return data.hasOwnProperty(name)
+    }
+
+    async _get(name: string) {
+        const path = PATH.join(appPath, this.fileName)
+        const data = loadFromFile(path)
         if (!data.hasOwnProperty(name)) {
             return []
         }
@@ -50,7 +54,7 @@ class BaseModule {
         return deployments
     }
 
-    async _delete(name) {
+    async _delete(name: string) {
         const path = PATH.join(appPath, this.fileName)
         const data = loadFromFile(path)
         if (!data.hasOwnProperty(name)) {

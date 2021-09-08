@@ -1,11 +1,11 @@
 import { BaseModule } from "./base";
-import { ZDB } from "./models";
-declare class Zdb extends BaseModule {
+import { ZDBS } from "./models";
+declare class Zdbs extends BaseModule {
     fileName: string;
-    deploy(options: ZDB): Promise<{
+    deploy(options: ZDBS): Promise<{
         contracts: any[];
     }>;
     get(options: any): Promise<any[]>;
     delete(options: any): Promise<any[]>;
 }
-export { Zdb as zdb };
+export { Zdbs as zdbs };

@@ -83,6 +83,11 @@ var BaseModule = /** @class */ (function () {
         jsonfs_1.updatejson(path, name, data);
         return data;
     };
+    BaseModule.prototype.exists = function (name) {
+        var path = PATH.join(jsonfs_1.appPath, this.fileName);
+        var data = jsonfs_1.loadFromFile(path);
+        return data.hasOwnProperty(name);
+    };
     BaseModule.prototype._get = function (name) {
         return __awaiter(this, void 0, void 0, function () {
             var path, data, deployments, rmb, _i, _a, contract, node_twin_id, payload, msg, result;
@@ -91,8 +96,6 @@ var BaseModule = /** @class */ (function () {
                     case 0:
                         path = PATH.join(jsonfs_1.appPath, this.fileName);
                         data = jsonfs_1.loadFromFile(path);
-                        console.log(name);
-                        console.log(data);
                         if (!data.hasOwnProperty(name)) {
                             return [2 /*return*/, []];
                         }

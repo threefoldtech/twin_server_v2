@@ -1,33 +1,40 @@
 import { BaseModule } from "./base"
-import { ZDB } from "./models"
+import { ZDBS } from "./models"
 import { expose } from "../helpers/expose"
 import { zdb } from "../primitives/zdb"
+import { generateString } from "../helpers/utils"
 import { DeploymentFactory } from "../primitives/deployment"
 import { TwinDeployment, Operations } from "../high_level/models"
 import { DeploymentFactory as TwinDeploymentFactory } from "../high_level/deploymentFactory"
 
-class Zdb extends BaseModule {
+class Zdbs extends BaseModule {
     fileName: string = "zdbs.json";
 
     @expose
-    async deploy(options: ZDB) {
-        const zdbFactory = new zdb()
-        const zdbWorkload = zdbFactory.create(options.name,
-            options.namespace,
-            options.disk_size,
-            options.mode,
-            options.password,
-            options.disk_type,
-            options.public,
-            options.metadata,
-            options.description)
-
+    async deploy(options: ZDBS) {
+        if (this.exists(options.name)) {
+            throw Error(`Another zdb deployment with the same name ${options.name} is already exist`)
+        }
         let deploymentFactory = new DeploymentFactory();
-        let deployment = deploymentFactory.create([zdbWorkload], 1626394539, options.metadata, options.description)
+        const zdbFactory = new zdb()
+        let twinDeployments = []
+        for (const instance of options.zdbs) {
+            const instance_name = generateString(10)
+            const zdbWorkload = zdbFactory.create(instance_name,
+                instance.namespace,
+                instance.disk_size,
+                instance.mode,
+                instance.password,
+                instance.disk_type,
+                instance.public,
+                options.metadata,
+                options.description)
+            let deployment = deploymentFactory.create([zdbWorkload], 1626394539, options.metadata, options.description)
+            twinDeployments.push(new TwinDeployment(deployment, Operations.deploy, 0, instance.node_id))
+        }
 
-        const twinDeployment = new TwinDeployment(deployment, Operations.deploy, 0, options.node_id)
         let twinDeploymentFactory = new TwinDeploymentFactory()
-        const contracts = await twinDeploymentFactory.handle([twinDeployment])
+        const contracts = await twinDeploymentFactory.handle(twinDeployments)
         const data = this.save(options.name, contracts)
         return data
     }
@@ -43,4 +50,4 @@ class Zdb extends BaseModule {
     }
 }
 
-export { Zdb as zdb }
+export { Zdbs as zdbs }

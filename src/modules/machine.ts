@@ -12,6 +12,10 @@ class Machine extends BaseModule {
     @expose
     async deploy(options: Machines) {
 
+        if (this.exists(options.name)) {
+            throw Error(`Another machine deployment with the same name ${options.name} is already exist`)
+        }
+
         const networkName = options.network.name;
         let network = new Network(networkName, options.network.ip_range)
         await network.load(true)

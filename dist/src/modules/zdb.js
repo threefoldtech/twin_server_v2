@@ -20,6 +20,9 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -57,42 +60,52 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.zdb = void 0;
+exports.zdbs = void 0;
 var base_1 = require("./base");
+var models_1 = require("./models");
 var expose_1 = require("../helpers/expose");
 var zdb_1 = require("../primitives/zdb");
+var utils_1 = require("../helpers/utils");
 var deployment_1 = require("../primitives/deployment");
-var models_1 = require("../high_level/models");
+var models_2 = require("../high_level/models");
 var deploymentFactory_1 = require("../high_level/deploymentFactory");
-var Zdb = /** @class */ (function (_super) {
-    __extends(Zdb, _super);
-    function Zdb() {
+var Zdbs = /** @class */ (function (_super) {
+    __extends(Zdbs, _super);
+    function Zdbs() {
         var _this = _super !== null && _super.apply(this, arguments) || this;
         _this.fileName = "zdbs.json";
         return _this;
     }
-    Zdb.prototype.deploy = function (options) {
+    Zdbs.prototype.deploy = function (options) {
         return __awaiter(this, void 0, void 0, function () {
-            var zdbFactory, zdbWorkload, deploymentFactory, deployment, twinDeployment, twinDeploymentFactory, contracts, data;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
+            var deploymentFactory, zdbFactory, twinDeployments, _i, _a, instance, instance_name, zdbWorkload, deployment, twinDeploymentFactory, contracts, data;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
                     case 0:
-                        zdbFactory = new zdb_1.zdb();
-                        zdbWorkload = zdbFactory.create(options.name, options.namespace, options.disk_size, options.mode, options.password, options.disk_type, options.public, options.metadata, options.description);
+                        if (this.exists(options.name)) {
+                            throw Error("Another zdb deployment with the same name " + options.name + " is already exist");
+                        }
                         deploymentFactory = new deployment_1.DeploymentFactory();
-                        deployment = deploymentFactory.create([zdbWorkload], 1626394539, options.metadata, options.description);
-                        twinDeployment = new models_1.TwinDeployment(deployment, models_1.Operations.deploy, 0, options.node_id);
+                        zdbFactory = new zdb_1.zdb();
+                        twinDeployments = [];
+                        for (_i = 0, _a = options.zdbs; _i < _a.length; _i++) {
+                            instance = _a[_i];
+                            instance_name = utils_1.generateString(10);
+                            zdbWorkload = zdbFactory.create(instance_name, instance.namespace, instance.disk_size, instance.mode, instance.password, instance.disk_type, instance.public, options.metadata, options.description);
+                            deployment = deploymentFactory.create([zdbWorkload], 1626394539, options.metadata, options.description);
+                            twinDeployments.push(new models_2.TwinDeployment(deployment, models_2.Operations.deploy, 0, instance.node_id));
+                        }
                         twinDeploymentFactory = new deploymentFactory_1.DeploymentFactory();
-                        return [4 /*yield*/, twinDeploymentFactory.handle([twinDeployment])];
+                        return [4 /*yield*/, twinDeploymentFactory.handle(twinDeployments)];
                     case 1:
-                        contracts = _a.sent();
+                        contracts = _b.sent();
                         data = this.save(options.name, contracts);
                         return [2 /*return*/, data];
                 }
             });
         });
     };
-    Zdb.prototype.get = function (options) {
+    Zdbs.prototype.get = function (options) {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
@@ -102,7 +115,7 @@ var Zdb = /** @class */ (function (_super) {
             });
         });
     };
-    Zdb.prototype.delete = function (options) {
+    Zdbs.prototype.delete = function (options) {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
@@ -113,14 +126,23 @@ var Zdb = /** @class */ (function (_super) {
         });
     };
     __decorate([
-        expose_1.expose
-    ], Zdb.prototype, "deploy", null);
+        expose_1.expose,
+        __metadata("design:type", Function),
+        __metadata("design:paramtypes", [models_1.ZDBS]),
+        __metadata("design:returntype", Promise)
+    ], Zdbs.prototype, "deploy", null);
     __decorate([
-        expose_1.expose
-    ], Zdb.prototype, "get", null);
+        expose_1.expose,
+        __metadata("design:type", Function),
+        __metadata("design:paramtypes", [Object]),
+        __metadata("design:returntype", Promise)
+    ], Zdbs.prototype, "get", null);
     __decorate([
-        expose_1.expose
-    ], Zdb.prototype, "delete", null);
-    return Zdb;
+        expose_1.expose,
+        __metadata("design:type", Function),
+        __metadata("design:paramtypes", [Object]),
+        __metadata("design:returntype", Promise)
+    ], Zdbs.prototype, "delete", null);
+    return Zdbs;
 }(base_1.BaseModule));
-exports.zdb = Zdb;
+exports.zdbs = Zdbs;

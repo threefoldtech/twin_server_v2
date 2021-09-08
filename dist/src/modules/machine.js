@@ -20,6 +20,9 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -59,6 +62,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.machine = void 0;
 var base_1 = require("./base");
+var models_1 = require("./models");
 var index_1 = require("../primitives/index");
 var expose_1 = require("../helpers/expose");
 var machine_1 = require("../high_level/machine");
@@ -76,6 +80,9 @@ var Machine = /** @class */ (function (_super) {
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
+                        if (this._get(options.name)) {
+                            throw Error("Another machine deployment with the same name " + options.name + " is already exist");
+                        }
                         networkName = options.network.name;
                         network = new index_1.Network(networkName, options.network.ip_range);
                         return [4 /*yield*/, network.load(true)];
@@ -116,13 +123,22 @@ var Machine = /** @class */ (function (_super) {
         });
     };
     __decorate([
-        expose_1.expose
+        expose_1.expose,
+        __metadata("design:type", Function),
+        __metadata("design:paramtypes", [models_1.Machines]),
+        __metadata("design:returntype", Promise)
     ], Machine.prototype, "deploy", null);
     __decorate([
-        expose_1.expose
+        expose_1.expose,
+        __metadata("design:type", Function),
+        __metadata("design:paramtypes", [Object]),
+        __metadata("design:returntype", Promise)
     ], Machine.prototype, "get", null);
     __decorate([
-        expose_1.expose
+        expose_1.expose,
+        __metadata("design:type", Function),
+        __metadata("design:paramtypes", [Object]),
+        __metadata("design:returntype", Promise)
     ], Machine.prototype, "delete", null);
     return Machine;
 }(base_1.BaseModule));

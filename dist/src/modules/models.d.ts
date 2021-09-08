@@ -43,9 +43,12 @@ declare class ZDB {
     disk_size: number;
     disk_type: DeviceTypes;
     public: boolean;
-    name: string;
     namespace: string;
     password: string;
+}
+declare class ZDBS {
+    name: string;
+    zdbs: ZDB[];
     metadata: string;
     description: string;
 }
@@ -77,4 +80,4 @@ declare class TwinList {
 declare class TwinDelete {
     id: number;
 }
-export { Machines, K8S, ZDB, ContractCreate, ContractGet, ContractUpdate, ContractCancel, TwinCreate, TwinGet, TwinList, TwinDelete };
+export { Machines, K8S, ZDBS, ContractCreate, ContractGet, ContractUpdate, ContractCancel, TwinCreate, TwinGet, TwinList, TwinDelete };

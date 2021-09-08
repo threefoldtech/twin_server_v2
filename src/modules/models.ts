@@ -43,15 +43,20 @@ class K8S {
     ssh_key: string
 }
 
+
 class ZDB {
     node_id: number
     mode: ZdbModes
     disk_size: number
     disk_type: DeviceTypes
     public: boolean
-    name: string
     namespace: string
     password: string
+}
+
+class ZDBS {
+    name: string
+    zdbs: ZDB[];
     metadata: string
     description: string
 }
@@ -101,7 +106,7 @@ class TwinDelete {
 export {
     Machines,
     K8S,
-    ZDB,
+    ZDBS,
     ContractCreate,
     ContractGet,
     ContractUpdate,

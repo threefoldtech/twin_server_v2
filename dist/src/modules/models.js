@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.TwinDelete = exports.TwinList = exports.TwinGet = exports.TwinCreate = exports.ContractCancel = exports.ContractUpdate = exports.ContractGet = exports.ContractCreate = exports.ZDB = exports.K8S = exports.Machines = void 0;
+exports.TwinDelete = exports.TwinList = exports.TwinGet = exports.TwinCreate = exports.ContractCancel = exports.ContractUpdate = exports.ContractGet = exports.ContractCreate = exports.ZDBS = exports.K8S = exports.Machines = void 0;
 var Disks = /** @class */ (function () {
     function Disks() {
     }
@@ -33,7 +33,12 @@ var ZDB = /** @class */ (function () {
     }
     return ZDB;
 }());
-exports.ZDB = ZDB;
+var ZDBS = /** @class */ (function () {
+    function ZDBS() {
+    }
+    return ZDBS;
+}());
+exports.ZDBS = ZDBS;
 var ContractCreate = /** @class */ (function () {
     function ContractCreate() {
     }

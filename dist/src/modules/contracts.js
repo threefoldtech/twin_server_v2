@@ -5,6 +5,9 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -47,6 +50,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.contracts = void 0;
 var grid3_client_1 = require("grid3_client");
+var models_1 = require("./models");
 var index_1 = require("../helpers/index");
 var config_json_1 = __importDefault(require("../../config.json"));
 var Contracts = /** @class */ (function () {
@@ -106,16 +110,28 @@ var Contracts = /** @class */ (function () {
         });
     };
     __decorate([
-        index_1.expose
+        index_1.expose,
+        __metadata("design:type", Function),
+        __metadata("design:paramtypes", [models_1.ContractCreate]),
+        __metadata("design:returntype", Promise)
     ], Contracts.prototype, "create", null);
     __decorate([
-        index_1.expose
+        index_1.expose,
+        __metadata("design:type", Function),
+        __metadata("design:paramtypes", [models_1.ContractGet]),
+        __metadata("design:returntype", Promise)
     ], Contracts.prototype, "get", null);
     __decorate([
-        index_1.expose
+        index_1.expose,
+        __metadata("design:type", Function),
+        __metadata("design:paramtypes", [models_1.ContractUpdate]),
+        __metadata("design:returntype", Promise)
     ], Contracts.prototype, "update", null);
     __decorate([
-        index_1.expose
+        index_1.expose,
+        __metadata("design:type", Function),
+        __metadata("design:paramtypes", [models_1.ContractCancel]),
+        __metadata("design:returntype", Promise)
     ], Contracts.prototype, "cancel", null);
     return Contracts;
 }());
