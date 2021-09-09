@@ -5,7 +5,7 @@ import { zdb } from "../primitives/zdb"
 import { generateString } from "../helpers/utils"
 import { DeploymentFactory } from "../primitives/deployment"
 import { TwinDeployment, Operations } from "../high_level/models"
-import { DeploymentFactory as TwinDeploymentFactory } from "../high_level/deploymentFactory"
+import { TwinDeploymentFactory } from "../high_level/twinDeploymentFactory"
 
 class Zdbs extends BaseModule {
     fileName: string = "zdbs.json";

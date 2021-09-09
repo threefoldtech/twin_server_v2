@@ -65,7 +65,7 @@ var grid3_client_1 = require("grid3_client");
 var models_1 = require("./models");
 var base_1 = require("./base");
 var index_1 = require("../helpers/index");
-var deploymentFactory_1 = require("../high_level/deploymentFactory");
+var twinDeploymentFactory_1 = require("../high_level/twinDeploymentFactory");
 var kubernetes_1 = require("../high_level/kubernetes");
 var network_1 = require("../primitives/network");
 var ipRange = "10.200.0.0/16";
@@ -78,14 +78,14 @@ var K8s = /** @class */ (function (_super) {
     }
     K8s.prototype.deploy = function (options) {
         return __awaiter(this, void 0, void 0, function () {
-            var networkName, network, deployments, wireguardConfig, kubernetes, _i, _a, master, _b, twinDeployments, wgConfig, masterIp, _c, deployments_1, twinDeployment, _d, _e, workload, _f, _g, worker, _h, twinDeployments, _, deploymentFactory, contracts, data;
+            var networkName, network, deployments, wireguardConfig, kubernetes, _i, _a, master, _b, twinDeployments, wgConfig, masterIp, _c, deployments_1, twinDeployment, _d, _e, workload, _f, _g, worker, _h, twinDeployments, _, twinDeploymentFactory, contracts, data;
             return __generator(this, function (_j) {
                 switch (_j.label) {
                     case 0:
                         if (options.masters.length > 1) {
                             throw Error("Multi master is not supported");
                         }
-                        if (this._get(options.name)) {
+                        if (this.exists(options.name)) {
                             throw Error("Another k8s deployment with the same name " + options.name + " is already exist");
                         }
                         networkName = options.name + "_k8s_network";
@@ -141,8 +141,8 @@ var K8s = /** @class */ (function (_super) {
                         _f++;
                         return [3 /*break*/, 6];
                     case 9:
-                        deploymentFactory = new deploymentFactory_1.DeploymentFactory();
-                        return [4 /*yield*/, deploymentFactory.handle(deployments, network)];
+                        twinDeploymentFactory = new twinDeploymentFactory_1.TwinDeploymentFactory();
+                        return [4 /*yield*/, twinDeploymentFactory.handle(deployments, network)];
                     case 10:
                         contracts = _j.sent();
                         data = this.save(options.name, contracts, wireguardConfig);

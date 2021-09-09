@@ -68,7 +68,7 @@ var zdb_1 = require("../primitives/zdb");
 var utils_1 = require("../helpers/utils");
 var deployment_1 = require("../primitives/deployment");
 var models_2 = require("../high_level/models");
-var deploymentFactory_1 = require("../high_level/deploymentFactory");
+var twinDeploymentFactory_1 = require("../high_level/twinDeploymentFactory");
 var Zdbs = /** @class */ (function (_super) {
     __extends(Zdbs, _super);
     function Zdbs() {
@@ -95,7 +95,7 @@ var Zdbs = /** @class */ (function (_super) {
                             deployment = deploymentFactory.create([zdbWorkload], 1626394539, options.metadata, options.description);
                             twinDeployments.push(new models_2.TwinDeployment(deployment, models_2.Operations.deploy, 0, instance.node_id));
                         }
-                        twinDeploymentFactory = new deploymentFactory_1.DeploymentFactory();
+                        twinDeploymentFactory = new twinDeploymentFactory_1.TwinDeploymentFactory();
                         return [4 /*yield*/, twinDeploymentFactory.handle(twinDeployments)];
                     case 1:
                         contracts = _b.sent();

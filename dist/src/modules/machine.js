@@ -66,7 +66,7 @@ var models_1 = require("./models");
 var index_1 = require("../primitives/index");
 var expose_1 = require("../helpers/expose");
 var machine_1 = require("../high_level/machine");
-var deploymentFactory_1 = require("../high_level/deploymentFactory");
+var twinDeploymentFactory_1 = require("../high_level/twinDeploymentFactory");
 var Machine = /** @class */ (function (_super) {
     __extends(Machine, _super);
     function Machine() {
@@ -76,11 +76,11 @@ var Machine = /** @class */ (function (_super) {
     }
     Machine.prototype.deploy = function (options) {
         return __awaiter(this, void 0, void 0, function () {
-            var networkName, network, vm, _a, twinDeployments, wgConfig, deploymentFactory, contracts, data;
+            var networkName, network, vm, _a, twinDeployments, wgConfig, twinDeploymentFactory, contracts, data;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
-                        if (this._get(options.name)) {
+                        if (this.exists(options.name)) {
                             throw Error("Another machine deployment with the same name " + options.name + " is already exist");
                         }
                         networkName = options.network.name;
@@ -92,8 +92,8 @@ var Machine = /** @class */ (function (_super) {
                         return [4 /*yield*/, vm.create(options.name, options.node_id, options.flist, options.cpu, options.memory, options.disks, options.public_ip, network, options.entrypoint, options.env, options.metadata, options.description)];
                     case 2:
                         _a = _b.sent(), twinDeployments = _a[0], wgConfig = _a[1];
-                        deploymentFactory = new deploymentFactory_1.DeploymentFactory();
-                        return [4 /*yield*/, deploymentFactory.handle(twinDeployments, network)];
+                        twinDeploymentFactory = new twinDeploymentFactory_1.TwinDeploymentFactory();
+                        return [4 /*yield*/, twinDeploymentFactory.handle(twinDeployments, network)];
                     case 3:
                         contracts = _b.sent();
                         data = this.save(options.name, contracts, wgConfig);

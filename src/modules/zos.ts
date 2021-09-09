@@ -1,21 +1,20 @@
-import { Deployment, WorkloadTypes } from "grid3_client"
+import { WorkloadTypes } from "grid3_client"
 
 import { expose } from "../helpers/index"
 import { default as config } from "../../config.json"
-import { DeploymentFactory } from "../high_level/deploymentFactory"
+import { TwinDeploymentFactory } from "../high_level/twinDeploymentFactory"
+import { DeploymentFactory } from "../primitives/deployment"
 
 class Zos {
     @expose
     async deploy(options) {
-        // get challenge hash, node_id, and node_twin_id from the deployment
-        const deploymentHash = options.hash
+        // get node_id from the deployment
         const node_id = options.node_id
-        delete options.hash
         delete options.node_id
 
-        let deployment = new Deployment()
-        Object.assign(deployment, options)
-        deployment.sign(deployment.twin_id, config.mnemonic, deploymentHash)
+        const deploymentFactory = new DeploymentFactory()
+        let deployment = deploymentFactory.fromObj(options)
+        deployment.sign(deployment.twin_id, config.mnemonic)
 
         let publicIPs = 0;
         for (const workload of deployment.workloads) {
@@ -23,8 +22,8 @@ class Zos {
                 publicIPs++;
             }
         }
-        let deploymentFactory = new DeploymentFactory()
-        return await deploymentFactory.createContractAndSendToZos(deployment, node_id, deploymentHash, publicIPs)
+        let twinDeploymentFactory = new TwinDeploymentFactory()
+        return await twinDeploymentFactory.createContractAndSendToZos(deployment, node_id, deployment.challenge_hash(), publicIPs)
     }
 }
 

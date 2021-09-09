@@ -5,7 +5,7 @@ import { Network, getNodeTwinId } from "../primitives/index";
 import { default as config } from "../../config.json"
 
 
-class DeploymentFactory {
+class TwinDeploymentFactory {
     tfclient: TFClient;
     rmb: MessageBusClient;
 
@@ -89,4 +89,4 @@ class DeploymentFactory {
     }
 }
 
-export { DeploymentFactory }
+export { TwinDeploymentFactory }

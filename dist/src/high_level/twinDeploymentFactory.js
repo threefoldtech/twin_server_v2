@@ -39,17 +39,17 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.DeploymentFactory = void 0;
+exports.TwinDeploymentFactory = void 0;
 var grid3_client_1 = require("grid3_client");
 var models_1 = require("./models");
 var index_1 = require("../primitives/index");
 var config_json_1 = __importDefault(require("../../config.json"));
-var DeploymentFactory = /** @class */ (function () {
-    function DeploymentFactory() {
+var TwinDeploymentFactory = /** @class */ (function () {
+    function TwinDeploymentFactory() {
         this.tfclient = new grid3_client_1.TFClient(config_json_1.default.url, config_json_1.default.mnemonic);
         this.rmb = new grid3_client_1.MessageBusClient();
     }
-    DeploymentFactory.prototype.createContractAndSendToZos = function (deployment, node_id, hash, publicIPs) {
+    TwinDeploymentFactory.prototype.createContractAndSendToZos = function (deployment, node_id, hash, publicIPs) {
         return __awaiter(this, void 0, void 0, function () {
             var contract, payload, node_twin_id, msg, result, err_1;
             return __generator(this, function (_a) {
@@ -95,7 +95,7 @@ var DeploymentFactory = /** @class */ (function () {
             });
         });
     };
-    DeploymentFactory.prototype.merge = function (twinDeployments) {
+    TwinDeploymentFactory.prototype.merge = function (twinDeployments) {
         var deploymentMap = {};
         for (var _i = 0, twinDeployments_1 = twinDeployments; _i < twinDeployments_1.length; _i++) {
             var twinDeployment = twinDeployments_1[_i];
@@ -116,7 +116,7 @@ var DeploymentFactory = /** @class */ (function () {
         }
         return deployments;
     };
-    DeploymentFactory.prototype.handle = function (deployments, network) {
+    TwinDeploymentFactory.prototype.handle = function (deployments, network) {
         if (network === void 0) { network = null; }
         return __awaiter(this, void 0, void 0, function () {
             var contracts, _i, deployments_1, twinDeployment, _a, _b, workload, hash, contract;
@@ -158,6 +158,6 @@ var DeploymentFactory = /** @class */ (function () {
             });
         });
     };
-    return DeploymentFactory;
+    return TwinDeploymentFactory;
 }());
-exports.DeploymentFactory = DeploymentFactory;
+exports.TwinDeploymentFactory = TwinDeploymentFactory;

@@ -3,7 +3,7 @@ import { Machines } from "./models"
 import { Network } from "../primitives/index"
 import { expose } from "../helpers/expose"
 import { VirtualMachine } from "../high_level/machine"
-import { DeploymentFactory } from "../high_level/deploymentFactory"
+import { TwinDeploymentFactory } from "../high_level/twinDeploymentFactory"
 
 
 class Machine extends BaseModule {
@@ -35,8 +35,8 @@ class Machine extends BaseModule {
             options.metadata,
             options.description)
 
-        let deploymentFactory = new DeploymentFactory()
-        const contracts = await deploymentFactory.handle(twinDeployments, network)
+        let twinDeploymentFactory = new TwinDeploymentFactory()
+        const contracts = await twinDeploymentFactory.handle(twinDeployments, network)
         const data = this.save(options.name, contracts, wgConfig)
         return data
     }

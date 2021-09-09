@@ -52,23 +52,22 @@ exports.zos = void 0;
 var grid3_client_1 = require("grid3_client");
 var index_1 = require("../helpers/index");
 var config_json_1 = __importDefault(require("../../config.json"));
-var deploymentFactory_1 = require("../high_level/deploymentFactory");
+var twinDeploymentFactory_1 = require("../high_level/twinDeploymentFactory");
+var deployment_1 = require("../primitives/deployment");
 var Zos = /** @class */ (function () {
     function Zos() {
     }
     Zos.prototype.deploy = function (options) {
         return __awaiter(this, void 0, void 0, function () {
-            var deploymentHash, node_id, deployment, publicIPs, _i, _a, workload, deploymentFactory;
+            var node_id, deploymentFactory, deployment, publicIPs, _i, _a, workload, twinDeploymentFactory;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
-                        deploymentHash = options.hash;
                         node_id = options.node_id;
-                        delete options.hash;
                         delete options.node_id;
-                        deployment = new grid3_client_1.Deployment();
-                        Object.assign(deployment, options);
-                        deployment.sign(deployment.twin_id, config_json_1.default.mnemonic, deploymentHash);
+                        deploymentFactory = new deployment_1.DeploymentFactory();
+                        deployment = deploymentFactory.fromObj(options);
+                        deployment.sign(deployment.twin_id, config_json_1.default.mnemonic);
                         publicIPs = 0;
                         for (_i = 0, _a = deployment.workloads; _i < _a.length; _i++) {
                             workload = _a[_i];
@@ -76,8 +75,8 @@ var Zos = /** @class */ (function () {
                                 publicIPs++;
                             }
                         }
-                        deploymentFactory = new deploymentFactory_1.DeploymentFactory();
-                        return [4 /*yield*/, deploymentFactory.createContractAndSendToZos(deployment, node_id, deploymentHash, publicIPs)];
+                        twinDeploymentFactory = new twinDeploymentFactory_1.TwinDeploymentFactory();
+                        return [4 /*yield*/, twinDeploymentFactory.createContractAndSendToZos(deployment, node_id, deployment.challenge_hash(), publicIPs)];
                     case 1: return [2 /*return*/, _b.sent()];
                 }
             });
