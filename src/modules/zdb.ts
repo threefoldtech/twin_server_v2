@@ -19,8 +19,7 @@ class Zdbs extends BaseModule {
         const zdbFactory = new zdb()
         let twinDeployments = []
         for (const instance of options.zdbs) {
-            const instance_name = generateString(10)
-            const zdbWorkload = zdbFactory.create(instance_name,
+            const zdbWorkload = zdbFactory.create(instance.name,
                 instance.namespace,
                 instance.disk_size,
                 instance.mode,

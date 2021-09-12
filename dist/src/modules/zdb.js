@@ -65,7 +65,6 @@ var base_1 = require("./base");
 var models_1 = require("./models");
 var expose_1 = require("../helpers/expose");
 var zdb_1 = require("../primitives/zdb");
-var utils_1 = require("../helpers/utils");
 var deployment_1 = require("../primitives/deployment");
 var models_2 = require("../high_level/models");
 var twinDeploymentFactory_1 = require("../high_level/twinDeploymentFactory");
@@ -78,7 +77,7 @@ var Zdbs = /** @class */ (function (_super) {
     }
     Zdbs.prototype.deploy = function (options) {
         return __awaiter(this, void 0, void 0, function () {
-            var deploymentFactory, zdbFactory, twinDeployments, _i, _a, instance, instance_name, zdbWorkload, deployment, twinDeploymentFactory, contracts, data;
+            var deploymentFactory, zdbFactory, twinDeployments, _i, _a, instance, zdbWorkload, deployment, twinDeploymentFactory, contracts, data;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
@@ -90,8 +89,7 @@ var Zdbs = /** @class */ (function (_super) {
                         twinDeployments = [];
                         for (_i = 0, _a = options.zdbs; _i < _a.length; _i++) {
                             instance = _a[_i];
-                            instance_name = utils_1.generateString(10);
-                            zdbWorkload = zdbFactory.create(instance_name, instance.namespace, instance.disk_size, instance.mode, instance.password, instance.disk_type, instance.public, options.metadata, options.description);
+                            zdbWorkload = zdbFactory.create(instance.name, instance.namespace, instance.disk_size, instance.mode, instance.password, instance.disk_type, instance.public, options.metadata, options.description);
                             deployment = deploymentFactory.create([zdbWorkload], 1626394539, options.metadata, options.description);
                             twinDeployments.push(new models_2.TwinDeployment(deployment, models_2.Operations.deploy, 0, instance.node_id));
                         }

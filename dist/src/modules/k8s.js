@@ -104,7 +104,7 @@ var K8s = /** @class */ (function (_super) {
                     case 2:
                         if (!(_i < _a.length)) return [3 /*break*/, 5];
                         master = _a[_i];
-                        return [4 /*yield*/, kubernetes.add_master(master.node_id, options.secret, master.cpu, master.memory, master.disk_size, master.public_ip, network, options.ssh_key, options.metadata, options.description)];
+                        return [4 /*yield*/, kubernetes.add_master(master.name, master.node_id, options.secret, master.cpu, master.memory, master.disk_size, master.public_ip, network, options.ssh_key, options.metadata, options.description)];
                     case 3:
                         _b = _j.sent(), twinDeployments = _b[0], wgConfig = _b[1];
                         deployments = deployments.concat(twinDeployments);
@@ -132,7 +132,7 @@ var K8s = /** @class */ (function (_super) {
                     case 6:
                         if (!(_f < _g.length)) return [3 /*break*/, 9];
                         worker = _g[_f];
-                        return [4 /*yield*/, kubernetes.add_worker(worker.node_id, options.secret, masterIp, worker.cpu, worker.memory, worker.disk_size, worker.public_ip, network, options.ssh_key, options.metadata, options.description)];
+                        return [4 /*yield*/, kubernetes.add_worker(worker.name, worker.node_id, options.secret, masterIp, worker.cpu, worker.memory, worker.disk_size, worker.public_ip, network, options.ssh_key, options.metadata, options.description)];
                     case 7:
                         _h = _j.sent(), twinDeployments = _h[0], _ = _h[1];
                         deployments = deployments.concat(twinDeployments);

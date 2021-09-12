@@ -25,17 +25,16 @@ class VirtualMachine {
         // disks
         let diskMounts = [];
         for (const d of disks) {
-            const dName = generateString(10);
             const disk = new Disk()
-            workloads.push(disk.create(d["size"], dName, metadata, description))
-            diskMounts.push(disk.createMount(dName, d["mountpoint"]))
+            workloads.push(disk.create(d["size"], d["name"], metadata, description))
+            diskMounts.push(disk.createMount(d["name"], d["mountpoint"]))
         }
         // ipv4
         let ipName = "";
         let publicIps = 0;
         if (publicIp) {
             const ipv4 = new IPv4();
-            ipName = generateString(10);
+            ipName = `${name}_pubip`
             workloads.push(ipv4.create(ipName, metadata, description))
             publicIps++;
         }

@@ -7,12 +7,7 @@ enum Operations {
 }
 
 class TwinDeployment {
-    deployment: Deployment;
-    operation: Operations;
-    publicIps: number;
-    nodeId: number;
-
-    constructor(deployment: Deployment, operation: Operations, publicIps: number, nodeId: number) {
+    constructor(public deployment: Deployment, public operation: Operations, public publicIps: number, public nodeId: number) {
         this.deployment = deployment;
         this.operation = operation;
         this.publicIps = publicIps;

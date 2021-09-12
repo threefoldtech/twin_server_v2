@@ -13,6 +13,10 @@ var TwinDeployment = /** @class */ (function () {
         this.operation = operation;
         this.publicIps = publicIps;
         this.nodeId = nodeId;
+        this.deployment = deployment;
+        this.operation = operation;
+        this.publicIps = publicIps;
+        this.nodeId = nodeId;
     }
     return TwinDeployment;
 }());

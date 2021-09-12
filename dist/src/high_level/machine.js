@@ -49,7 +49,7 @@ var VirtualMachine = /** @class */ (function () {
         if (metadata === void 0) { metadata = ""; }
         if (description === void 0) { description = ""; }
         return __awaiter(this, void 0, void 0, function () {
-            var deployments, workloads, diskMounts, _i, disks_1, d, dName, disk, ipName, publicIps, ipv4, deploymentFactory, accessNodes, access_net_workload, wgConfig, hasAccessNode, _a, _b, accessNode, filteredAccessNodes, _c, _d, accessNodeId, access_node_id, znet_workload, _e, _f, deployment_1, d, _g, _h, workload, accessNodeId, deployment_2, vm, machine_ip, deployment;
+            var deployments, workloads, diskMounts, _i, disks_1, d, disk, ipName, publicIps, ipv4, deploymentFactory, accessNodes, access_net_workload, wgConfig, hasAccessNode, _a, _b, accessNode, filteredAccessNodes, _c, _d, accessNodeId, access_node_id, znet_workload, _e, _f, deployment_1, d, _g, _h, workload, accessNodeId, deployment_2, vm, machine_ip, deployment;
             return __generator(this, function (_j) {
                 switch (_j.label) {
                     case 0:
@@ -58,16 +58,15 @@ var VirtualMachine = /** @class */ (function () {
                         diskMounts = [];
                         for (_i = 0, disks_1 = disks; _i < disks_1.length; _i++) {
                             d = disks_1[_i];
-                            dName = utils_1.generateString(10);
                             disk = new index_1.Disk();
-                            workloads.push(disk.create(d["size"], dName, metadata, description));
-                            diskMounts.push(disk.createMount(dName, d["mountpoint"]));
+                            workloads.push(disk.create(d["size"], d["name"], metadata, description));
+                            diskMounts.push(disk.createMount(d["name"], d["mountpoint"]));
                         }
                         ipName = "";
                         publicIps = 0;
                         if (publicIp) {
                             ipv4 = new index_1.IPv4();
-                            ipName = utils_1.generateString(10);
+                            ipName = name + "_pubip";
                             workloads.push(ipv4.create(ipName, metadata, description));
                             publicIps++;
                         }

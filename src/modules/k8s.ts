@@ -34,7 +34,8 @@ class K8s extends BaseModule {
         const kubernetes = new Kubernetes()
 
         for (const master of options.masters) {
-            const [twinDeployments, wgConfig] = await kubernetes.add_master(master.node_id,
+            const [twinDeployments, wgConfig] = await kubernetes.add_master(master.name,
+                master.node_id,
                 options.secret,
                 master.cpu,
                 master.memory,
@@ -62,7 +63,8 @@ class K8s extends BaseModule {
         }
 
         for (const worker of options.workers) {
-            const [twinDeployments, _] = await kubernetes.add_worker(worker.node_id,
+            const [twinDeployments, _] = await kubernetes.add_worker(worker.name,
+                worker.node_id,
                 options.secret,
                 masterIp,
                 worker.cpu,

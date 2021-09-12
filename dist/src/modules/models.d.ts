@@ -1,5 +1,6 @@
 import { ZdbModes, DeviceTypes } from "grid3_client";
 declare class Disks {
+    name: string;
     size: number;
     mountpoint: string;
 }
@@ -8,6 +9,7 @@ declare class Network {
     ip_range: string;
 }
 declare class KubernetesNode {
+    name: string;
     node_id: number;
     cpu: number;
     memory: number;
@@ -38,6 +40,7 @@ declare class K8S {
     ssh_key: string;
 }
 declare class ZDB {
+    name: string;
     node_id: number;
     mode: ZdbModes;
     disk_size: number;

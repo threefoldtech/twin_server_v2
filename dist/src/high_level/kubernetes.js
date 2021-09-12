@@ -38,32 +38,32 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Kubernetes = void 0;
 var machine_1 = require("../high_level//machine");
-var utils_1 = require("../helpers/utils");
 var Flist = "https://hub.grid.tf/ahmed_hanafy_1/ahmedhanafy725-k3s-latest.flist";
 var Kubernetes = /** @class */ (function () {
     function Kubernetes() {
     }
-    Kubernetes.prototype.add_master = function (nodeId, secret, cpu, memory, diskSize, publicIp, network, sshKey, metadata, description) {
+    Kubernetes.prototype.add_master = function (name, nodeId, secret, cpu, memory, diskSize, publicIp, network, sshKey, metadata, description) {
         if (metadata === void 0) { metadata = ""; }
         if (description === void 0) { description = ""; }
         return __awaiter(this, void 0, void 0, function () {
-            var name, machine, env, disk;
+            var machine, mountpoint, env, disk;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        name = utils_1.generateString(10);
                         machine = new machine_1.VirtualMachine();
+                        mountpoint = "/mnt/data";
                         env = {
                             "SSH_KEY": sshKey,
                             "K3S_TOKEN": secret,
-                            "K3S_DATA_DIR": "/mnt/data",
+                            "K3S_DATA_DIR": mountpoint,
                             "K3S_FLANNEL_IFACE": "eth0",
                             "K3S_NODE_NAME": name,
                             "K3S_URL": ""
                         };
                         disk = {
+                            "name": name + "_disk",
                             "size": diskSize,
-                            "mountpoint": "/mnt/data" // it must be the same as the K3S_DATA_DIR
+                            "mountpoint": mountpoint
                         };
                         return [4 /*yield*/, machine.create(name, nodeId, Flist, cpu, memory, [disk], publicIp, network, "/sbin/zinit init", env, metadata, description)];
                     case 1: return [2 /*return*/, _a.sent()];
@@ -71,27 +71,28 @@ var Kubernetes = /** @class */ (function () {
             });
         });
     };
-    Kubernetes.prototype.add_worker = function (nodeId, secret, masterIp, cpu, memory, diskSize, publicIp, network, sshKey, metadata, description) {
+    Kubernetes.prototype.add_worker = function (name, nodeId, secret, masterIp, cpu, memory, diskSize, publicIp, network, sshKey, metadata, description) {
         if (metadata === void 0) { metadata = ""; }
         if (description === void 0) { description = ""; }
         return __awaiter(this, void 0, void 0, function () {
-            var name, machine, env, disk;
+            var machine, mountpoint, env, disk;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        name = utils_1.generateString(10);
                         machine = new machine_1.VirtualMachine();
+                        mountpoint = "/mnt/data";
                         env = {
                             "SSH_KEY": sshKey,
                             "K3S_TOKEN": secret,
-                            "K3S_DATA_DIR": "/mnt/data",
+                            "K3S_DATA_DIR": mountpoint,
                             "K3S_FLANNEL_IFACE": "eth0",
                             "K3S_NODE_NAME": name,
                             "K3S_URL": "https://" + masterIp + ":6443"
                         };
                         disk = {
+                            "name": name + "_disk",
                             "size": diskSize,
-                            "mountpoint": "/mnt/data" // it must be the same as the K3S_DATA_DIR
+                            "mountpoint": mountpoint
                         };
                         return [4 /*yield*/, machine.create(name, nodeId, Flist, cpu, memory, [disk], publicIp, network, "/sbin/zinit init", env, metadata, description)];
                     case 1: return [2 /*return*/, _a.sent()];

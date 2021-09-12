@@ -5,7 +5,8 @@ import { generateString } from "../helpers/utils"
 const Flist = "https://hub.grid.tf/ahmed_hanafy_1/ahmedhanafy725-k3s-latest.flist"
 
 class Kubernetes {
-    async add_master(nodeId: number,
+    async add_master(name: string,
+        nodeId: number,
         secret: string,
         cpu: number,
         memory: number,
@@ -15,19 +16,21 @@ class Kubernetes {
         sshKey: string,
         metadata: string = "",
         description: string = "") {
-        const name = generateString(10)
+
         const machine = new VirtualMachine()
+        const mountpoint = "/mnt/data"
         const env = {
             "SSH_KEY": sshKey,
             "K3S_TOKEN": secret,
-            "K3S_DATA_DIR": "/mnt/data",
+            "K3S_DATA_DIR": mountpoint,
             "K3S_FLANNEL_IFACE": "eth0",
             "K3S_NODE_NAME": name,
             "K3S_URL": ""
         }
         const disk = {
+            "name": `${name}_disk`,
             "size": diskSize,
-            "mountpoint": "/mnt/data" // it must be the same as the K3S_DATA_DIR
+            "mountpoint": mountpoint
         }
         return await machine.create(name,
             nodeId,
@@ -43,7 +46,8 @@ class Kubernetes {
             description)
     }
 
-    async add_worker(nodeId: number,
+    async add_worker(name: string,
+        nodeId: number,
         secret: string,
         masterIp: string,
         cpu: number,
@@ -55,19 +59,20 @@ class Kubernetes {
         metadata: string = "",
         description: string = "") {
 
-        const name = generateString(10)
         const machine = new VirtualMachine()
+        const mountpoint = "/mnt/data"
         const env = {
             "SSH_KEY": sshKey,
             "K3S_TOKEN": secret,
-            "K3S_DATA_DIR": "/mnt/data",
+            "K3S_DATA_DIR": mountpoint,
             "K3S_FLANNEL_IFACE": "eth0",
             "K3S_NODE_NAME": name,
             "K3S_URL": `https://${masterIp}:6443`
         }
         const disk = {
+            "name": `${name}_disk`,
             "size": diskSize,
-            "mountpoint": "/mnt/data" // it must be the same as the K3S_DATA_DIR
+            "mountpoint": mountpoint
         }
         return await machine.create(name,
             nodeId,

@@ -1,7 +1,7 @@
 import { TFClient, WorkloadTypes, Deployment, MessageBusClient } from "grid3_client"
 
 import { Operations, TwinDeployment } from "./models";
-import { Network, getNodeTwinId, DeploymentFactory } from "../primitives/index";
+import { Network, getNodeTwinId } from "../primitives/index";
 import { default as config } from "../../config.json"
 
 
