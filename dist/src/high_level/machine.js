@@ -37,6 +37,8 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.VirtualMachine = void 0;
+var netaddr_1 = require("netaddr");
+var grid3_client_1 = require("grid3_client");
 var models_1 = require("./models");
 var index_1 = require("../primitives/index");
 var utils_1 = require("../helpers/utils");
@@ -47,9 +49,9 @@ var VirtualMachine = /** @class */ (function () {
         if (metadata === void 0) { metadata = ""; }
         if (description === void 0) { description = ""; }
         return __awaiter(this, void 0, void 0, function () {
-            var deployments, workloads, diskMounts, _i, disks_1, d, dName, disk, ipName, publicIps, ipv4, accessNodes, access_net_workload, wgConfig, hasAccessNode, _a, _b, accessNode, filteredAccessNodes, _c, _d, accessNodeId, access_node_id, znet_workload, deploymentFactory, accessNodeId, deployment_1, vm, machine_ip, deployment;
-            return __generator(this, function (_e) {
-                switch (_e.label) {
+            var deployments, workloads, diskMounts, _i, disks_1, d, dName, disk, ipName, publicIps, ipv4, deploymentFactory, accessNodes, access_net_workload, wgConfig, hasAccessNode, _a, _b, accessNode, filteredAccessNodes, _c, _d, accessNodeId, access_node_id, znet_workload, _e, _f, deployment_1, d, _g, _h, workload, accessNodeId, deployment_2, vm, machine_ip, deployment;
+            return __generator(this, function (_j) {
+                switch (_j.label) {
                     case 0:
                         deployments = [];
                         workloads = [];
@@ -69,9 +71,10 @@ var VirtualMachine = /** @class */ (function () {
                             workloads.push(ipv4.create(ipName, metadata, description));
                             publicIps++;
                         }
+                        deploymentFactory = new index_1.DeploymentFactory();
                         return [4 /*yield*/, index_1.getAccessNodes()];
                     case 1:
-                        accessNodes = _e.sent();
+                        accessNodes = _j.sent();
                         wgConfig = "";
                         hasAccessNode = false;
                         for (_a = 0, _b = Object.keys(accessNodes); _a < _b.length; _a++) {
@@ -92,34 +95,51 @@ var VirtualMachine = /** @class */ (function () {
                         access_node_id = Number(utils_1.randomChoice(filteredAccessNodes));
                         return [4 /*yield*/, network.addNode(access_node_id, metadata, description)];
                     case 2:
-                        access_net_workload = _e.sent();
+                        access_net_workload = _j.sent();
                         return [4 /*yield*/, network.addAccess(access_node_id, true)];
                     case 3:
-                        wgConfig = _e.sent();
-                        _e.label = 4;
+                        wgConfig = _j.sent();
+                        _j.label = 4;
                     case 4: return [4 /*yield*/, network.addNode(nodeId, metadata, description)];
                     case 5:
-                        znet_workload = _e.sent();
+                        znet_workload = _j.sent();
                         if (!(znet_workload && network.exists())) return [3 /*break*/, 6];
-                        throw Error("Network update is not implemented");
+                        // update network
+                        for (_e = 0, _f = network.deployments; _e < _f.length; _e++) {
+                            deployment_1 = _f[_e];
+                            d = deploymentFactory.fromObj(deployment_1);
+                            for (_g = 0, _h = d["workloads"]; _g < _h.length; _g++) {
+                                workload = _h[_g];
+                                if (workload["type"] !== grid3_client_1.WorkloadTypes.network || !netaddr_1.Addr(network.ipRange).contains(netaddr_1.Addr(workload["data"]["subnet"]))) {
+                                    continue;
+                                }
+                                workload.data = network.updateNetwork(workload["data"]);
+                                workload.version += 1;
+                                console.log("version updated");
+                                break;
+                            }
+                            deployments.push(new models_1.TwinDeployment(d, models_1.Operations.update, 0, 0));
+                        }
+                        workloads.push(znet_workload);
+                        return [3 /*break*/, 9];
                     case 6:
                         if (!znet_workload) return [3 /*break*/, 9];
                         if (!(!access_net_workload && !hasAccessNode)) return [3 /*break*/, 8];
                         return [4 /*yield*/, network.addAccess(nodeId, true)];
                     case 7:
-                        wgConfig = _e.sent();
+                        // this node is access node, so add access point on it
+                        wgConfig = _j.sent();
                         znet_workload["data"] = network.updateNetwork(znet_workload.data);
-                        _e.label = 8;
+                        _j.label = 8;
                     case 8:
                         workloads.push(znet_workload);
-                        _e.label = 9;
+                        _j.label = 9;
                     case 9:
-                        deploymentFactory = new index_1.DeploymentFactory();
                         if (access_net_workload) {
                             accessNodeId = access_net_workload.data["node_id"];
                             access_net_workload["data"] = network.updateNetwork(access_net_workload.data);
-                            deployment_1 = deploymentFactory.create([access_net_workload], 1626394539, metadata, description);
-                            deployments.push(new models_1.TwinDeployment(deployment_1, models_1.Operations.deploy, 0, accessNodeId));
+                            deployment_2 = deploymentFactory.create([access_net_workload], 1626394539, metadata, description);
+                            deployments.push(new models_1.TwinDeployment(deployment_2, models_1.Operations.deploy, 0, accessNodeId));
                         }
                         vm = new index_1.VM();
                         machine_ip = network.getFreeIP(nodeId);

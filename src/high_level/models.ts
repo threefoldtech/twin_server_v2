@@ -9,13 +9,13 @@ enum Operations {
 class TwinDeployment {
     deployment: Deployment;
     operation: Operations;
-    publicIPs: number;
+    publicIps: number;
     nodeId: number;
 
-    constructor(deployment: Deployment, operation: Operations, publicIPs: number, nodeId: number) {
+    constructor(deployment: Deployment, operation: Operations, publicIps: number, nodeId: number) {
         this.deployment = deployment;
         this.operation = operation;
-        this.publicIPs = publicIPs;
+        this.publicIps = publicIps;
         this.nodeId = nodeId;
     }
 }

@@ -27,6 +27,7 @@ declare class Network {
     updateNetwork(znet: any): Znet;
     updateNetworkDeployments(): void;
     load(deployments?: boolean): Promise<void>;
+    _fromObj(net: Znet): Znet;
     exists(): boolean;
     nodeExists(node_id: number): boolean;
     generateWireguardKeypair(): Promise<WireGuardKeys>;

@@ -8,10 +8,10 @@ var Operations;
 })(Operations || (Operations = {}));
 exports.Operations = Operations;
 var TwinDeployment = /** @class */ (function () {
-    function TwinDeployment(deployment, operation, publicIPs, nodeId) {
+    function TwinDeployment(deployment, operation, publicIps, nodeId) {
         this.deployment = deployment;
         this.operation = operation;
-        this.publicIPs = publicIPs;
+        this.publicIps = publicIps;
         this.nodeId = nodeId;
     }
     return TwinDeployment;

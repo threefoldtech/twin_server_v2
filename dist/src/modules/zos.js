@@ -59,7 +59,7 @@ var Zos = /** @class */ (function () {
     }
     Zos.prototype.deploy = function (options) {
         return __awaiter(this, void 0, void 0, function () {
-            var node_id, deploymentFactory, deployment, publicIPs, _i, _a, workload, twinDeploymentFactory;
+            var node_id, deploymentFactory, deployment, publicIps, _i, _a, workload, twinDeploymentFactory;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
@@ -68,15 +68,15 @@ var Zos = /** @class */ (function () {
                         deploymentFactory = new deployment_1.DeploymentFactory();
                         deployment = deploymentFactory.fromObj(options);
                         deployment.sign(deployment.twin_id, config_json_1.default.mnemonic);
-                        publicIPs = 0;
+                        publicIps = 0;
                         for (_i = 0, _a = deployment.workloads; _i < _a.length; _i++) {
                             workload = _a[_i];
                             if (workload.type === grid3_client_1.WorkloadTypes.ipv4) {
-                                publicIPs++;
+                                publicIps++;
                             }
                         }
                         twinDeploymentFactory = new twinDeploymentFactory_1.TwinDeploymentFactory();
-                        return [4 /*yield*/, twinDeploymentFactory.createContractAndSendToZos(deployment, node_id, deployment.challenge_hash(), publicIPs)];
+                        return [4 /*yield*/, twinDeploymentFactory.deploy(deployment, node_id, publicIps)];
                     case 1: return [2 /*return*/, _b.sent()];
                 }
             });

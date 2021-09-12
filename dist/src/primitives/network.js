@@ -57,9 +57,9 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Network = void 0;
 var Wg = require('wireguard-wrapper').Wg;
-var Addr = require('netaddr').Addr;
 var Private = require("private-ip");
 var PATH = __importStar(require("path"));
+var netaddr_1 = require("netaddr");
 var grid3_client_1 = require("grid3_client");
 var jsonfs_1 = require("../helpers/jsonfs");
 var utils_1 = require("../helpers/utils");
@@ -88,7 +88,7 @@ var Network = /** @class */ (function () {
         this.accessPoints = [];
         this.name = name;
         this.ipRange = ip_range;
-        if (Addr(ip_range).prefix !== 16) {
+        if (netaddr_1.Addr(ip_range).prefix !== 16) {
             throw Error("Network ip_range should be with prefix 16");
         }
         if (!this.isPrivateIP(ip_range)) {
@@ -191,7 +191,7 @@ var Network = /** @class */ (function () {
         for (var _i = 0, _a = this.networks; _i < _a.length; _i++) {
             var net = _a[_i];
             if (net.subnet === znet.subnet) {
-                return znet;
+                return net;
             }
         }
     };
@@ -206,11 +206,10 @@ var Network = /** @class */ (function () {
                     if (workload["type"] !== grid3_client_1.WorkloadTypes.network) {
                         continue;
                     }
-                    if (net.subnet !== workload["data"]["subnet"]) {
-                        continue;
+                    if (net.subnet === workload["data"]["subnet"]) {
+                        workload["data"] = net;
+                        break;
                     }
-                    workload["data"] = net;
-                    break;
                 }
                 deployment["workloads"] = workloads;
             }
@@ -259,10 +258,10 @@ var Network = /** @class */ (function () {
                         this.deployments.push(res);
                         for (_d = 0, _e = res["workloads"]; _d < _e.length; _d++) {
                             workload = _e[_d];
-                            if (workload["type"] !== grid3_client_1.WorkloadTypes.network) {
+                            if (workload["type"] !== grid3_client_1.WorkloadTypes.network || !netaddr_1.Addr(this.ipRange).contains(netaddr_1.Addr(workload["data"]["subnet"]))) {
                                 continue;
                             }
-                            znet = workload["data"];
+                            znet = this._fromObj(workload["data"]);
                             znet["node_id"] = node.node_id;
                             this.networks.push(znet);
                         }
@@ -278,6 +277,19 @@ var Network = /** @class */ (function () {
                 }
             });
         });
+    };
+    Network.prototype._fromObj = function (net) {
+        var znet = new grid3_client_1.Znet();
+        Object.assign(znet, net);
+        var peers = [];
+        for (var _i = 0, _a = znet.peers; _i < _a.length; _i++) {
+            var peer = _a[_i];
+            var p = new grid3_client_1.Peer();
+            Object.assign(p, peer);
+            peers.push(p);
+        }
+        znet.peers = peers;
+        return znet;
     };
     Network.prototype.exists = function () {
         return this.getNetworkNames().includes(this.name);
@@ -348,10 +360,10 @@ var Network = /** @class */ (function () {
         if (subnet === void 0) { subnet = ""; }
         var ip;
         if (!this.nodeExists(node_id) && subnet) {
-            ip = Addr(subnet).mask(32).increment().increment();
+            ip = netaddr_1.Addr(subnet).mask(32).increment().increment();
         }
         else if (this.nodeExists(node_id)) {
-            ip = Addr(this.getNodeSubnet(node_id)).mask(32).increment().increment();
+            ip = netaddr_1.Addr(this.getNodeSubnet(node_id)).mask(32).increment().increment();
             var reserved_ips = this.getNodeReservedIps(node_id);
             while (reserved_ips.includes(ip.toString().split("/")[0])) {
                 ip = ip.increment();
@@ -406,8 +418,14 @@ var Network = /** @class */ (function () {
                 this.reservedSubnets.push(subnet);
             }
         }
-        for (var _b = 0, _c = this.networks; _b < _c.length; _b++) {
-            var network = _c[_b];
+        for (var _b = 0, _c = this.accessPoints; _b < _c.length; _b++) {
+            var accessPoint = _c[_b];
+            if (accessPoint.subnet && !this.reservedSubnets.includes(accessPoint.subnet)) {
+                this.reservedSubnets.push(accessPoint.subnet);
+            }
+        }
+        for (var _d = 0, _e = this.networks; _d < _e.length; _d++) {
+            var network = _e[_d];
             if (!this.reservedSubnets.includes(network.subnet)) {
                 this.reservedSubnets.push(network.subnet);
             }
@@ -416,7 +434,7 @@ var Network = /** @class */ (function () {
     };
     Network.prototype.getFreeSubnet = function () {
         var reservedSubnets = this.getReservedSubnets();
-        var subnet = Addr(this.ipRange).mask(24).nextSibling().nextSibling();
+        var subnet = netaddr_1.Addr(this.ipRange).mask(24).nextSibling().nextSibling();
         while (reservedSubnets.includes(subnet.toString())) {
             subnet = subnet.nextSibling();
         }

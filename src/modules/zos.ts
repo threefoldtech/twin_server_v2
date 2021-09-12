@@ -16,14 +16,14 @@ class Zos {
         let deployment = deploymentFactory.fromObj(options)
         deployment.sign(deployment.twin_id, config.mnemonic)
 
-        let publicIPs = 0;
+        let publicIps = 0;
         for (const workload of deployment.workloads) {
             if (workload.type === WorkloadTypes.ipv4) {
-                publicIPs++;
+                publicIps++;
             }
         }
         let twinDeploymentFactory = new TwinDeploymentFactory()
-        return await twinDeploymentFactory.createContractAndSendToZos(deployment, node_id, deployment.challenge_hash(), publicIPs)
+        return await twinDeploymentFactory.deploy(deployment, node_id, publicIps)
     }
 }
 

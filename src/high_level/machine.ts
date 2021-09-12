@@ -1,3 +1,6 @@
+import { Addr } from "netaddr"
+import { WorkloadTypes } from "grid3_client"
+
 import { TwinDeployment, Operations } from "./models"
 import { Disk, VM, IPv4, DeploymentFactory, Network, getAccessNodes } from "../primitives/index"
 import { generateString, randomChoice } from "../helpers/utils"
@@ -38,6 +41,7 @@ class VirtualMachine {
         }
 
         // network
+        let deploymentFactory = new DeploymentFactory();
         const accessNodes = await getAccessNodes()
         let access_net_workload
         let wgConfig = ""
@@ -64,18 +68,33 @@ class VirtualMachine {
         }
         const znet_workload = await network.addNode(nodeId, metadata, description)
         if (znet_workload && network.exists()) {
-            throw Error("Network update is not implemented")
+            // update network
+            for (let deployment of network.deployments) {
+                let d = deploymentFactory.fromObj(deployment)
+                for (let workload of d["workloads"]) {
+                    if (workload["type"] !== WorkloadTypes.network || !Addr(network.ipRange).contains(Addr(workload["data"]["subnet"]))) {
+                        continue
+                    }
+                    workload.data = network.updateNetwork(workload["data"])
+                    workload.version += 1
+                    console.log("version updated")
+                    break;
+                }
+                deployments.push(new TwinDeployment(d, Operations.update, 0, 0))
+            }
+            workloads.push(znet_workload)
         }
         else if (znet_workload) {
+            // node not exist on the network
             if (!access_net_workload && !hasAccessNode) {
+                // this node is access node, so add access point on it
                 wgConfig = await network.addAccess(nodeId, true)
                 znet_workload["data"] = network.updateNetwork(znet_workload.data)
             }
             workloads.push(znet_workload)
         }
-
-        let deploymentFactory = new DeploymentFactory();
         if (access_net_workload) {
+            // network is not exist, and the node provide is not an access node
             const accessNodeId = access_net_workload.data["node_id"]
             access_net_workload["data"] = network.updateNetwork(access_net_workload.data)
             let deployment = deploymentFactory.create([access_net_workload], 1626394539, metadata, description)

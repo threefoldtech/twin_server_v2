@@ -1,9 +1,9 @@
 const { Wg } = require('wireguard-wrapper');
-const Addr = require('netaddr').Addr;
 const Private = require("private-ip")
 
 import * as PATH from "path"
 
+import { Addr } from "netaddr"
 import { Znet, Workload, WorkloadTypes, Peer, MessageBusClient } from 'grid3_client'
 
 import { loadFromFile, dumpToFile, appPath } from "../helpers/jsonfs"
@@ -118,7 +118,7 @@ class Network {
     updateNetwork(znet): Znet {
         for (const net of this.networks) {
             if (net.subnet === znet.subnet) {
-                return znet
+                return net
             }
         }
     }
@@ -131,11 +131,10 @@ class Network {
                     if (workload["type"] !== WorkloadTypes.network) {
                         continue;
                     }
-                    if (net.subnet !== workload["data"]["subnet"]) {
-                        continue;
+                    if (net.subnet === workload["data"]["subnet"]) {
+                        workload["data"] = net
+                        break;
                     }
-                    workload["data"] = net
-                    break;
                 }
                 deployment["workloads"] = workloads
             }
@@ -169,16 +168,29 @@ class Network {
                 res["node_id"] = node.node_id
                 this.deployments.push(res)
                 for (const workload of res["workloads"]) {
-                    if (workload["type"] !== WorkloadTypes.network) {
+                    if (workload["type"] !== WorkloadTypes.network || !Addr(this.ipRange).contains(Addr(workload["data"]["subnet"]))) {
                         continue
                     }
-                    let znet = workload["data"]
+                    let znet = this._fromObj(workload["data"])
                     znet["node_id"] = node.node_id
                     this.networks.push(znet)
                 }
             }
             await this.getAccessPoints()
         }
+    }
+
+    _fromObj(net: Znet): Znet {
+        let znet = new Znet()
+        Object.assign(znet, net)
+        let peers = []
+        for (let peer of znet.peers) {
+            let p = new Peer()
+            Object.assign(p, peer)
+            peers.push(p)
+        }
+        znet.peers = peers
+        return znet
     }
 
     exists(): boolean {
@@ -285,6 +297,11 @@ class Network {
             const subnet = this.getNodeSubnet(node.node_id)
             if (subnet && !this.reservedSubnets.includes(subnet)) {
                 this.reservedSubnets.push(subnet)
+            }
+        }
+        for (const accessPoint of this.accessPoints) {
+            if (accessPoint.subnet && !this.reservedSubnets.includes(accessPoint.subnet)) {
+                this.reservedSubnets.push(accessPoint.subnet)
             }
         }
         for (const network of this.networks) {
