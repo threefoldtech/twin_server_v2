@@ -41,6 +41,71 @@ class DeploymentFactory {
         return deployment
     }
 
+    UpdateDeployment(oldDeployment: Deployment, newDeployment: Deployment): Deployment {
+        let oldWorkloadNames = [];
+        let newWorkloadNames = [];
+        let deletedWorkloads = [];
+        let newWorkloads = [];
+        let foundUpdate = false;
+        for (const workload of oldDeployment.workloads) {
+            oldWorkloadNames.push(workload.name);
+        }
+        for (const workload of newDeployment.workloads) {
+            newWorkloadNames.push(workload.name);
+        }
+
+        for (let workload of oldDeployment.workloads) {
+            if (workload.type === WorkloadTypes.network) {
+                continue
+            }
+            if (!newWorkloadNames.includes(workload.name)) {
+                deletedWorkloads.push(workload)
+                foundUpdate = true
+                continue;
+            }
+            const oldVersion = workload.version
+            workload.version = 0
+            for (let w of newDeployment.workloads) {
+                if (!oldWorkloadNames.includes(w.name)) {
+                    w.version += 1
+                    newWorkloads.push(w)
+                    foundUpdate = true
+                    continue;
+                }
+                if (w.type === WorkloadTypes.network) {
+                    continue;
+                }
+                if (w.name !== workload.name) {
+                    continue;
+                }
+                if (w.challenge() === workload.challenge()) {
+                    continue;
+                }
+                // Don't change the machine ip
+                if (w.type === WorkloadTypes.zmachine) {
+                    const oldMachineIp = workload.data["network"]["interfaces"]["ip"]
+                    w.data["network"]["interfaces"]["ip"] = oldMachineIp
+                }
+                workload.version = oldVersion + 1
+                workload.data = w.data
+                workload.description = w.description
+                workload.metadata = w.metadata
+                foundUpdate = true
+                break
+            }
+        }
+        // add new workloads 
+        oldDeployment.workloads = oldDeployment.workloads.concat(newWorkloads)
+
+        // remove the deleted workloads
+        oldDeployment.workloads = oldDeployment.workloads.filter(item => !deletedWorkloads.includes(item))
+
+        if (!foundUpdate) {
+            return null;
+        }
+        return oldDeployment;
+    }
+
     fromObj(deployment: Object) {
         let d = new Deployment()
         Object.assign(d, deployment)

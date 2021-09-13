@@ -67,7 +67,7 @@ var expose_1 = require("../helpers/expose");
 var zdb_1 = require("../primitives/zdb");
 var deployment_1 = require("../primitives/deployment");
 var models_2 = require("../high_level/models");
-var twinDeploymentFactory_1 = require("../high_level/twinDeploymentFactory");
+var twinDeploymentHandler_1 = require("../high_level/twinDeploymentHandler");
 var Zdbs = /** @class */ (function (_super) {
     __extends(Zdbs, _super);
     function Zdbs() {
@@ -77,7 +77,7 @@ var Zdbs = /** @class */ (function (_super) {
     }
     Zdbs.prototype.deploy = function (options) {
         return __awaiter(this, void 0, void 0, function () {
-            var deploymentFactory, zdbFactory, twinDeployments, _i, _a, instance, zdbWorkload, deployment, twinDeploymentFactory, contracts, data;
+            var deploymentFactory, zdbFactory, twinDeployments, _i, _a, instance, zdbWorkload, deployment, twinDeploymentHandler, contracts, data;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
@@ -93,8 +93,8 @@ var Zdbs = /** @class */ (function (_super) {
                             deployment = deploymentFactory.create([zdbWorkload], 1626394539, options.metadata, options.description);
                             twinDeployments.push(new models_2.TwinDeployment(deployment, models_2.Operations.deploy, 0, instance.node_id));
                         }
-                        twinDeploymentFactory = new twinDeploymentFactory_1.TwinDeploymentFactory();
-                        return [4 /*yield*/, twinDeploymentFactory.handle(twinDeployments)];
+                        twinDeploymentHandler = new twinDeploymentHandler_1.TwinDeploymentHandler();
+                        return [4 /*yield*/, twinDeploymentHandler.handle(twinDeployments)];
                     case 1:
                         contracts = _b.sent();
                         data = this.save(options.name, contracts);

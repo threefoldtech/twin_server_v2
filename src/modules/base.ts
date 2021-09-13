@@ -2,6 +2,7 @@ import * as PATH from "path"
 
 import { Deployment, MessageBusClient, TFClient } from "grid3_client"
 
+import { K8S, Machines, ZDBS } from "./models"
 import { loadFromFile, updatejson, appPath } from "../helpers/jsonfs"
 import { getNodeTwinId } from "../primitives/nodes";
 import { default as config } from "../../config.json"
@@ -29,6 +30,19 @@ class BaseModule {
         const path = PATH.join(appPath, this.fileName)
         const data = loadFromFile(path)
         return data.hasOwnProperty(name)
+    }
+
+    _getDeploymentNodeIds(name) {
+        const path = PATH.join(appPath, this.fileName)
+        const data = loadFromFile(path)
+        if (!data.hasOwnProperty(name)) {
+            return []
+        }
+        let nodeIds = []
+        for (const contract of data[name]["contracts"]) {
+            nodeIds.push(contract["node_id"])
+        }
+        return nodeIds
     }
 
     async _get(name: string) {

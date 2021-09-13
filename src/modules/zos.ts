@@ -2,7 +2,7 @@ import { WorkloadTypes } from "grid3_client"
 
 import { expose } from "../helpers/index"
 import { default as config } from "../../config.json"
-import { TwinDeploymentFactory } from "../high_level/twinDeploymentFactory"
+import { TwinDeploymentHandler } from "../high_level/twinDeploymentHandler"
 import { DeploymentFactory } from "../primitives/deployment"
 
 class Zos {
@@ -22,8 +22,8 @@ class Zos {
                 publicIps++;
             }
         }
-        let twinDeploymentFactory = new TwinDeploymentFactory()
-        return await twinDeploymentFactory.deploy(deployment, node_id, publicIps)
+        let twinDeploymentHandler = new TwinDeploymentHandler()
+        return await twinDeploymentHandler.deploy(deployment, node_id, publicIps)
     }
 }
 

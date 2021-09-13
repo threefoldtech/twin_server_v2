@@ -29,6 +29,71 @@ var DeploymentFactory = /** @class */ (function () {
         deployment.signature_requirement = signature_requirement;
         return deployment;
     };
+    DeploymentFactory.prototype.UpdateDeployment = function (oldDeployment, newDeployment) {
+        var oldWorkloadNames = [];
+        var newWorkloadNames = [];
+        var deletedWorkloads = [];
+        var newWorkloads = [];
+        var foundUpdate = false;
+        for (var _i = 0, _a = oldDeployment.workloads; _i < _a.length; _i++) {
+            var workload = _a[_i];
+            oldWorkloadNames.push(workload.name);
+        }
+        for (var _b = 0, _c = newDeployment.workloads; _b < _c.length; _b++) {
+            var workload = _c[_b];
+            newWorkloadNames.push(workload.name);
+        }
+        for (var _d = 0, _e = oldDeployment.workloads; _d < _e.length; _d++) {
+            var workload = _e[_d];
+            if (workload.type === grid3_client_1.WorkloadTypes.network) {
+                continue;
+            }
+            if (!newWorkloadNames.includes(workload.name)) {
+                deletedWorkloads.push(workload);
+                foundUpdate = true;
+                continue;
+            }
+            var oldVersion = workload.version;
+            workload.version = 0;
+            for (var _f = 0, _g = newDeployment.workloads; _f < _g.length; _f++) {
+                var w = _g[_f];
+                if (!oldWorkloadNames.includes(w.name)) {
+                    w.version += 1;
+                    newWorkloads.push(w);
+                    foundUpdate = true;
+                    continue;
+                }
+                if (w.type === grid3_client_1.WorkloadTypes.network) {
+                    continue;
+                }
+                if (w.name !== workload.name) {
+                    continue;
+                }
+                if (w.challenge() === workload.challenge()) {
+                    continue;
+                }
+                // Don't change the machine ip
+                if (w.type === grid3_client_1.WorkloadTypes.zmachine) {
+                    var oldMachineIp = workload.data["network"]["interfaces"]["ip"];
+                    w.data["network"]["interfaces"]["ip"] = oldMachineIp;
+                }
+                workload.version = oldVersion + 1;
+                workload.data = w.data;
+                workload.description = w.description;
+                workload.metadata = w.metadata;
+                foundUpdate = true;
+                break;
+            }
+        }
+        // add new workloads 
+        oldDeployment.workloads = oldDeployment.workloads.concat(newWorkloads);
+        // remove the deleted workloads
+        oldDeployment.workloads = oldDeployment.workloads.filter(function (item) { return !deletedWorkloads.includes(item); });
+        if (!foundUpdate) {
+            return null;
+        }
+        return oldDeployment;
+    };
     DeploymentFactory.prototype.fromObj = function (deployment) {
         var d = new grid3_client_1.Deployment();
         Object.assign(d, deployment);

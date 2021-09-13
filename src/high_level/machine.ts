@@ -1,9 +1,9 @@
 import { Addr } from "netaddr"
-import { WorkloadTypes } from "grid3_client"
+import { Deployment, WorkloadTypes } from "grid3_client"
 
 import { TwinDeployment, Operations } from "./models"
 import { Disk, VM, IPv4, DeploymentFactory, Network, getAccessNodes } from "../primitives/index"
-import { generateString, randomChoice } from "../helpers/utils"
+import { randomChoice } from "../helpers/utils"
 
 class VirtualMachine {
 
@@ -111,6 +111,49 @@ class VirtualMachine {
 
         deployments.push(new TwinDeployment(deployment, Operations.deploy, publicIps, nodeId))
         return [deployments, wgConfig]
+    }
+
+    async update(oldDeployment: Deployment,
+        name: string,
+        nodeId: number,
+        flist: string,
+        cpu: number,
+        memory: number,
+        disks: Object[],
+        publicIp: boolean,
+        network: Network,
+        entrypoint: string,
+        env: Object,
+        metadata: string = "",
+        description: string = ""): Promise<TwinDeployment> {
+        const vm = new VirtualMachine()
+        let [twinDeployments, _] = await vm.create(name,
+            nodeId,
+            flist,
+            cpu,
+            memory,
+            disks,
+            publicIp,
+            network,
+            entrypoint,
+            env,
+            metadata,
+            description)
+
+        // Don't reserve the new machine ip
+        for (let node of network.nodes) {
+            if (node.node_id === nodeId) {
+                node.reserved_ips.pop()
+                break
+            }
+        }
+        let deploymentFactory = new DeploymentFactory()
+        let updatedDeployment = deploymentFactory.UpdateDeployment(oldDeployment, twinDeployments.pop().deployment)
+        if (!updatedDeployment) {
+            throw Error("Nothing found to be updated")
+        }
+        return new TwinDeployment(updatedDeployment, Operations.update, 0, 0)
+
     }
 }
 

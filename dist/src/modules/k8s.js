@@ -65,7 +65,7 @@ var grid3_client_1 = require("grid3_client");
 var models_1 = require("./models");
 var base_1 = require("./base");
 var index_1 = require("../helpers/index");
-var twinDeploymentFactory_1 = require("../high_level/twinDeploymentFactory");
+var twinDeploymentHandler_1 = require("../high_level/twinDeploymentHandler");
 var kubernetes_1 = require("../high_level/kubernetes");
 var network_1 = require("../primitives/network");
 var ipRange = "10.200.0.0/16";
@@ -78,7 +78,7 @@ var K8s = /** @class */ (function (_super) {
     }
     K8s.prototype.deploy = function (options) {
         return __awaiter(this, void 0, void 0, function () {
-            var networkName, network, deployments, wireguardConfig, kubernetes, _i, _a, master, _b, twinDeployments, wgConfig, masterIp, _c, deployments_1, twinDeployment, _d, _e, workload, _f, _g, worker, _h, twinDeployments, _, twinDeploymentFactory, contracts, data;
+            var networkName, network, deployments, wireguardConfig, kubernetes, _i, _a, master, _b, twinDeployments, wgConfig, masterIp, _c, deployments_1, twinDeployment, _d, _e, workload, _f, _g, worker, _h, twinDeployments, _, twinDeploymentHandler, contracts, data;
             return __generator(this, function (_j) {
                 switch (_j.label) {
                     case 0:
@@ -141,8 +141,8 @@ var K8s = /** @class */ (function (_super) {
                         _f++;
                         return [3 /*break*/, 6];
                     case 9:
-                        twinDeploymentFactory = new twinDeploymentFactory_1.TwinDeploymentFactory();
-                        return [4 /*yield*/, twinDeploymentFactory.handle(deployments, network)];
+                        twinDeploymentHandler = new twinDeploymentHandler_1.TwinDeploymentHandler();
+                        return [4 /*yield*/, twinDeploymentHandler.handle(deployments, network)];
                     case 10:
                         contracts = _j.sent();
                         data = this.save(options.name, contracts, wireguardConfig);

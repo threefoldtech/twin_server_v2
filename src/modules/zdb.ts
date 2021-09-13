@@ -5,7 +5,7 @@ import { zdb } from "../primitives/zdb"
 import { generateString } from "../helpers/utils"
 import { DeploymentFactory } from "../primitives/deployment"
 import { TwinDeployment, Operations } from "../high_level/models"
-import { TwinDeploymentFactory } from "../high_level/twinDeploymentFactory"
+import { TwinDeploymentHandler } from "../high_level/twinDeploymentHandler"
 
 class Zdbs extends BaseModule {
     fileName: string = "zdbs.json";
@@ -32,8 +32,8 @@ class Zdbs extends BaseModule {
             twinDeployments.push(new TwinDeployment(deployment, Operations.deploy, 0, instance.node_id))
         }
 
-        let twinDeploymentFactory = new TwinDeploymentFactory()
-        const contracts = await twinDeploymentFactory.handle(twinDeployments)
+        let twinDeploymentHandler = new TwinDeploymentHandler()
+        const contracts = await twinDeploymentHandler.handle(twinDeployments)
         const data = this.save(options.name, contracts)
         return data
     }

@@ -150,6 +150,38 @@ var VirtualMachine = /** @class */ (function () {
             });
         });
     };
+    VirtualMachine.prototype.update = function (oldDeployment, name, nodeId, flist, cpu, memory, disks, publicIp, network, entrypoint, env, metadata, description) {
+        if (metadata === void 0) { metadata = ""; }
+        if (description === void 0) { description = ""; }
+        return __awaiter(this, void 0, void 0, function () {
+            var vm, _a, twinDeployments, _, _i, _b, node, deploymentFactory, updatedDeployment;
+            return __generator(this, function (_c) {
+                switch (_c.label) {
+                    case 0:
+                        vm = new VirtualMachine();
+                        return [4 /*yield*/, vm.create(name, nodeId, flist, cpu, memory, disks, publicIp, network, entrypoint, env, metadata, description)
+                            // Don't reserve the new machine ip
+                        ];
+                    case 1:
+                        _a = _c.sent(), twinDeployments = _a[0], _ = _a[1];
+                        // Don't reserve the new machine ip
+                        for (_i = 0, _b = network.nodes; _i < _b.length; _i++) {
+                            node = _b[_i];
+                            if (node.node_id === nodeId) {
+                                node.reserved_ips.pop();
+                                break;
+                            }
+                        }
+                        deploymentFactory = new index_1.DeploymentFactory();
+                        updatedDeployment = deploymentFactory.UpdateDeployment(oldDeployment, twinDeployments.pop().deployment);
+                        if (!updatedDeployment) {
+                            throw Error("Nothing found to be updated");
+                        }
+                        return [2 /*return*/, new models_1.TwinDeployment(updatedDeployment, models_1.Operations.update, 0, 0)];
+                }
+            });
+        });
+    };
     return VirtualMachine;
 }());
 exports.VirtualMachine = VirtualMachine;

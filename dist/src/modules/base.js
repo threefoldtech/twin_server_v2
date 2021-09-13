@@ -88,6 +88,19 @@ var BaseModule = /** @class */ (function () {
         var data = jsonfs_1.loadFromFile(path);
         return data.hasOwnProperty(name);
     };
+    BaseModule.prototype._getDeploymentNodeIds = function (name) {
+        var path = PATH.join(jsonfs_1.appPath, this.fileName);
+        var data = jsonfs_1.loadFromFile(path);
+        if (!data.hasOwnProperty(name)) {
+            return [];
+        }
+        var nodeIds = [];
+        for (var _i = 0, _a = data[name]["contracts"]; _i < _a.length; _i++) {
+            var contract = _a[_i];
+            nodeIds.push(contract["node_id"]);
+        }
+        return nodeIds;
+    };
     BaseModule.prototype._get = function (name) {
         return __awaiter(this, void 0, void 0, function () {
             var path, data, deployments, rmb, _i, _a, contract, node_twin_id, payload, msg, result;

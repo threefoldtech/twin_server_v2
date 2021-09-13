@@ -61,12 +61,14 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.machine = void 0;
+var grid3_client_1 = require("grid3_client");
 var base_1 = require("./base");
 var models_1 = require("./models");
-var index_1 = require("../primitives/index");
+var network_1 = require("../primitives/network");
+var deployment_1 = require("../primitives/deployment");
 var expose_1 = require("../helpers/expose");
 var machine_1 = require("../high_level/machine");
-var twinDeploymentFactory_1 = require("../high_level/twinDeploymentFactory");
+var twinDeploymentHandler_1 = require("../high_level/twinDeploymentHandler");
 var Machine = /** @class */ (function (_super) {
     __extends(Machine, _super);
     function Machine() {
@@ -76,7 +78,7 @@ var Machine = /** @class */ (function (_super) {
     }
     Machine.prototype.deploy = function (options) {
         return __awaiter(this, void 0, void 0, function () {
-            var networkName, network, vm, _a, twinDeployments, wgConfig, twinDeploymentFactory, contracts, data;
+            var networkName, network, vm, _a, twinDeployments, wgConfig, twinDeploymentHandler, contracts, data;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
@@ -84,7 +86,7 @@ var Machine = /** @class */ (function (_super) {
                             throw Error("Another machine deployment with the same name " + options.name + " is already exist");
                         }
                         networkName = options.network.name;
-                        network = new index_1.Network(networkName, options.network.ip_range);
+                        network = new network_1.Network(networkName, options.network.ip_range);
                         return [4 /*yield*/, network.load(true)];
                     case 1:
                         _b.sent();
@@ -92,8 +94,8 @@ var Machine = /** @class */ (function (_super) {
                         return [4 /*yield*/, vm.create(options.name, options.node_id, options.flist, options.cpu, options.memory, options.disks, options.public_ip, network, options.entrypoint, options.env, options.metadata, options.description)];
                     case 2:
                         _a = _b.sent(), twinDeployments = _a[0], wgConfig = _a[1];
-                        twinDeploymentFactory = new twinDeploymentFactory_1.TwinDeploymentFactory();
-                        return [4 /*yield*/, twinDeploymentFactory.handle(twinDeployments, network)];
+                        twinDeploymentHandler = new twinDeploymentHandler_1.TwinDeploymentHandler();
+                        return [4 /*yield*/, twinDeploymentHandler.handle(twinDeployments, network)];
                     case 3:
                         contracts = _b.sent();
                         data = this.save(options.name, contracts, wgConfig);
@@ -122,6 +124,51 @@ var Machine = /** @class */ (function (_super) {
             });
         });
     };
+    Machine.prototype.update = function (options) {
+        return __awaiter(this, void 0, void 0, function () {
+            var deploymentObj, deploymentFactory, oldDeployment, _i, _a, workload, networkName, network, vm, twinDeployment, twinDeploymentHandler, contracts;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0:
+                        if (!this.exists(options.name)) {
+                            throw Error("There is no machine with name: " + options.name);
+                        }
+                        if (!this._getDeploymentNodeIds(options.name).includes(options.node_id)) {
+                            throw Error("node_id can't be changed");
+                        }
+                        return [4 /*yield*/, this._get(options.name)];
+                    case 1:
+                        deploymentObj = (_b.sent()).pop();
+                        deploymentFactory = new deployment_1.DeploymentFactory();
+                        oldDeployment = deploymentFactory.fromObj(deploymentObj);
+                        for (_i = 0, _a = oldDeployment.workloads; _i < _a.length; _i++) {
+                            workload = _a[_i];
+                            if (workload.type !== grid3_client_1.WorkloadTypes.network) {
+                                continue;
+                            }
+                            if (workload.name !== options.network.name) {
+                                throw Error("Network name can't be changed");
+                            }
+                        }
+                        networkName = options.network.name;
+                        network = new network_1.Network(networkName, options.network.ip_range);
+                        return [4 /*yield*/, network.load(true)];
+                    case 2:
+                        _b.sent();
+                        vm = new machine_1.VirtualMachine();
+                        return [4 /*yield*/, vm.update(oldDeployment, options.name, options.node_id, options.flist, options.cpu, options.memory, options.disks, options.public_ip, network, options.entrypoint, options.env, options.metadata, options.description)];
+                    case 3:
+                        twinDeployment = _b.sent();
+                        twinDeploymentHandler = new twinDeploymentHandler_1.TwinDeploymentHandler();
+                        console.log(JSON.stringify(twinDeployment));
+                        return [4 /*yield*/, twinDeploymentHandler.handle([twinDeployment], network)];
+                    case 4:
+                        contracts = _b.sent();
+                        return [2 /*return*/, { "contracts": contracts }];
+                }
+            });
+        });
+    };
     __decorate([
         expose_1.expose,
         __metadata("design:type", Function),
@@ -140,6 +187,12 @@ var Machine = /** @class */ (function (_super) {
         __metadata("design:paramtypes", [Object]),
         __metadata("design:returntype", Promise)
     ], Machine.prototype, "delete", null);
+    __decorate([
+        expose_1.expose,
+        __metadata("design:type", Function),
+        __metadata("design:paramtypes", [models_1.Machines]),
+        __metadata("design:returntype", Promise)
+    ], Machine.prototype, "update", null);
     return Machine;
 }(base_1.BaseModule));
 exports.machine = Machine;

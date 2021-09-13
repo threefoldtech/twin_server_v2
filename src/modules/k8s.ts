@@ -3,7 +3,7 @@ import { WorkloadTypes } from "grid3_client"
 import { K8S } from "./models"
 import { BaseModule } from "./base"
 import { expose } from "../helpers/index";
-import { TwinDeploymentFactory } from "../high_level/twinDeploymentFactory";
+import { TwinDeploymentHandler } from "../high_level/twinDeploymentHandler";
 import { Kubernetes } from "../high_level/kubernetes"
 import { Network } from "../primitives/network";
 
@@ -78,8 +78,8 @@ class K8s extends BaseModule {
 
             deployments = deployments.concat(twinDeployments)
         }
-        let twinDeploymentFactory = new TwinDeploymentFactory()
-        const contracts = await twinDeploymentFactory.handle(deployments, network)
+        let twinDeploymentHandler = new TwinDeploymentHandler()
+        const contracts = await twinDeploymentHandler.handle(deployments, network)
         const data = this.save(options.name, contracts, wireguardConfig)
         return data
     }

@@ -52,14 +52,14 @@ exports.zos = void 0;
 var grid3_client_1 = require("grid3_client");
 var index_1 = require("../helpers/index");
 var config_json_1 = __importDefault(require("../../config.json"));
-var twinDeploymentFactory_1 = require("../high_level/twinDeploymentFactory");
+var twinDeploymentHandler_1 = require("../high_level/twinDeploymentHandler");
 var deployment_1 = require("../primitives/deployment");
 var Zos = /** @class */ (function () {
     function Zos() {
     }
     Zos.prototype.deploy = function (options) {
         return __awaiter(this, void 0, void 0, function () {
-            var node_id, deploymentFactory, deployment, publicIps, _i, _a, workload, twinDeploymentFactory;
+            var node_id, deploymentFactory, deployment, publicIps, _i, _a, workload, twinDeploymentHandler;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
@@ -75,8 +75,8 @@ var Zos = /** @class */ (function () {
                                 publicIps++;
                             }
                         }
-                        twinDeploymentFactory = new twinDeploymentFactory_1.TwinDeploymentFactory();
-                        return [4 /*yield*/, twinDeploymentFactory.deploy(deployment, node_id, publicIps)];
+                        twinDeploymentHandler = new twinDeploymentHandler_1.TwinDeploymentHandler();
+                        return [4 /*yield*/, twinDeploymentHandler.deploy(deployment, node_id, publicIps)];
                     case 1: return [2 /*return*/, _b.sent()];
                 }
             });

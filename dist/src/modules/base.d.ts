@@ -4,6 +4,7 @@ declare class BaseModule {
         contracts: any[];
     };
     exists(name: any): any;
+    _getDeploymentNodeIds(name: any): any[];
     _get(name: string): Promise<any[]>;
     _delete(name: string): Promise<any[]>;
 }
