@@ -104,6 +104,9 @@ var Machine = /** @class */ (function (_super) {
             });
         });
     };
+    Machine.prototype.list = function () {
+        return this._list();
+    };
     Machine.prototype.get = function (options) {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
@@ -175,6 +178,12 @@ var Machine = /** @class */ (function (_super) {
         __metadata("design:paramtypes", [models_1.Machines]),
         __metadata("design:returntype", Promise)
     ], Machine.prototype, "deploy", null);
+    __decorate([
+        expose_1.expose,
+        __metadata("design:type", Function),
+        __metadata("design:paramtypes", []),
+        __metadata("design:returntype", void 0)
+    ], Machine.prototype, "list", null);
     __decorate([
         expose_1.expose,
         __metadata("design:type", Function),

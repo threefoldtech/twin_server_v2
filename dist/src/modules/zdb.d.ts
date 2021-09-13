@@ -5,6 +5,7 @@ declare class Zdbs extends BaseModule {
     deploy(options: ZDBS): Promise<{
         contracts: any[];
     }>;
+    list(): string[];
     get(options: any): Promise<any[]>;
     delete(options: any): Promise<any[]>;
 }

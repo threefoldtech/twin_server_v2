@@ -83,10 +83,13 @@ var BaseModule = /** @class */ (function () {
         jsonfs_1.updatejson(path, name, data);
         return data;
     };
-    BaseModule.prototype.exists = function (name) {
+    BaseModule.prototype._list = function () {
         var path = PATH.join(jsonfs_1.appPath, this.fileName);
         var data = jsonfs_1.loadFromFile(path);
-        return data.hasOwnProperty(name);
+        return Object.keys(data);
+    };
+    BaseModule.prototype.exists = function (name) {
+        return this._list().includes(name);
     };
     BaseModule.prototype._getDeploymentNodeIds = function (name) {
         var path = PATH.join(jsonfs_1.appPath, this.fileName);

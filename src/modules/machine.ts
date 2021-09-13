@@ -45,6 +45,11 @@ class Machine extends BaseModule {
     }
 
     @expose
+    list() {
+        return this._list()
+    }
+
+    @expose
     async get(options) {
         return await this._get(options.name)
     }

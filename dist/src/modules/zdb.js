@@ -103,6 +103,9 @@ var Zdbs = /** @class */ (function (_super) {
             });
         });
     };
+    Zdbs.prototype.list = function () {
+        return this._list();
+    };
     Zdbs.prototype.get = function (options) {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
@@ -129,6 +132,12 @@ var Zdbs = /** @class */ (function (_super) {
         __metadata("design:paramtypes", [models_1.ZDBS]),
         __metadata("design:returntype", Promise)
     ], Zdbs.prototype, "deploy", null);
+    __decorate([
+        expose_1.expose,
+        __metadata("design:type", Function),
+        __metadata("design:paramtypes", []),
+        __metadata("design:returntype", void 0)
+    ], Zdbs.prototype, "list", null);
     __decorate([
         expose_1.expose,
         __metadata("design:type", Function),

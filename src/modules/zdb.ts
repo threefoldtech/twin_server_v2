@@ -2,7 +2,6 @@ import { BaseModule } from "./base"
 import { ZDBS } from "./models"
 import { expose } from "../helpers/expose"
 import { zdb } from "../primitives/zdb"
-import { generateString } from "../helpers/utils"
 import { DeploymentFactory } from "../primitives/deployment"
 import { TwinDeployment, Operations } from "../high_level/models"
 import { TwinDeploymentHandler } from "../high_level/twinDeploymentHandler"
@@ -36,6 +35,11 @@ class Zdbs extends BaseModule {
         const contracts = await twinDeploymentHandler.handle(twinDeployments)
         const data = this.save(options.name, contracts)
         return data
+    }
+
+    @expose
+    list() {
+        return this._list()
     }
 
     @expose

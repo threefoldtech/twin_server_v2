@@ -151,6 +151,9 @@ var K8s = /** @class */ (function (_super) {
             });
         });
     };
+    K8s.prototype.list = function () {
+        return this._list();
+    };
     K8s.prototype.get = function (options) {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
@@ -177,6 +180,12 @@ var K8s = /** @class */ (function (_super) {
         __metadata("design:paramtypes", [models_1.K8S]),
         __metadata("design:returntype", Promise)
     ], K8s.prototype, "deploy", null);
+    __decorate([
+        index_1.expose,
+        __metadata("design:type", Function),
+        __metadata("design:paramtypes", []),
+        __metadata("design:returntype", void 0)
+    ], K8s.prototype, "list", null);
     __decorate([
         index_1.expose,
         __metadata("design:type", Function),

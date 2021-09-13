@@ -3,7 +3,8 @@ declare class BaseModule {
     save(name: string, contracts: Object[], wgConfig?: string): {
         contracts: any[];
     };
-    exists(name: any): any;
+    _list(): string[];
+    exists(name: any): boolean;
     _getDeploymentNodeIds(name: any): any[];
     _get(name: string): Promise<any[]>;
     _delete(name: string): Promise<any[]>;

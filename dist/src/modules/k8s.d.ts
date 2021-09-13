@@ -5,6 +5,7 @@ declare class K8s extends BaseModule {
     deploy(options: K8S): Promise<{
         contracts: any[];
     }>;
+    list(): string[];
     get(options: any): Promise<any[]>;
     delete(options: any): Promise<any[]>;
 }
