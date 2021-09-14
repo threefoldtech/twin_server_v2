@@ -7,6 +7,9 @@ declare class BaseModule {
     exists(name: any): boolean;
     _getDeploymentNodeIds(name: any): any[];
     _get(name: string): Promise<any[]>;
-    _delete(name: string): Promise<any[]>;
+    _delete(name: string): Promise<any[] | {
+        deleted: any[];
+        updated: any[];
+    }>;
 }
 export { BaseModule };

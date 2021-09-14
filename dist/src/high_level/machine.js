@@ -1,4 +1,19 @@
 "use strict";
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -40,10 +55,13 @@ exports.VirtualMachine = void 0;
 var netaddr_1 = require("netaddr");
 var grid3_client_1 = require("grid3_client");
 var models_1 = require("./models");
+var base_1 = require("./base");
 var index_1 = require("../primitives/index");
 var utils_1 = require("../helpers/utils");
-var VirtualMachine = /** @class */ (function () {
+var VirtualMachine = /** @class */ (function (_super) {
+    __extends(VirtualMachine, _super);
     function VirtualMachine() {
+        return _super !== null && _super.apply(this, arguments) || this;
     }
     VirtualMachine.prototype.create = function (name, nodeId, flist, cpu, memory, disks, publicIp, network, entrypoint, env, metadata, description) {
         if (metadata === void 0) { metadata = ""; }
@@ -114,10 +132,9 @@ var VirtualMachine = /** @class */ (function () {
                                 }
                                 workload.data = network.updateNetwork(workload["data"]);
                                 workload.version += 1;
-                                console.log("version updated");
                                 break;
                             }
-                            deployments.push(new models_1.TwinDeployment(d, models_1.Operations.update, 0, 0));
+                            deployments.push(new models_1.TwinDeployment(d, models_1.Operations.update, 0, 0, network));
                         }
                         workloads.push(znet_workload);
                         return [3 /*break*/, 9];
@@ -138,13 +155,13 @@ var VirtualMachine = /** @class */ (function () {
                             accessNodeId = access_net_workload.data["node_id"];
                             access_net_workload["data"] = network.updateNetwork(access_net_workload.data);
                             deployment_2 = deploymentFactory.create([access_net_workload], 1626394539, metadata, description);
-                            deployments.push(new models_1.TwinDeployment(deployment_2, models_1.Operations.deploy, 0, accessNodeId));
+                            deployments.push(new models_1.TwinDeployment(deployment_2, models_1.Operations.deploy, 0, accessNodeId, network));
                         }
                         vm = new index_1.VM();
                         machine_ip = network.getFreeIP(nodeId);
                         workloads.push(vm.create(name, flist, cpu, memory, diskMounts, network.name, machine_ip, true, ipName, entrypoint, env, metadata, description));
                         deployment = deploymentFactory.create(workloads, 1626394539, metadata, description);
-                        deployments.push(new models_1.TwinDeployment(deployment, models_1.Operations.deploy, publicIps, nodeId));
+                        deployments.push(new models_1.TwinDeployment(deployment, models_1.Operations.deploy, publicIps, nodeId, network));
                         return [2 /*return*/, [deployments, wgConfig]];
                 }
             });
@@ -182,6 +199,16 @@ var VirtualMachine = /** @class */ (function () {
             });
         });
     };
+    VirtualMachine.prototype.delete = function (deployment, names) {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this._delete(deployment, names, [grid3_client_1.WorkloadTypes.ipv4, grid3_client_1.WorkloadTypes.zmount, grid3_client_1.WorkloadTypes.zmachine])];
+                    case 1: return [2 /*return*/, _a.sent()];
+                }
+            });
+        });
+    };
     return VirtualMachine;
-}());
+}(base_1.HighLevelBase));
 exports.VirtualMachine = VirtualMachine;

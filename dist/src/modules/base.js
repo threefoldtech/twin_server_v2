@@ -54,16 +54,13 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BaseModule = void 0;
 var PATH = __importStar(require("path"));
 var grid3_client_1 = require("grid3_client");
+var base_1 = require("../high_level/base");
 var jsonfs_1 = require("../helpers/jsonfs");
 var nodes_1 = require("../primitives/nodes");
-var config_json_1 = __importDefault(require("../../config.json"));
 var BaseModule = /** @class */ (function () {
     function BaseModule() {
         this.fileName = "";
@@ -146,40 +143,35 @@ var BaseModule = /** @class */ (function () {
     };
     BaseModule.prototype._delete = function (name) {
         return __awaiter(this, void 0, void 0, function () {
-            var path, data, tfclient, contracts, _i, _a, contract, err_1;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
+            var path, data, contracts, deployments, highlvl, _i, deployments_1, deployment, contract;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
                     case 0:
                         path = PATH.join(jsonfs_1.appPath, this.fileName);
                         data = jsonfs_1.loadFromFile(path);
                         if (!data.hasOwnProperty(name)) {
                             return [2 /*return*/, []];
                         }
-                        tfclient = new grid3_client_1.TFClient(config_json_1.default.url, config_json_1.default.mnemonic);
-                        return [4 /*yield*/, tfclient.connect()];
+                        contracts = { "deleted": [], "updated": [] };
+                        return [4 /*yield*/, this._get(name)];
                     case 1:
-                        _b.sent();
-                        contracts = [];
-                        _i = 0, _a = data[name]["contracts"];
-                        _b.label = 2;
+                        deployments = _a.sent();
+                        highlvl = new base_1.HighLevelBase;
+                        _i = 0, deployments_1 = deployments;
+                        _a.label = 2;
                     case 2:
-                        if (!(_i < _a.length)) return [3 /*break*/, 7];
-                        contract = _a[_i];
-                        _b.label = 3;
+                        if (!(_i < deployments_1.length)) return [3 /*break*/, 5];
+                        deployment = deployments_1[_i];
+                        return [4 /*yield*/, highlvl._delete(deployment, [])];
                     case 3:
-                        _b.trys.push([3, 5, , 6]);
-                        return [4 /*yield*/, tfclient.contracts.cancel(contract["contract_id"])];
+                        contract = _a.sent();
+                        contracts.deleted = contracts.deleted.concat(contract["deleted"]);
+                        contracts.updated = contracts.updated.concat(contract["updated"]);
+                        _a.label = 4;
                     case 4:
-                        _b.sent();
-                        contracts.push(contract["contract_id"]);
-                        return [3 /*break*/, 6];
-                    case 5:
-                        err_1 = _b.sent();
-                        throw Error("Failed to cancel contract " + contract["contract_id"] + " due to: " + err_1);
-                    case 6:
                         _i++;
                         return [3 /*break*/, 2];
-                    case 7:
+                    case 5:
                         jsonfs_1.updatejson(path, name, "", "delete");
                         return [2 /*return*/, contracts];
                 }

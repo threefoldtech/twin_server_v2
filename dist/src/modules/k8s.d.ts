@@ -7,6 +7,9 @@ declare class K8s extends BaseModule {
     }>;
     list(): string[];
     get(options: any): Promise<any[]>;
-    delete(options: any): Promise<any[]>;
+    delete(options: any): Promise<any[] | {
+        deleted: any[];
+        updated: any[];
+    }>;
 }
 export { K8s as k8s };

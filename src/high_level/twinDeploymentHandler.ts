@@ -92,6 +92,23 @@ class TwinDeploymentHandler {
         return deployments
     }
 
+    async delete(contract_id: number): Promise<number> {
+        const tfclient = new TFClient(config.url, config.mnemonic)
+        await tfclient.connect()
+        try {
+            await tfclient.contracts.cancel(contract_id);
+        }
+        catch (err) {
+            throw Error(`Failed to cancel contract ${contract_id} due to: ${err}`)
+        }
+        finally {
+            tfclient.disconnect()
+        }
+        return contract_id
+    }
+
+
+
     _updateToLatest(twinDeployments: TwinDeployment[]): TwinDeployment {
         // all deployment pass should be with the same contract id to merge them to one deployment with all updates
         if (twinDeployments.length === 0) {
@@ -162,31 +179,39 @@ class TwinDeploymentHandler {
         let deployments = []
         deployments = deployments.concat(this.deployMerge(twinDeployments))
         deployments = deployments.concat(this.updateMerge(twinDeployments))
+        deployments = deployments.concat(twinDeployments.filter(d => d.operation === Operations.delete))
         return deployments
     }
 
-    async handle(twinDeployments: TwinDeployment[], network: Network = null) {
+    async handle(twinDeployments: TwinDeployment[]) {
         twinDeployments = this.merge(twinDeployments)
-        let contracts = []
+        let contracts = { "created": [], "updated": [], "deleted": [] }
         for (let twinDeployment of twinDeployments) {
             for (let workload of twinDeployment.deployment.workloads) {
+                if (!twinDeployment.network) {
+                    break
+                }
                 if (workload.type === WorkloadTypes.network) {
-                    workload["data"] = network.updateNetwork(workload.data);
+                    workload["data"] = twinDeployment.network.updateNetwork(workload.data);
                 }
             }
             twinDeployment.deployment.sign(config.twin_id, config.mnemonic)
-            let contract
             if (twinDeployment.operation === Operations.deploy) {
-                contract = await this.deploy(twinDeployment.deployment,
+                const contract = await this.deploy(twinDeployment.deployment,
                     twinDeployment.nodeId,
                     twinDeployment.publicIps)
-                contracts.push(contract)
+                contracts.created.push(contract)
+                if (twinDeployment.network) {
+                    await twinDeployment.network.save(contract["contract_id"], contract["node_id"])
+                }
             }
             else if (twinDeployment.operation === Operations.update) {
-                contract = await this.update(twinDeployment.deployment, twinDeployment.publicIps)
+                const contract = await this.update(twinDeployment.deployment, twinDeployment.publicIps)
+                contracts.updated.push(contract)
             }
-            if (network) {
-                await network.save(contract["contract_id"], contract["node_id"])
+            else if (twinDeployment.operation === Operations.delete) {
+                const contract = await this.delete(twinDeployment.deployment.contract_id)
+                contracts.deleted.push(contract)
             }
         }
         return contracts

@@ -2,10 +2,11 @@ import { Addr } from "netaddr"
 import { Deployment, WorkloadTypes } from "grid3_client"
 
 import { TwinDeployment, Operations } from "./models"
+import { HighLevelBase } from "./base"
 import { Disk, VM, IPv4, DeploymentFactory, Network, getAccessNodes } from "../primitives/index"
 import { randomChoice } from "../helpers/utils"
 
-class VirtualMachine {
+class VirtualMachine extends HighLevelBase {
 
     async create(name: string,
         nodeId: number,
@@ -76,10 +77,9 @@ class VirtualMachine {
                     }
                     workload.data = network.updateNetwork(workload["data"])
                     workload.version += 1
-                    console.log("version updated")
                     break;
                 }
-                deployments.push(new TwinDeployment(d, Operations.update, 0, 0))
+                deployments.push(new TwinDeployment(d, Operations.update, 0, 0, network))
             }
             workloads.push(znet_workload)
         }
@@ -97,7 +97,7 @@ class VirtualMachine {
             const accessNodeId = access_net_workload.data["node_id"]
             access_net_workload["data"] = network.updateNetwork(access_net_workload.data)
             let deployment = deploymentFactory.create([access_net_workload], 1626394539, metadata, description)
-            deployments.push(new TwinDeployment(deployment, Operations.deploy, 0, accessNodeId))
+            deployments.push(new TwinDeployment(deployment, Operations.deploy, 0, accessNodeId, network))
         }
         // vm 
         // check the planetary 
@@ -109,7 +109,7 @@ class VirtualMachine {
         // NOTE: expiration is not used for zos deployment
         let deployment = deploymentFactory.create(workloads, 1626394539, metadata, description)
 
-        deployments.push(new TwinDeployment(deployment, Operations.deploy, publicIps, nodeId))
+        deployments.push(new TwinDeployment(deployment, Operations.deploy, publicIps, nodeId, network))
         return [deployments, wgConfig]
     }
 
@@ -154,6 +154,10 @@ class VirtualMachine {
         }
         return new TwinDeployment(updatedDeployment, Operations.update, 0, 0)
 
+    }
+
+    async delete(deployment: Deployment, names: string[]) {
+        return await this._delete(deployment, names, [WorkloadTypes.ipv4, WorkloadTypes.zmount, WorkloadTypes.zmachine])
     }
 }
 

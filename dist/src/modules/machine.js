@@ -95,10 +95,10 @@ var Machine = /** @class */ (function (_super) {
                     case 2:
                         _a = _b.sent(), twinDeployments = _a[0], wgConfig = _a[1];
                         twinDeploymentHandler = new twinDeploymentHandler_1.TwinDeploymentHandler();
-                        return [4 /*yield*/, twinDeploymentHandler.handle(twinDeployments, network)];
+                        return [4 /*yield*/, twinDeploymentHandler.handle(twinDeployments)];
                     case 3:
                         contracts = _b.sent();
-                        data = this.save(options.name, contracts, wgConfig);
+                        data = this.save(options.name, contracts.created, wgConfig);
                         return [2 /*return*/, data];
                 }
             });
@@ -164,10 +164,10 @@ var Machine = /** @class */ (function (_super) {
                         twinDeployment = _b.sent();
                         twinDeploymentHandler = new twinDeploymentHandler_1.TwinDeploymentHandler();
                         console.log(JSON.stringify(twinDeployment));
-                        return [4 /*yield*/, twinDeploymentHandler.handle([twinDeployment], network)];
+                        return [4 /*yield*/, twinDeploymentHandler.handle([twinDeployment])];
                     case 4:
                         contracts = _b.sent();
-                        return [2 /*return*/, { "contracts": contracts }];
+                        return [2 /*return*/, { "contracts": contracts.updated }];
                 }
             });
         });

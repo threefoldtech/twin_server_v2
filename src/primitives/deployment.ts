@@ -83,8 +83,8 @@ class DeploymentFactory {
                 }
                 // Don't change the machine ip
                 if (w.type === WorkloadTypes.zmachine) {
-                    const oldMachineIp = workload.data["network"]["interfaces"]["ip"]
-                    w.data["network"]["interfaces"]["ip"] = oldMachineIp
+                    const oldMachineIp = workload.data["network"]["interfaces"][0]["ip"]
+                    w.data["network"]["interfaces"][0]["ip"] = oldMachineIp
                 }
                 workload.version = oldVersion + 1
                 workload.data = w.data

@@ -7,7 +7,10 @@ declare class Machine extends BaseModule {
     }>;
     list(): string[];
     get(options: any): Promise<any[]>;
-    delete(options: any): Promise<any[]>;
+    delete(options: any): Promise<any[] | {
+        deleted: any[];
+        updated: any[];
+    }>;
     update(options: Machines): Promise<{
         contracts: any[];
     }>;

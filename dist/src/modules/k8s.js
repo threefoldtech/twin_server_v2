@@ -142,10 +142,10 @@ var K8s = /** @class */ (function (_super) {
                         return [3 /*break*/, 6];
                     case 9:
                         twinDeploymentHandler = new twinDeploymentHandler_1.TwinDeploymentHandler();
-                        return [4 /*yield*/, twinDeploymentHandler.handle(deployments, network)];
+                        return [4 /*yield*/, twinDeploymentHandler.handle(deployments)];
                     case 10:
                         contracts = _j.sent();
-                        data = this.save(options.name, contracts, wireguardConfig);
+                        data = this.save(options.name, contracts.created, wireguardConfig);
                         return [2 /*return*/, data];
                 }
             });

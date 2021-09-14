@@ -74,8 +74,8 @@ var DeploymentFactory = /** @class */ (function () {
                 }
                 // Don't change the machine ip
                 if (w.type === grid3_client_1.WorkloadTypes.zmachine) {
-                    var oldMachineIp = workload.data["network"]["interfaces"]["ip"];
-                    w.data["network"]["interfaces"]["ip"] = oldMachineIp;
+                    var oldMachineIp = workload.data["network"]["interfaces"][0]["ip"];
+                    w.data["network"]["interfaces"][0]["ip"] = oldMachineIp;
                 }
                 workload.version = oldVersion + 1;
                 workload.data = w.data;

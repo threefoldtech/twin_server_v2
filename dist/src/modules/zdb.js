@@ -97,7 +97,7 @@ var Zdbs = /** @class */ (function (_super) {
                         return [4 /*yield*/, twinDeploymentHandler.handle(twinDeployments)];
                     case 1:
                         contracts = _b.sent();
-                        data = this.save(options.name, contracts);
+                        data = this.save(options.name, contracts.created);
                         return [2 /*return*/, data];
                 }
             });

@@ -4,7 +4,7 @@ const Private = require("private-ip")
 import * as PATH from "path"
 
 import { Addr } from "netaddr"
-import { Znet, Workload, WorkloadTypes, Peer, MessageBusClient } from 'grid3_client'
+import { Znet, Workload, WorkloadTypes, Peer, MessageBusClient, Deployment } from 'grid3_client'
 
 import { loadFromFile, dumpToFile, appPath } from "../helpers/jsonfs"
 import { getRandomNumber } from "../helpers/utils"
@@ -32,7 +32,7 @@ class Network {
     name: string
     ipRange: string
     nodes: Node[] = []
-    deployments: Object[] = []
+    deployments: Deployment[] = []
     reservedSubnets: string[] = []
     networks: Znet[] = []
     accessPoints: AccessPoint[] = []
@@ -113,6 +113,34 @@ class Network {
         znet_workload.metadata = metadata;
         znet_workload.description = description;
         return znet_workload;
+    }
+
+    deleteNode(node_id: number): number {
+        let network;
+        if (!this.exists()) {
+            return 0
+        }
+        let contract_id = 0
+        network = this.getNetworks()[this.name];
+        let nodes = []
+        for (const node of network["nodes"]) {
+            if (node.node_id !== node_id) {
+                nodes.push(node)
+            }
+            else {
+                contract_id = node.contract_id
+            }
+        }
+        this.nodes = this.nodes.filter(node => node.node_id !== node_id)
+        this.networks = this.networks.filter(net => net["node_id"] !== node_id)
+        const net = this.networks.filter(net => net["node_id"] === node_id)
+        this.reservedSubnets = this.reservedSubnets.filter(subnet => subnet === net[0].subnet)
+        if (nodes.length === 0) {
+            this.delete()
+        }
+        network.nodes = nodes;
+        this._save(network)
+        return contract_id
     }
 
     updateNetwork(znet): Znet {
@@ -206,6 +234,16 @@ class Network {
         return false
     }
 
+    hasAccessPoint(node_id: number): boolean {
+        for (const accessPoint of this.accessPoints) {
+            if (node_id === accessPoint.node_id) {
+                return true
+            }
+        }
+        return false
+
+    }
+
     async generateWireguardKeypair(): Promise<WireGuardKeys> {
         return Wg.genkey().then(function (privateKey) {
             return Wg.pubkey(privateKey).then(function (publicKey) {
@@ -282,6 +320,25 @@ class Network {
             return node.reserved_ips
         }
         return []
+    }
+
+    deleteReservedIp(node_id: number, ip: string): string {
+        for (let node of this.nodes) {
+            if (node.node_id === node_id) {
+                node.reserved_ips = node.reserved_ips.filter(item => item !== ip)
+            }
+        }
+        let network = this.getNetworks()[this.name];
+        let nodes = []
+        for (const node of network["nodes"]) {
+            if (node.node_id === node_id) {
+                node.reserved_ips = node.reserved_ips.filter(item => item !== ip)
+            }
+            nodes.push(node)
+        }
+        network.nodes = nodes;
+        this._save(network)
+        return ip
     }
 
     getNodeSubnet(node_id: number): string {
@@ -456,8 +513,19 @@ PersistentKeepalive = 25\nEndpoint = ${endpoint}`
             network.nodes.push(node)
         }
 
+        this._save(network)
+    }
+
+    _save(network) {
         let networks = this.getNetworks()
         networks[this.name] = network;
+        const path = PATH.join(appPath, "network.json")
+        dumpToFile(path, networks)
+    }
+
+    delete() {
+        let networks = this.getNetworks()
+        delete networks[this.name]
         const path = PATH.join(appPath, "network.json")
         dumpToFile(path, networks)
     }

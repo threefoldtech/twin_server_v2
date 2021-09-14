@@ -162,6 +162,34 @@ var TwinDeploymentHandler = /** @class */ (function () {
         }
         return deployments;
     };
+    TwinDeploymentHandler.prototype.delete = function (contract_id) {
+        return __awaiter(this, void 0, void 0, function () {
+            var tfclient, err_3;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        tfclient = new grid3_client_1.TFClient(config_json_1.default.url, config_json_1.default.mnemonic);
+                        return [4 /*yield*/, tfclient.connect()];
+                    case 1:
+                        _a.sent();
+                        _a.label = 2;
+                    case 2:
+                        _a.trys.push([2, 4, 5, 6]);
+                        return [4 /*yield*/, tfclient.contracts.cancel(contract_id)];
+                    case 3:
+                        _a.sent();
+                        return [3 /*break*/, 6];
+                    case 4:
+                        err_3 = _a.sent();
+                        throw Error("Failed to cancel contract " + contract_id + " due to: " + err_3);
+                    case 5:
+                        tfclient.disconnect();
+                        return [7 /*endfinally*/];
+                    case 6: return [2 /*return*/, contract_id];
+                }
+            });
+        });
+    };
     TwinDeploymentHandler.prototype._updateToLatest = function (twinDeployments) {
         // all deployment pass should be with the same contract id to merge them to one deployment with all updates
         if (twinDeployments.length === 0) {
@@ -229,52 +257,61 @@ var TwinDeploymentHandler = /** @class */ (function () {
         var deployments = [];
         deployments = deployments.concat(this.deployMerge(twinDeployments));
         deployments = deployments.concat(this.updateMerge(twinDeployments));
+        deployments = deployments.concat(twinDeployments.filter(function (d) { return d.operation === models_1.Operations.delete; }));
         return deployments;
     };
-    TwinDeploymentHandler.prototype.handle = function (twinDeployments, network) {
-        if (network === void 0) { network = null; }
+    TwinDeploymentHandler.prototype.handle = function (twinDeployments) {
         return __awaiter(this, void 0, void 0, function () {
-            var contracts, _i, twinDeployments_4, twinDeployment, _a, _b, workload, contract;
+            var contracts, _i, twinDeployments_4, twinDeployment, _a, _b, workload, contract, contract, contract;
             return __generator(this, function (_c) {
                 switch (_c.label) {
                     case 0:
                         twinDeployments = this.merge(twinDeployments);
-                        contracts = [];
+                        contracts = { "created": [], "updated": [], "deleted": [] };
                         _i = 0, twinDeployments_4 = twinDeployments;
                         _c.label = 1;
                     case 1:
-                        if (!(_i < twinDeployments_4.length)) return [3 /*break*/, 8];
+                        if (!(_i < twinDeployments_4.length)) return [3 /*break*/, 10];
                         twinDeployment = twinDeployments_4[_i];
                         for (_a = 0, _b = twinDeployment.deployment.workloads; _a < _b.length; _a++) {
                             workload = _b[_a];
+                            if (!twinDeployment.network) {
+                                break;
+                            }
                             if (workload.type === grid3_client_1.WorkloadTypes.network) {
-                                workload["data"] = network.updateNetwork(workload.data);
+                                workload["data"] = twinDeployment.network.updateNetwork(workload.data);
                             }
                         }
                         twinDeployment.deployment.sign(config_json_1.default.twin_id, config_json_1.default.mnemonic);
-                        contract = void 0;
-                        if (!(twinDeployment.operation === models_1.Operations.deploy)) return [3 /*break*/, 3];
+                        if (!(twinDeployment.operation === models_1.Operations.deploy)) return [3 /*break*/, 5];
                         return [4 /*yield*/, this.deploy(twinDeployment.deployment, twinDeployment.nodeId, twinDeployment.publicIps)];
                     case 2:
                         contract = _c.sent();
-                        contracts.push(contract);
-                        return [3 /*break*/, 5];
+                        contracts.created.push(contract);
+                        if (!twinDeployment.network) return [3 /*break*/, 4];
+                        return [4 /*yield*/, twinDeployment.network.save(contract["contract_id"], contract["node_id"])];
                     case 3:
-                        if (!(twinDeployment.operation === models_1.Operations.update)) return [3 /*break*/, 5];
-                        return [4 /*yield*/, this.update(twinDeployment.deployment, twinDeployment.publicIps)];
-                    case 4:
-                        contract = _c.sent();
-                        _c.label = 5;
-                    case 5:
-                        if (!network) return [3 /*break*/, 7];
-                        return [4 /*yield*/, network.save(contract["contract_id"], contract["node_id"])];
-                    case 6:
                         _c.sent();
-                        _c.label = 7;
+                        _c.label = 4;
+                    case 4: return [3 /*break*/, 9];
+                    case 5:
+                        if (!(twinDeployment.operation === models_1.Operations.update)) return [3 /*break*/, 7];
+                        return [4 /*yield*/, this.update(twinDeployment.deployment, twinDeployment.publicIps)];
+                    case 6:
+                        contract = _c.sent();
+                        contracts.updated.push(contract);
+                        return [3 /*break*/, 9];
                     case 7:
+                        if (!(twinDeployment.operation === models_1.Operations.delete)) return [3 /*break*/, 9];
+                        return [4 /*yield*/, this.delete(twinDeployment.deployment.contract_id)];
+                    case 8:
+                        contract = _c.sent();
+                        contracts.deleted.push(contract);
+                        _c.label = 9;
+                    case 9:
                         _i++;
                         return [3 /*break*/, 1];
-                    case 8: return [2 /*return*/, contracts];
+                    case 10: return [2 /*return*/, contracts];
                 }
             });
         });

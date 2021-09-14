@@ -187,6 +187,34 @@ var Network = /** @class */ (function () {
             });
         });
     };
+    Network.prototype.deleteNode = function (node_id) {
+        var network;
+        if (!this.exists()) {
+            return 0;
+        }
+        var contract_id = 0;
+        network = this.getNetworks()[this.name];
+        var nodes = [];
+        for (var _i = 0, _a = network["nodes"]; _i < _a.length; _i++) {
+            var node = _a[_i];
+            if (node.node_id !== node_id) {
+                nodes.push(node);
+            }
+            else {
+                contract_id = node.contract_id;
+            }
+        }
+        this.nodes = this.nodes.filter(function (node) { return node.node_id !== node_id; });
+        this.networks = this.networks.filter(function (net) { return net["node_id"] !== node_id; });
+        var net = this.networks.filter(function (net) { return net["node_id"] === node_id; });
+        this.reservedSubnets = this.reservedSubnets.filter(function (subnet) { return subnet === net[0].subnet; });
+        if (nodes.length === 0) {
+            this.delete();
+        }
+        network.nodes = nodes;
+        this._save(network);
+        return contract_id;
+    };
     Network.prototype.updateNetwork = function (znet) {
         for (var _i = 0, _a = this.networks; _i < _a.length; _i++) {
             var net = _a[_i];
@@ -303,6 +331,15 @@ var Network = /** @class */ (function () {
         }
         return false;
     };
+    Network.prototype.hasAccessPoint = function (node_id) {
+        for (var _i = 0, _a = this.accessPoints; _i < _a.length; _i++) {
+            var accessPoint = _a[_i];
+            if (node_id === accessPoint.node_id) {
+                return true;
+            }
+        }
+        return false;
+    };
     Network.prototype.generateWireguardKeypair = function () {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
@@ -401,6 +438,26 @@ var Network = /** @class */ (function () {
             return node.reserved_ips;
         }
         return [];
+    };
+    Network.prototype.deleteReservedIp = function (node_id, ip) {
+        for (var _i = 0, _a = this.nodes; _i < _a.length; _i++) {
+            var node = _a[_i];
+            if (node.node_id === node_id) {
+                node.reserved_ips = node.reserved_ips.filter(function (item) { return item !== ip; });
+            }
+        }
+        var network = this.getNetworks()[this.name];
+        var nodes = [];
+        for (var _b = 0, _c = network["nodes"]; _b < _c.length; _b++) {
+            var node = _c[_b];
+            if (node.node_id === node_id) {
+                node.reserved_ips = node.reserved_ips.filter(function (item) { return item !== ip; });
+            }
+            nodes.push(node);
+        }
+        network.nodes = nodes;
+        this._save(network);
+        return ip;
     };
     Network.prototype.getNodeSubnet = function (node_id) {
         for (var _i = 0, _a = this.networks; _i < _a.length; _i++) {
@@ -580,7 +637,7 @@ var Network = /** @class */ (function () {
     };
     Network.prototype.save = function (contract_id, node_id) {
         return __awaiter(this, void 0, void 0, function () {
-            var network, nodeFound, _i, _a, node, node, networks, path;
+            var network, nodeFound, _i, _a, node, node;
             return __generator(this, function (_b) {
                 if (this.exists()) {
                     network = this.getNetworks()[this.name];
@@ -608,13 +665,22 @@ var Network = /** @class */ (function () {
                     };
                     network.nodes.push(node);
                 }
-                networks = this.getNetworks();
-                networks[this.name] = network;
-                path = PATH.join(jsonfs_1.appPath, "network.json");
-                jsonfs_1.dumpToFile(path, networks);
+                this._save(network);
                 return [2 /*return*/];
             });
         });
+    };
+    Network.prototype._save = function (network) {
+        var networks = this.getNetworks();
+        networks[this.name] = network;
+        var path = PATH.join(jsonfs_1.appPath, "network.json");
+        jsonfs_1.dumpToFile(path, networks);
+    };
+    Network.prototype.delete = function () {
+        var networks = this.getNetworks();
+        delete networks[this.name];
+        var path = PATH.join(jsonfs_1.appPath, "network.json");
+        jsonfs_1.dumpToFile(path, networks);
     };
     Network.prototype.generatePeers = function () {
         return __awaiter(this, void 0, void 0, function () {

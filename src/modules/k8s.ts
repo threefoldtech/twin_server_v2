@@ -79,8 +79,8 @@ class K8s extends BaseModule {
             deployments = deployments.concat(twinDeployments)
         }
         let twinDeploymentHandler = new TwinDeploymentHandler()
-        const contracts = await twinDeploymentHandler.handle(deployments, network)
-        const data = this.save(options.name, contracts, wireguardConfig)
+        const contracts = await twinDeploymentHandler.handle(deployments)
+        const data = this.save(options.name, contracts.created, wireguardConfig)
         return data
     }
 

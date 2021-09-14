@@ -33,7 +33,7 @@ class Zdbs extends BaseModule {
 
         let twinDeploymentHandler = new TwinDeploymentHandler()
         const contracts = await twinDeploymentHandler.handle(twinDeployments)
-        const data = this.save(options.name, contracts)
+        const data = this.save(options.name, contracts.created)
         return data
     }
 

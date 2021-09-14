@@ -1,9 +1,11 @@
 import * as PATH from "path"
 
-import { Deployment, MessageBusClient, TFClient } from "grid3_client"
+import { MessageBusClient } from "grid3_client"
 
+import { HighLevelBase } from "../high_level/base";
 import { loadFromFile, updatejson, appPath } from "../helpers/jsonfs"
 import { getNodeTwinId } from "../primitives/nodes";
+
 import { default as config } from "../../config.json"
 
 
@@ -77,18 +79,14 @@ class BaseModule {
         if (!data.hasOwnProperty(name)) {
             return []
         }
+        let contracts = { "deleted": [], "updated": [] }
 
-        const tfclient = new TFClient(config.url, config.mnemonic)
-        await tfclient.connect()
-        let contracts = []
-        for (const contract of data[name]["contracts"]) {
-            try {
-                await tfclient.contracts.cancel(contract["contract_id"]);
-                contracts.push(contract["contract_id"])
-            }
-            catch (err) {
-                throw Error(`Failed to cancel contract ${contract["contract_id"]} due to: ${err}`)
-            }
+        const deployments = await this._get(name)
+        const highlvl = new HighLevelBase
+        for (let deployment of deployments) {
+            const contract = await highlvl._delete(deployment, [])
+            contracts.deleted = contracts.deleted.concat(contract["deleted"])
+            contracts.updated = contracts.updated.concat(contract["updated"])
         }
         updatejson(path, name, "", "delete")
         return contracts
