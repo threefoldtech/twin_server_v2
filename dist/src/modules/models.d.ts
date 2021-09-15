@@ -55,6 +55,13 @@ declare class ZDBS {
     metadata: string;
     description: string;
 }
+declare class AddZDB extends ZDB {
+    deployment_name: string;
+}
+declare class DeleteZDB {
+    deployment_name: string;
+    name: string;
+}
 declare class ContractCreate {
     node_id: number;
     hash: string;
@@ -83,4 +90,4 @@ declare class TwinList {
 declare class TwinDelete {
     id: number;
 }
-export { Machines, K8S, ZDBS, ContractCreate, ContractGet, ContractUpdate, ContractCancel, TwinCreate, TwinGet, TwinList, TwinDelete };
+export { Machines, K8S, ZDBS, AddZDB, DeleteZDB, ContractCreate, ContractGet, ContractUpdate, ContractCancel, TwinCreate, TwinGet, TwinList, TwinDelete };

@@ -78,7 +78,7 @@ var K8s = /** @class */ (function (_super) {
     }
     K8s.prototype.deploy = function (options) {
         return __awaiter(this, void 0, void 0, function () {
-            var networkName, network, deployments, wireguardConfig, kubernetes, _i, _a, master, _b, twinDeployments, wgConfig, masterIp, _c, deployments_1, twinDeployment, _d, _e, workload, _f, _g, worker, _h, twinDeployments, _, twinDeploymentHandler, contracts, data;
+            var networkName, network, deployments, wireguardConfig, kubernetes, _i, _a, master, _b, twinDeployments, wgConfig, masterIp, _c, deployments_1, twinDeployment, _d, _e, workload, _f, _g, worker, _h, twinDeployments, _, twinDeploymentHandler, contracts;
             return __generator(this, function (_j) {
                 switch (_j.label) {
                     case 0:
@@ -145,8 +145,8 @@ var K8s = /** @class */ (function (_super) {
                         return [4 /*yield*/, twinDeploymentHandler.handle(deployments)];
                     case 10:
                         contracts = _j.sent();
-                        data = this.save(options.name, contracts.created, wireguardConfig);
-                        return [2 /*return*/, data];
+                        this.save(options.name, contracts, wireguardConfig);
+                        return [2 /*return*/, { "contracts": contracts, "wireguard_config": wireguardConfig }];
                 }
             });
         });

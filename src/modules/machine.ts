@@ -40,8 +40,8 @@ class Machine extends BaseModule {
 
         let twinDeploymentHandler = new TwinDeploymentHandler()
         const contracts = await twinDeploymentHandler.handle(twinDeployments)
-        const data = this.save(options.name, contracts.created, wgConfig)
-        return data
+        this.save(options.name, contracts, wgConfig)
+        return { "contracts": contracts, "wireguard_config": wgConfig }
     }
 
     @expose
@@ -102,7 +102,7 @@ class Machine extends BaseModule {
         let twinDeploymentHandler = new TwinDeploymentHandler()
         console.log(JSON.stringify(twinDeployment))
         const contracts = await twinDeploymentHandler.handle([twinDeployment])
-        return { "contracts": contracts.updated }
+        return { "contracts": contracts }
     }
 }
 

@@ -3,7 +3,12 @@ import { BaseModule } from "./base";
 declare class K8s extends BaseModule {
     fileName: string;
     deploy(options: K8S): Promise<{
-        contracts: any[];
+        contracts: {
+            created: any[];
+            updated: any[];
+            deleted: any[];
+        };
+        wireguard_config: string;
     }>;
     list(): string[];
     get(options: any): Promise<any[]>;

@@ -64,6 +64,15 @@ class ZDBS {
     description: string
 }
 
+class AddZDB extends ZDB {
+    deployment_name: string
+}
+
+class DeleteZDB {
+    deployment_name: string
+    name: string
+}
+
 class ContractCreate {
     node_id: number;
     hash: string;
@@ -110,6 +119,8 @@ export {
     Machines,
     K8S,
     ZDBS,
+    AddZDB,
+    DeleteZDB,
     ContractCreate,
     ContractGet,
     ContractUpdate,

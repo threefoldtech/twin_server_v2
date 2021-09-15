@@ -78,7 +78,7 @@ var Machine = /** @class */ (function (_super) {
     }
     Machine.prototype.deploy = function (options) {
         return __awaiter(this, void 0, void 0, function () {
-            var networkName, network, vm, _a, twinDeployments, wgConfig, twinDeploymentHandler, contracts, data;
+            var networkName, network, vm, _a, twinDeployments, wgConfig, twinDeploymentHandler, contracts;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
@@ -98,8 +98,8 @@ var Machine = /** @class */ (function (_super) {
                         return [4 /*yield*/, twinDeploymentHandler.handle(twinDeployments)];
                     case 3:
                         contracts = _b.sent();
-                        data = this.save(options.name, contracts.created, wgConfig);
-                        return [2 /*return*/, data];
+                        this.save(options.name, contracts, wgConfig);
+                        return [2 /*return*/, { "contracts": contracts, "wireguard_config": wgConfig }];
                 }
             });
         });
@@ -167,7 +167,7 @@ var Machine = /** @class */ (function (_super) {
                         return [4 /*yield*/, twinDeploymentHandler.handle([twinDeployment])];
                     case 4:
                         contracts = _b.sent();
-                        return [2 /*return*/, { "contracts": contracts.updated }];
+                        return [2 /*return*/, { "contracts": contracts }];
                 }
             });
         });

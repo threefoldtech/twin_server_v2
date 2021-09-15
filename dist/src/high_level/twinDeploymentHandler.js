@@ -306,7 +306,7 @@ var TwinDeploymentHandler = /** @class */ (function () {
                         return [4 /*yield*/, this.delete(twinDeployment.deployment.contract_id)];
                     case 8:
                         contract = _c.sent();
-                        contracts.deleted.push(contract);
+                        contracts.deleted.push({ "contract_id": contract });
                         _c.label = 9;
                     case 9:
                         _i++;

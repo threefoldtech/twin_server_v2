@@ -211,7 +211,7 @@ class TwinDeploymentHandler {
             }
             else if (twinDeployment.operation === Operations.delete) {
                 const contract = await this.delete(twinDeployment.deployment.contract_id)
-                contracts.deleted.push(contract)
+                contracts.deleted.push({ "contract_id": contract })
             }
         }
         return contracts

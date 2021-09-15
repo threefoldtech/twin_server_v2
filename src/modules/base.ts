@@ -6,25 +6,29 @@ import { HighLevelBase } from "../high_level/base";
 import { loadFromFile, updatejson, appPath } from "../helpers/jsonfs"
 import { getNodeTwinId } from "../primitives/nodes";
 
-import { default as config } from "../../config.json"
-
 
 class BaseModule {
     fileName: string = "";
 
-    save(name: string, contracts: Object[], wgConfig: string = "") {
-        let contractIds = []
-        for (const contract of contracts) {
-            contractIds.push({ "contract_id": contract["contract_id"], "node_id": contract["node_id"] })
-        }
-        let data = { "contracts": contractIds }
-        if (wgConfig) {
-            data["wireguard_config"] = wgConfig
-        }
+    save(name: string, contracts: Object, wgConfig: string = "") {
         const path = PATH.join(appPath, this.fileName)
-        updatejson(path, name, data)
+        const data = loadFromFile(path)
+        let deploymentData = { "contracts": [], "wireguard_config": "" }
+        if (data.hasOwnProperty(name)) {
+            deploymentData = data[name]
+        }
 
-        return data
+        for (const contract of contracts["created"]) {
+            deploymentData.contracts.push({ "contract_id": contract["contract_id"], "node_id": contract["node_id"] })
+        }
+        for (const contract of contracts["deleted"]) {
+            deploymentData.contracts = deploymentData.contracts.filter(c => c["contract_id"] !== contract["contract_id"])
+        }
+        if (wgConfig) {
+            deploymentData["wireguard_config"] = wgConfig
+        }
+        updatejson(path, name, deploymentData)
+        return deploymentData
     }
 
     _list() {
@@ -38,16 +42,38 @@ class BaseModule {
     }
 
     _getDeploymentNodeIds(name) {
+        let nodeIds = []
+        const contracts = this._getContracts(name)
+        for (const contract of contracts) {
+            nodeIds.push(contract["node_id"])
+        }
+        return nodeIds
+    }
+
+    _getContracts(name) {
         const path = PATH.join(appPath, this.fileName)
         const data = loadFromFile(path)
         if (!data.hasOwnProperty(name)) {
             return []
         }
-        let nodeIds = []
-        for (const contract of data[name]["contracts"]) {
-            nodeIds.push(contract["node_id"])
+        return data[name]["contracts"]
+    }
+
+    _getContractIdFromNodeId(name, nodeId) {
+        const contracts = this._getContracts(name)
+        for (const contract of contracts) {
+            if (contract["node_id"] === nodeId) {
+                return contract["contract_id"]
+            }
         }
-        return nodeIds
+    }
+    _getNodeIdFromContractId(name, contractId) {
+        const contracts = this._getContracts(name)
+        for (const contract of contracts) {
+            if (contract["contract_id"] === contractId) {
+                return contract["node_id"]
+            }
+        }
     }
 
     async _get(name: string) {

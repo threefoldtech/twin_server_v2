@@ -69,6 +69,7 @@ class DeploymentFactory {
                 if (!oldWorkloadNames.includes(w.name)) {
                     w.version += 1
                     newWorkloads.push(w)
+                    oldWorkloadNames.push(w.name)
                     foundUpdate = true
                     continue;
                 }

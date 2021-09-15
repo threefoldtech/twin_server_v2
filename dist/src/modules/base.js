@@ -67,18 +67,28 @@ var BaseModule = /** @class */ (function () {
     }
     BaseModule.prototype.save = function (name, contracts, wgConfig) {
         if (wgConfig === void 0) { wgConfig = ""; }
-        var contractIds = [];
-        for (var _i = 0, contracts_1 = contracts; _i < contracts_1.length; _i++) {
-            var contract = contracts_1[_i];
-            contractIds.push({ "contract_id": contract["contract_id"], "node_id": contract["node_id"] });
-        }
-        var data = { "contracts": contractIds };
-        if (wgConfig) {
-            data["wireguard_config"] = wgConfig;
-        }
         var path = PATH.join(jsonfs_1.appPath, this.fileName);
-        jsonfs_1.updatejson(path, name, data);
-        return data;
+        var data = jsonfs_1.loadFromFile(path);
+        var deploymentData = { "contracts": [], "wireguard_config": "" };
+        if (data.hasOwnProperty(name)) {
+            deploymentData = data[name];
+        }
+        for (var _i = 0, _a = contracts["created"]; _i < _a.length; _i++) {
+            var contract = _a[_i];
+            deploymentData.contracts.push({ "contract_id": contract["contract_id"], "node_id": contract["node_id"] });
+        }
+        var _loop_1 = function (contract) {
+            deploymentData.contracts = deploymentData.contracts.filter(function (c) { return c["contract_id"] !== contract["contract_id"]; });
+        };
+        for (var _b = 0, _c = contracts["deleted"]; _b < _c.length; _b++) {
+            var contract = _c[_b];
+            _loop_1(contract);
+        }
+        if (wgConfig) {
+            deploymentData["wireguard_config"] = wgConfig;
+        }
+        jsonfs_1.updatejson(path, name, deploymentData);
+        return deploymentData;
     };
     BaseModule.prototype._list = function () {
         var path = PATH.join(jsonfs_1.appPath, this.fileName);
@@ -89,17 +99,39 @@ var BaseModule = /** @class */ (function () {
         return this._list().includes(name);
     };
     BaseModule.prototype._getDeploymentNodeIds = function (name) {
+        var nodeIds = [];
+        var contracts = this._getContracts(name);
+        for (var _i = 0, contracts_1 = contracts; _i < contracts_1.length; _i++) {
+            var contract = contracts_1[_i];
+            nodeIds.push(contract["node_id"]);
+        }
+        return nodeIds;
+    };
+    BaseModule.prototype._getContracts = function (name) {
         var path = PATH.join(jsonfs_1.appPath, this.fileName);
         var data = jsonfs_1.loadFromFile(path);
         if (!data.hasOwnProperty(name)) {
             return [];
         }
-        var nodeIds = [];
-        for (var _i = 0, _a = data[name]["contracts"]; _i < _a.length; _i++) {
-            var contract = _a[_i];
-            nodeIds.push(contract["node_id"]);
+        return data[name]["contracts"];
+    };
+    BaseModule.prototype._getContractIdFromNodeId = function (name, nodeId) {
+        var contracts = this._getContracts(name);
+        for (var _i = 0, contracts_2 = contracts; _i < contracts_2.length; _i++) {
+            var contract = contracts_2[_i];
+            if (contract["node_id"] === nodeId) {
+                return contract["contract_id"];
+            }
         }
-        return nodeIds;
+    };
+    BaseModule.prototype._getNodeIdFromContractId = function (name, contractId) {
+        var contracts = this._getContracts(name);
+        for (var _i = 0, contracts_3 = contracts; _i < contracts_3.length; _i++) {
+            var contract = contracts_3[_i];
+            if (contract["contract_id"] === contractId) {
+                return contract["node_id"];
+            }
+        }
     };
     BaseModule.prototype._get = function (name) {
         return __awaiter(this, void 0, void 0, function () {
