@@ -68,7 +68,6 @@ var index_1 = require("../helpers/index");
 var twinDeploymentHandler_1 = require("../high_level/twinDeploymentHandler");
 var kubernetes_1 = require("../high_level/kubernetes");
 var network_1 = require("../primitives/network");
-var ipRange = "10.200.0.0/16";
 var K8s = /** @class */ (function (_super) {
     __extends(K8s, _super);
     function K8s() {
@@ -78,7 +77,7 @@ var K8s = /** @class */ (function (_super) {
     }
     K8s.prototype.deploy = function (options) {
         return __awaiter(this, void 0, void 0, function () {
-            var networkName, network, deployments, wireguardConfig, kubernetes, _i, _a, master, _b, twinDeployments, wgConfig, masterIp, _c, deployments_1, twinDeployment, _d, _e, workload, _f, _g, worker, _h, twinDeployments, _, twinDeploymentHandler, contracts;
+            var network, deployments, wireguardConfig, kubernetes, _i, _a, master, _b, twinDeployments, wgConfig, masterIp, _c, deployments_1, twinDeployment, _d, _e, workload, _f, _g, worker, _h, twinDeployments, _, twinDeploymentHandler, contracts;
             return __generator(this, function (_j) {
                 switch (_j.label) {
                     case 0:
@@ -88,8 +87,7 @@ var K8s = /** @class */ (function (_super) {
                         if (this.exists(options.name)) {
                             throw Error("Another k8s deployment with the same name " + options.name + " is already exist");
                         }
-                        networkName = options.name + "_k8s_network";
-                        network = new network_1.Network(networkName, ipRange);
+                        network = new network_1.Network(options.network.name, options.network.ip_range);
                         return [4 /*yield*/, network.load(true)];
                     case 1:
                         _j.sent();

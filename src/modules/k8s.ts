@@ -7,7 +7,6 @@ import { TwinDeploymentHandler } from "../high_level/twinDeploymentHandler";
 import { Kubernetes } from "../high_level/kubernetes"
 import { Network } from "../primitives/network";
 
-const ipRange = "10.200.0.0/16"
 
 class K8s extends BaseModule {
     fileName: string = "kubernetes.json";
@@ -22,8 +21,7 @@ class K8s extends BaseModule {
             throw Error(`Another k8s deployment with the same name ${options.name} is already exist`)
         }
 
-        const networkName = `${options.name}_k8s_network`;
-        let network = new Network(networkName, ipRange)
+        let network = new Network(options.network.name, options.network.ip_range)
         await network.load(true)
         if (network.exists()) {
             throw Error(`A kubernetes cluster with same name ${options.name} already exists`)

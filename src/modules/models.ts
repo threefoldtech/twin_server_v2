@@ -38,6 +38,7 @@ class Machines {
 class K8S {
     name: string
     secret: string
+    network: Network
     masters: KubernetesNode[]
     workers: KubernetesNode[]
     metadata: string;
