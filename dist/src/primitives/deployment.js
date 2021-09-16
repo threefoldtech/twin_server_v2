@@ -35,6 +35,7 @@ var DeploymentFactory = /** @class */ (function () {
         var deletedWorkloads = [];
         var newWorkloads = [];
         var foundUpdate = false;
+        var deploymentVersion = oldDeployment.version;
         for (var _i = 0, _a = oldDeployment.workloads; _i < _a.length; _i++) {
             var workload = _a[_i];
             oldWorkloadNames.push(workload.name);
@@ -53,12 +54,10 @@ var DeploymentFactory = /** @class */ (function () {
                 foundUpdate = true;
                 continue;
             }
-            var oldVersion = workload.version;
-            workload.version = 0;
             for (var _f = 0, _g = newDeployment.workloads; _f < _g.length; _f++) {
                 var w = _g[_f];
                 if (!oldWorkloadNames.includes(w.name)) {
-                    w.version += 1;
+                    w.version = deploymentVersion + 1;
                     newWorkloads.push(w);
                     oldWorkloadNames.push(w.name);
                     foundUpdate = true;
@@ -70,7 +69,10 @@ var DeploymentFactory = /** @class */ (function () {
                 if (w.name !== workload.name) {
                     continue;
                 }
+                var oldVersion = workload.version;
+                workload.version = 0;
                 if (w.challenge() === workload.challenge()) {
+                    workload.version = oldVersion;
                     continue;
                 }
                 // Don't change the machine ip
@@ -78,7 +80,7 @@ var DeploymentFactory = /** @class */ (function () {
                     var oldMachineIp = workload.data["network"]["interfaces"][0]["ip"];
                     w.data["network"]["interfaces"][0]["ip"] = oldMachineIp;
                 }
-                workload.version = oldVersion + 1;
+                workload.version = deploymentVersion + 1;
                 workload.data = w.data;
                 workload.description = w.description;
                 workload.metadata = w.metadata;

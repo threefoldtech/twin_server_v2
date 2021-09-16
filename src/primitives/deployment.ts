@@ -47,6 +47,7 @@ class DeploymentFactory {
         let deletedWorkloads = [];
         let newWorkloads = [];
         let foundUpdate = false;
+        const deploymentVersion = oldDeployment.version;
         for (const workload of oldDeployment.workloads) {
             oldWorkloadNames.push(workload.name);
         }
@@ -63,11 +64,9 @@ class DeploymentFactory {
                 foundUpdate = true
                 continue;
             }
-            const oldVersion = workload.version
-            workload.version = 0
             for (let w of newDeployment.workloads) {
                 if (!oldWorkloadNames.includes(w.name)) {
-                    w.version += 1
+                    w.version = deploymentVersion + 1
                     newWorkloads.push(w)
                     oldWorkloadNames.push(w.name)
                     foundUpdate = true
@@ -79,7 +78,10 @@ class DeploymentFactory {
                 if (w.name !== workload.name) {
                     continue;
                 }
+                const oldVersion = workload.version
+                workload.version = 0
                 if (w.challenge() === workload.challenge()) {
+                    workload.version = oldVersion
                     continue;
                 }
                 // Don't change the machine ip
@@ -87,7 +89,7 @@ class DeploymentFactory {
                     const oldMachineIp = workload.data["network"]["interfaces"][0]["ip"]
                     w.data["network"]["interfaces"][0]["ip"] = oldMachineIp
                 }
-                workload.version = oldVersion + 1
+                workload.version = deploymentVersion + 1
                 workload.data = w.data
                 workload.description = w.description
                 workload.metadata = w.metadata
