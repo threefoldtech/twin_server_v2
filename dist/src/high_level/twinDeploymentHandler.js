@@ -199,6 +199,8 @@ var TwinDeploymentHandler = /** @class */ (function () {
             twinDeployments[0].deployment.version += 1;
             return twinDeployments[0];
         }
+        // TODO: in case of the deployment has a deleted workloads
+        // it will be added after the merge, the code should be smart to detect that
         var workloadMap = {};
         var publicIps = 0;
         for (var _i = 0, twinDeployments_2 = twinDeployments; _i < twinDeployments_2.length; _i++) {

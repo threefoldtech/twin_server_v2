@@ -171,26 +171,18 @@ var VirtualMachine = /** @class */ (function (_super) {
         if (metadata === void 0) { metadata = ""; }
         if (description === void 0) { description = ""; }
         return __awaiter(this, void 0, void 0, function () {
-            var vm, _a, twinDeployments, _, _i, _b, node, deploymentFactory, updatedDeployment;
-            return __generator(this, function (_c) {
-                switch (_c.label) {
+            var vm, _a, twinDeployments, _, deploymentFactory, updatedDeployment;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
                     case 0:
                         vm = new VirtualMachine();
-                        return [4 /*yield*/, vm.create(name, nodeId, flist, cpu, memory, disks, publicIp, network, entrypoint, env, metadata, description)
-                            // Don't reserve the new machine ip
-                        ];
+                        return [4 /*yield*/, vm.create(name, nodeId, flist, cpu, memory, disks, publicIp, network, entrypoint, env, metadata, description)];
                     case 1:
-                        _a = _c.sent(), twinDeployments = _a[0], _ = _a[1];
-                        // Don't reserve the new machine ip
-                        for (_i = 0, _b = network.nodes; _i < _b.length; _i++) {
-                            node = _b[_i];
-                            if (node.node_id === nodeId) {
-                                node.reserved_ips.pop();
-                                break;
-                            }
-                        }
+                        _a = _b.sent(), twinDeployments = _a[0], _ = _a[1];
                         deploymentFactory = new index_1.DeploymentFactory();
-                        updatedDeployment = deploymentFactory.UpdateDeployment(oldDeployment, twinDeployments.pop().deployment);
+                        return [4 /*yield*/, deploymentFactory.UpdateDeployment(oldDeployment, twinDeployments.pop().deployment, network)];
+                    case 2:
+                        updatedDeployment = _b.sent();
                         if (!updatedDeployment) {
                             throw Error("Nothing found to be updated");
                         }

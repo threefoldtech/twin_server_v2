@@ -11,15 +11,6 @@ class Network {
     ip_range: string;
 }
 
-class KubernetesNode {
-    name: string;
-    node_id: number
-    cpu: number;
-    memory: number;
-    disk_size: number;
-    public_ip: boolean;
-
-}
 class Machines {
     name: string;
     node_id: number;
@@ -35,6 +26,16 @@ class Machines {
     env: Object
 }
 
+class KubernetesNode {
+    name: string;
+    node_id: number
+    cpu: number;
+    memory: number;
+    disk_size: number;
+    public_ip: boolean;
+
+}
+
 class K8S {
     name: string
     secret: string
@@ -46,6 +47,14 @@ class K8S {
     ssh_key: string
 }
 
+class AddWorker extends KubernetesNode {
+    deployment_name: string
+}
+
+class DeleteWorker {
+    deployment_name: string
+    name: string
+}
 
 class ZDB {
     name: string;
@@ -69,10 +78,7 @@ class AddZDB extends ZDB {
     deployment_name: string
 }
 
-class DeleteZDB {
-    deployment_name: string
-    name: string
-}
+class DeleteZDB extends DeleteWorker { }
 
 class ContractCreate {
     node_id: number;
@@ -119,6 +125,8 @@ class TwinDelete {
 export {
     Machines,
     K8S,
+    AddWorker,
+    DeleteWorker,
     ZDBS,
     AddZDB,
     DeleteZDB,

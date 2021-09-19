@@ -1,10 +1,12 @@
+import { Deployment, WorkloadTypes } from "grid3_client"
+
 import { Network } from "../primitives/network"
 import { VirtualMachine } from "../high_level//machine"
-import { generateString } from "../helpers/utils"
+import { HighLevelBase } from "./base"
 
 const Flist = "https://hub.grid.tf/ahmed_hanafy_1/ahmedhanafy725-k3s-latest.flist"
 
-class Kubernetes {
+class Kubernetes extends HighLevelBase {
     async add_master(name: string,
         nodeId: number,
         secret: string,
@@ -86,6 +88,10 @@ class Kubernetes {
             env,
             metadata,
             description)
+    }
+
+    async deleteNode(deployment: Deployment, names: string[]) {
+        return await this._delete(deployment, names, [WorkloadTypes.zmachine, WorkloadTypes.zmount, WorkloadTypes.ipv4])
     }
 }
 export { Kubernetes }

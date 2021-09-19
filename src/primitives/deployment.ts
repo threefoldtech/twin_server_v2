@@ -12,10 +12,11 @@ import {
     PublicIP,
     ComputeCapacity,
     Peer,
-    Mount
+    Mount,
+    TFClient
 } from "grid3_client"
-import request from "request";
 
+import { Network } from "./network"
 import { default as config } from "../../config.json"
 
 
@@ -41,7 +42,7 @@ class DeploymentFactory {
         return deployment
     }
 
-    UpdateDeployment(oldDeployment: Deployment, newDeployment: Deployment): Deployment {
+    async UpdateDeployment(oldDeployment: Deployment, newDeployment: Deployment, network: Network = null): Promise<Deployment> {
         let oldWorkloadNames = [];
         let newWorkloadNames = [];
         let deletedWorkloads = [];
@@ -80,14 +81,19 @@ class DeploymentFactory {
                 }
                 const oldVersion = workload.version
                 workload.version = 0
+                // Don't change the machine ip
+                if (w.type === WorkloadTypes.zmachine) {
+                    const tfclient = new TFClient(config.url, config.mnemonic)
+                    await tfclient.connect()
+                    const contract = await tfclient.contracts.get(oldDeployment.contract_id)
+                    const node_id = contract["node_id"]
+                    network.deleteReservedIp(node_id, w.data["network"]["interfaces"][0]["ip"])
+                    const oldMachineIp = workload.data["network"]["interfaces"][0]["ip"]
+                    w.data["network"]["interfaces"][0]["ip"] = oldMachineIp
+                }
                 if (w.challenge() === workload.challenge()) {
                     workload.version = oldVersion
                     continue;
-                }
-                // Don't change the machine ip
-                if (w.type === WorkloadTypes.zmachine) {
-                    const oldMachineIp = workload.data["network"]["interfaces"][0]["ip"]
-                    w.data["network"]["interfaces"][0]["ip"] = oldMachineIp
                 }
                 workload.version = deploymentVersion + 1
                 workload.data = w.data

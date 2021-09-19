@@ -14,13 +14,7 @@ class TwinDeployment {
         public publicIps: number,
         public nodeId: number,
         public network: Network = null
-    ) {
-        this.deployment = deployment;
-        this.operation = operation;
-        this.publicIps = publicIps;
-        this.nodeId = nodeId;
-        this.network = network;
-    }
+    ) { }
 }
 
 export { TwinDeployment, Operations }

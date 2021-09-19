@@ -29,6 +29,10 @@ declare class Zdbs extends BaseModule {
             deleted: any[];
         };
     }>;
-    delete_zdb(options: DeleteZDB): Promise<Object>;
+    delete_zdb(options: DeleteZDB): Promise<{
+        created: any[];
+        updated: any[];
+        deleted: any[];
+    }>;
 }
 export { Zdbs as zdbs };

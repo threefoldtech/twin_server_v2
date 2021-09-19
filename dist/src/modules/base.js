@@ -61,6 +61,7 @@ var grid3_client_1 = require("grid3_client");
 var base_1 = require("../high_level/base");
 var jsonfs_1 = require("../helpers/jsonfs");
 var nodes_1 = require("../primitives/nodes");
+var twinDeploymentHandler_1 = require("../high_level/twinDeploymentHandler");
 var BaseModule = /** @class */ (function () {
     function BaseModule() {
         this.fileName = "";
@@ -175,7 +176,7 @@ var BaseModule = /** @class */ (function () {
     };
     BaseModule.prototype._delete = function (name) {
         return __awaiter(this, void 0, void 0, function () {
-            var path, data, contracts, deployments, highlvl, _i, deployments_1, deployment, contract;
+            var path, data, contracts, twinDeploymentHandler, deployments, highlvl, _i, deployments_1, deployment, twinDeployments, contract;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -185,6 +186,7 @@ var BaseModule = /** @class */ (function () {
                             return [2 /*return*/, []];
                         }
                         contracts = { "deleted": [], "updated": [] };
+                        twinDeploymentHandler = new twinDeploymentHandler_1.TwinDeploymentHandler();
                         return [4 /*yield*/, this._get(name)];
                     case 1:
                         deployments = _a.sent();
@@ -192,18 +194,21 @@ var BaseModule = /** @class */ (function () {
                         _i = 0, deployments_1 = deployments;
                         _a.label = 2;
                     case 2:
-                        if (!(_i < deployments_1.length)) return [3 /*break*/, 5];
+                        if (!(_i < deployments_1.length)) return [3 /*break*/, 6];
                         deployment = deployments_1[_i];
                         return [4 /*yield*/, highlvl._delete(deployment, [])];
                     case 3:
+                        twinDeployments = _a.sent();
+                        return [4 /*yield*/, twinDeploymentHandler.handle(twinDeployments)];
+                    case 4:
                         contract = _a.sent();
                         contracts.deleted = contracts.deleted.concat(contract["deleted"]);
                         contracts.updated = contracts.updated.concat(contract["updated"]);
-                        _a.label = 4;
-                    case 4:
+                        _a.label = 5;
+                    case 5:
                         _i++;
                         return [3 /*break*/, 2];
-                    case 5:
+                    case 6:
                         jsonfs_1.updatejson(path, name, "", "delete");
                         return [2 /*return*/, contracts];
                 }

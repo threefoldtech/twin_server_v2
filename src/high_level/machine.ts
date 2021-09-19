@@ -140,15 +140,8 @@ class VirtualMachine extends HighLevelBase {
             metadata,
             description)
 
-        // Don't reserve the new machine ip
-        for (let node of network.nodes) {
-            if (node.node_id === nodeId) {
-                node.reserved_ips.pop()
-                break
-            }
-        }
         let deploymentFactory = new DeploymentFactory()
-        let updatedDeployment = deploymentFactory.UpdateDeployment(oldDeployment, twinDeployments.pop().deployment)
+        let updatedDeployment = await deploymentFactory.UpdateDeployment(oldDeployment, twinDeployments.pop().deployment, network)
         if (!updatedDeployment) {
             throw Error("Nothing found to be updated")
         }

@@ -119,6 +119,8 @@ class TwinDeploymentHandler {
             return twinDeployments[0]
 
         }
+        // TODO: in case of the deployment has a deleted workloads
+        // it will be added after the merge, the code should be smart to detect that
         let workloadMap = {}
         let publicIps = 0
         for (const twinDeployment of twinDeployments) {

@@ -118,7 +118,7 @@ class HighLevelBase {
     async _delete(deployment: Deployment,
         names: string[],
         types: WorkloadTypes[] = [WorkloadTypes.ipv4, WorkloadTypes.zmachine, WorkloadTypes.zmount, WorkloadTypes.zdb]
-    ): Promise<Object> {
+    ): Promise<TwinDeployment[]> {
 
         if (types.includes(WorkloadTypes.network)) {
             throw Error("network can't be deleted")
@@ -129,7 +129,6 @@ class HighLevelBase {
         let twinDeployments = []
 
         const deploymentFactory = new DeploymentFactory()
-        const twinDeploymentHandler = new TwinDeploymentHandler()
         const contract = await tfclient.contracts.get(deployment.contract_id)
         const node_id = contract["node_id"]
         const numberOfWorkloads = deployment.workloads.length
@@ -147,8 +146,7 @@ class HighLevelBase {
             deployment.workloads = remainingWorkloads
             twinDeployments.push(new TwinDeployment(deployment, Operations.update, 0, 0))
         }
-        console.log(JSON.stringify(twinDeployments))
-        return await twinDeploymentHandler.handle(twinDeployments)
+        return twinDeployments
     }
 }
 

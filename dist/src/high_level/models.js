@@ -16,11 +16,6 @@ var TwinDeployment = /** @class */ (function () {
         this.publicIps = publicIps;
         this.nodeId = nodeId;
         this.network = network;
-        this.deployment = deployment;
-        this.operation = operation;
-        this.publicIps = publicIps;
-        this.nodeId = nodeId;
-        this.network = network;
     }
     return TwinDeployment;
 }());

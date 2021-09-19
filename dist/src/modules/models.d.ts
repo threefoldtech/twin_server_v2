@@ -8,14 +8,6 @@ declare class Network {
     name: string;
     ip_range: string;
 }
-declare class KubernetesNode {
-    name: string;
-    node_id: number;
-    cpu: number;
-    memory: number;
-    disk_size: number;
-    public_ip: boolean;
-}
 declare class Machines {
     name: string;
     node_id: number;
@@ -30,6 +22,14 @@ declare class Machines {
     description: string;
     env: Object;
 }
+declare class KubernetesNode {
+    name: string;
+    node_id: number;
+    cpu: number;
+    memory: number;
+    disk_size: number;
+    public_ip: boolean;
+}
 declare class K8S {
     name: string;
     secret: string;
@@ -39,6 +39,13 @@ declare class K8S {
     metadata: string;
     description: string;
     ssh_key: string;
+}
+declare class AddWorker extends KubernetesNode {
+    deployment_name: string;
+}
+declare class DeleteWorker {
+    deployment_name: string;
+    name: string;
 }
 declare class ZDB {
     name: string;
@@ -59,9 +66,7 @@ declare class ZDBS {
 declare class AddZDB extends ZDB {
     deployment_name: string;
 }
-declare class DeleteZDB {
-    deployment_name: string;
-    name: string;
+declare class DeleteZDB extends DeleteWorker {
 }
 declare class ContractCreate {
     node_id: number;
@@ -91,4 +96,4 @@ declare class TwinList {
 declare class TwinDelete {
     id: number;
 }
-export { Machines, K8S, ZDBS, AddZDB, DeleteZDB, ContractCreate, ContractGet, ContractUpdate, ContractCancel, TwinCreate, TwinGet, TwinList, TwinDelete };
+export { Machines, K8S, AddWorker, DeleteWorker, ZDBS, AddZDB, DeleteZDB, ContractCreate, ContractGet, ContractUpdate, ContractCancel, TwinCreate, TwinGet, TwinList, TwinDelete };

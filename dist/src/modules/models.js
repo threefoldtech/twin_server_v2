@@ -15,7 +15,7 @@ var __extends = (this && this.__extends) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.TwinDelete = exports.TwinList = exports.TwinGet = exports.TwinCreate = exports.ContractCancel = exports.ContractUpdate = exports.ContractGet = exports.ContractCreate = exports.DeleteZDB = exports.AddZDB = exports.ZDBS = exports.K8S = exports.Machines = void 0;
+exports.TwinDelete = exports.TwinList = exports.TwinGet = exports.TwinCreate = exports.ContractCancel = exports.ContractUpdate = exports.ContractGet = exports.ContractCreate = exports.DeleteZDB = exports.AddZDB = exports.ZDBS = exports.DeleteWorker = exports.AddWorker = exports.K8S = exports.Machines = void 0;
 var Disks = /** @class */ (function () {
     function Disks() {
     }
@@ -26,23 +26,37 @@ var Network = /** @class */ (function () {
     }
     return Network;
 }());
-var KubernetesNode = /** @class */ (function () {
-    function KubernetesNode() {
-    }
-    return KubernetesNode;
-}());
 var Machines = /** @class */ (function () {
     function Machines() {
     }
     return Machines;
 }());
 exports.Machines = Machines;
+var KubernetesNode = /** @class */ (function () {
+    function KubernetesNode() {
+    }
+    return KubernetesNode;
+}());
 var K8S = /** @class */ (function () {
     function K8S() {
     }
     return K8S;
 }());
 exports.K8S = K8S;
+var AddWorker = /** @class */ (function (_super) {
+    __extends(AddWorker, _super);
+    function AddWorker() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    return AddWorker;
+}(KubernetesNode));
+exports.AddWorker = AddWorker;
+var DeleteWorker = /** @class */ (function () {
+    function DeleteWorker() {
+    }
+    return DeleteWorker;
+}());
+exports.DeleteWorker = DeleteWorker;
 var ZDB = /** @class */ (function () {
     function ZDB() {
     }
@@ -62,11 +76,13 @@ var AddZDB = /** @class */ (function (_super) {
     return AddZDB;
 }(ZDB));
 exports.AddZDB = AddZDB;
-var DeleteZDB = /** @class */ (function () {
+var DeleteZDB = /** @class */ (function (_super) {
+    __extends(DeleteZDB, _super);
     function DeleteZDB() {
+        return _super !== null && _super.apply(this, arguments) || this;
     }
     return DeleteZDB;
-}());
+}(DeleteWorker));
 exports.DeleteZDB = DeleteZDB;
 var ContractCreate = /** @class */ (function () {
     function ContractCreate() {

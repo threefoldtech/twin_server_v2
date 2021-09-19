@@ -45,7 +45,6 @@ var netaddr_1 = require("netaddr");
 var deployment_1 = require("../primitives/deployment");
 var network_1 = require("../primitives/network");
 var models_1 = require("../high_level/models");
-var twinDeploymentHandler_1 = require("../high_level/twinDeploymentHandler");
 var config_json_1 = __importDefault(require("../../config.json"));
 var HighLevelBase = /** @class */ (function () {
     function HighLevelBase() {
@@ -177,7 +176,7 @@ var HighLevelBase = /** @class */ (function () {
     HighLevelBase.prototype._delete = function (deployment, names, types) {
         if (types === void 0) { types = [grid3_client_1.WorkloadTypes.ipv4, grid3_client_1.WorkloadTypes.zmachine, grid3_client_1.WorkloadTypes.zmount, grid3_client_1.WorkloadTypes.zdb]; }
         return __awaiter(this, void 0, void 0, function () {
-            var tfclient, twinDeployments, deploymentFactory, twinDeploymentHandler, contract, node_id, numberOfWorkloads, _a, remainingWorkloads, deletedMachineWorkloads, _b, newTwinDeployments, newRemainingWorkloads;
+            var tfclient, twinDeployments, deploymentFactory, contract, node_id, numberOfWorkloads, _a, remainingWorkloads, deletedMachineWorkloads, _b, newTwinDeployments, newRemainingWorkloads;
             return __generator(this, function (_c) {
                 switch (_c.label) {
                     case 0:
@@ -190,7 +189,6 @@ var HighLevelBase = /** @class */ (function () {
                         _c.sent();
                         twinDeployments = [];
                         deploymentFactory = new deployment_1.DeploymentFactory();
-                        twinDeploymentHandler = new twinDeploymentHandler_1.TwinDeploymentHandler();
                         return [4 /*yield*/, tfclient.contracts.get(deployment.contract_id)];
                     case 2:
                         contract = _c.sent();
@@ -210,9 +208,7 @@ var HighLevelBase = /** @class */ (function () {
                             deployment.workloads = remainingWorkloads;
                             twinDeployments.push(new models_1.TwinDeployment(deployment, models_1.Operations.update, 0, 0));
                         }
-                        console.log(JSON.stringify(twinDeployments));
-                        return [4 /*yield*/, twinDeploymentHandler.handle(twinDeployments)];
-                    case 4: return [2 /*return*/, _c.sent()];
+                        return [2 /*return*/, twinDeployments];
                 }
             });
         });

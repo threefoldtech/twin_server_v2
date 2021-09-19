@@ -89,7 +89,7 @@ class Zdbs extends BaseModule {
                 if (twinDeployment.nodeId !== node_id) {
                     continue
                 }
-                oldDeployment = deploymentFactory.UpdateDeployment(oldDeployment, twinDeployment.deployment)
+                oldDeployment = await deploymentFactory.UpdateDeployment(oldDeployment, twinDeployment.deployment)
                 deploymentFound = true
                 if (!oldDeployment) {
                     continue
@@ -137,7 +137,7 @@ class Zdbs extends BaseModule {
                 }
                 let newDeployment = deploymentFactory.fromObj(deploymentObj)
                 newDeployment.workloads = newDeployment.workloads.concat(twinDeployment.deployment.workloads)
-                const deployment = deploymentFactory.UpdateDeployment(oldDeployment, newDeployment)
+                const deployment = await deploymentFactory.UpdateDeployment(oldDeployment, newDeployment)
                 twinDeployment.deployment = deployment
                 twinDeployment.operation = Operations.update
                 break
@@ -156,10 +156,13 @@ class Zdbs extends BaseModule {
             throw Error(`There is no zdb deployment with name: ${options.deployment_name}`)
         }
         const zdb = new Zdb()
+        let twinDeploymentHandler = new TwinDeploymentHandler()
         let deployments = await this._get(options.deployment_name)
         for (const deployment of deployments) {
-            const contracts = await zdb.delete(deployment, [options.name])
+            const twinDeployments = await zdb.delete(deployment, [options.name])
+            const contracts = await twinDeploymentHandler.handle(twinDeployments)
             if (contracts["deleted"].length > 0 || contracts["updated"].length > 0) {
+                this.save(options.deployment_name, contracts)
                 return contracts
             }
         }

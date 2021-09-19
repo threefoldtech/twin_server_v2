@@ -5,6 +5,7 @@ import { MessageBusClient } from "grid3_client"
 import { HighLevelBase } from "../high_level/base";
 import { loadFromFile, updatejson, appPath } from "../helpers/jsonfs"
 import { getNodeTwinId } from "../primitives/nodes";
+import { TwinDeploymentHandler } from "../high_level/twinDeploymentHandler"
 
 
 class BaseModule {
@@ -106,11 +107,12 @@ class BaseModule {
             return []
         }
         let contracts = { "deleted": [], "updated": [] }
-
+        let twinDeploymentHandler = new TwinDeploymentHandler()
         const deployments = await this._get(name)
         const highlvl = new HighLevelBase
         for (let deployment of deployments) {
-            const contract = await highlvl._delete(deployment, [])
+            const twinDeployments = await highlvl._delete(deployment, [])
+            const contract = await twinDeploymentHandler.handle(twinDeployments)
             contracts.deleted = contracts.deleted.concat(contract["deleted"])
             contracts.updated = contracts.updated.concat(contract["updated"])
         }

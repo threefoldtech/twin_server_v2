@@ -149,30 +149,44 @@ var Zdbs = /** @class */ (function (_super) {
                         return [4 /*yield*/, this._get(options.name)];
                     case 1:
                         deploymentObjs = _d.sent();
-                        for (_b = 0, deploymentObjs_1 = deploymentObjs; _b < deploymentObjs_1.length; _b++) {
-                            deploymentObj = deploymentObjs_1[_b];
-                            oldDeployment = deploymentFactory.fromObj(deploymentObj);
-                            node_id = this._getNodeIdFromContractId(options.name, oldDeployment.contract_id);
-                            deploymentFound = false;
-                            for (_c = 0, twinDeployments_1 = twinDeployments; _c < twinDeployments_1.length; _c++) {
-                                twinDeployment = twinDeployments_1[_c];
-                                if (twinDeployment.nodeId !== node_id) {
-                                    continue;
-                                }
-                                oldDeployment = deploymentFactory.UpdateDeployment(oldDeployment, twinDeployment.deployment);
-                                deploymentFound = true;
-                                if (!oldDeployment) {
-                                    continue;
-                                }
-                                finalTwinDeployments.push(new models_2.TwinDeployment(oldDeployment, models_2.Operations.update, 0, 0));
-                                break;
-                            }
-                            if (!deploymentFound) {
-                                finalTwinDeployments.push(new models_2.TwinDeployment(oldDeployment, models_2.Operations.delete, 0, 0));
-                            }
-                        }
-                        return [4 /*yield*/, twinDeploymentHandler.handle(finalTwinDeployments)];
+                        _b = 0, deploymentObjs_1 = deploymentObjs;
+                        _d.label = 2;
                     case 2:
+                        if (!(_b < deploymentObjs_1.length)) return [3 /*break*/, 8];
+                        deploymentObj = deploymentObjs_1[_b];
+                        oldDeployment = deploymentFactory.fromObj(deploymentObj);
+                        node_id = this._getNodeIdFromContractId(options.name, oldDeployment.contract_id);
+                        deploymentFound = false;
+                        _c = 0, twinDeployments_1 = twinDeployments;
+                        _d.label = 3;
+                    case 3:
+                        if (!(_c < twinDeployments_1.length)) return [3 /*break*/, 6];
+                        twinDeployment = twinDeployments_1[_c];
+                        if (twinDeployment.nodeId !== node_id) {
+                            return [3 /*break*/, 5];
+                        }
+                        return [4 /*yield*/, deploymentFactory.UpdateDeployment(oldDeployment, twinDeployment.deployment)];
+                    case 4:
+                        oldDeployment = _d.sent();
+                        deploymentFound = true;
+                        if (!oldDeployment) {
+                            return [3 /*break*/, 5];
+                        }
+                        finalTwinDeployments.push(new models_2.TwinDeployment(oldDeployment, models_2.Operations.update, 0, 0));
+                        return [3 /*break*/, 6];
+                    case 5:
+                        _c++;
+                        return [3 /*break*/, 3];
+                    case 6:
+                        if (!deploymentFound) {
+                            finalTwinDeployments.push(new models_2.TwinDeployment(oldDeployment, models_2.Operations.delete, 0, 0));
+                        }
+                        _d.label = 7;
+                    case 7:
+                        _b++;
+                        return [3 /*break*/, 2];
+                    case 8: return [4 /*yield*/, twinDeploymentHandler.handle(finalTwinDeployments)];
+                    case 9:
                         contracts = _d.sent();
                         if (contracts.created.length === 0 && contracts.updated.length === 0 && contracts.deleted.length === 0) {
                             return [2 /*return*/, "Nothing found to update"];
@@ -199,24 +213,31 @@ var Zdbs = /** @class */ (function (_super) {
                         zdbFactory = new zdb_1.Zdb();
                         twinDeployment = zdbFactory.create(options.name, options.node_id, options.namespace, options.disk_size, options.disk_type, options.mode, options.password, options.public, deploymentObjs[0].metadata, deploymentObjs[0].metadata);
                         contract_id = this._getContractIdFromNodeId(options.deployment_name, options.node_id);
-                        if (contract_id) {
-                            for (_i = 0, deploymentObjs_2 = deploymentObjs; _i < deploymentObjs_2.length; _i++) {
-                                deploymentObj = deploymentObjs_2[_i];
-                                oldDeployment = deploymentFactory.fromObj(deploymentObj);
-                                if (oldDeployment.contract_id !== contract_id) {
-                                    continue;
-                                }
-                                newDeployment = deploymentFactory.fromObj(deploymentObj);
-                                newDeployment.workloads = newDeployment.workloads.concat(twinDeployment.deployment.workloads);
-                                deployment = deploymentFactory.UpdateDeployment(oldDeployment, newDeployment);
-                                twinDeployment.deployment = deployment;
-                                twinDeployment.operation = models_2.Operations.update;
-                                break;
-                            }
+                        if (!contract_id) return [3 /*break*/, 5];
+                        _i = 0, deploymentObjs_2 = deploymentObjs;
+                        _a.label = 2;
+                    case 2:
+                        if (!(_i < deploymentObjs_2.length)) return [3 /*break*/, 5];
+                        deploymentObj = deploymentObjs_2[_i];
+                        oldDeployment = deploymentFactory.fromObj(deploymentObj);
+                        if (oldDeployment.contract_id !== contract_id) {
+                            return [3 /*break*/, 4];
                         }
+                        newDeployment = deploymentFactory.fromObj(deploymentObj);
+                        newDeployment.workloads = newDeployment.workloads.concat(twinDeployment.deployment.workloads);
+                        return [4 /*yield*/, deploymentFactory.UpdateDeployment(oldDeployment, newDeployment)];
+                    case 3:
+                        deployment = _a.sent();
+                        twinDeployment.deployment = deployment;
+                        twinDeployment.operation = models_2.Operations.update;
+                        return [3 /*break*/, 5];
+                    case 4:
+                        _i++;
+                        return [3 /*break*/, 2];
+                    case 5:
                         twinDeploymentHandler = new twinDeploymentHandler_1.TwinDeploymentHandler();
                         return [4 /*yield*/, twinDeploymentHandler.handle([twinDeployment])];
-                    case 2:
+                    case 6:
                         contracts = _a.sent();
                         this.save(options.deployment_name, contracts);
                         return [2 /*return*/, { "contracts": contracts }];
@@ -226,7 +247,7 @@ var Zdbs = /** @class */ (function (_super) {
     };
     Zdbs.prototype.delete_zdb = function (options) {
         return __awaiter(this, void 0, void 0, function () {
-            var zdb, deployments, _i, deployments_1, deployment, contracts;
+            var zdb, twinDeploymentHandler, deployments, _i, deployments_1, deployment, twinDeployments, contracts;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -234,25 +255,30 @@ var Zdbs = /** @class */ (function (_super) {
                             throw Error("There is no zdb deployment with name: " + options.deployment_name);
                         }
                         zdb = new zdb_1.Zdb();
+                        twinDeploymentHandler = new twinDeploymentHandler_1.TwinDeploymentHandler();
                         return [4 /*yield*/, this._get(options.deployment_name)];
                     case 1:
                         deployments = _a.sent();
                         _i = 0, deployments_1 = deployments;
                         _a.label = 2;
                     case 2:
-                        if (!(_i < deployments_1.length)) return [3 /*break*/, 5];
+                        if (!(_i < deployments_1.length)) return [3 /*break*/, 6];
                         deployment = deployments_1[_i];
                         return [4 /*yield*/, zdb.delete(deployment, [options.name])];
                     case 3:
+                        twinDeployments = _a.sent();
+                        return [4 /*yield*/, twinDeploymentHandler.handle(twinDeployments)];
+                    case 4:
                         contracts = _a.sent();
                         if (contracts["deleted"].length > 0 || contracts["updated"].length > 0) {
+                            this.save(options.deployment_name, contracts);
                             return [2 /*return*/, contracts];
                         }
-                        _a.label = 4;
-                    case 4:
+                        _a.label = 5;
+                    case 5:
                         _i++;
                         return [3 /*break*/, 2];
-                    case 5: throw Error("zdb instance with name " + options.name + " is not found");
+                    case 6: throw Error("zdb instance with name " + options.name + " is not found");
                 }
             });
         });
