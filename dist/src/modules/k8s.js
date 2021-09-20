@@ -193,7 +193,7 @@ var K8s = /** @class */ (function (_super) {
     };
     K8s.prototype.update = function (options) {
         return __awaiter(this, void 0, void 0, function () {
-            var deploymentObjs, _i, _a, workload, masterIps, networkName, network, twinDeployments, kubernetes, _b, _c, master, _d, TDeployments, _, _e, _f, worker, _g, TDeployments, _, deploymentFactory, finalTwinDeployments, twinDeploymentHandler, deploymentNodeIds, _h, deploymentObjs_1, deploymentObj, oldDeployment, node_id, deploymentFound, _j, twinDeployments_1, twinDeployment, tDeployments, contracts;
+            var deploymentObjs, _i, _a, workload, masterIps, networkName, network, twinDeployments, kubernetes, _b, _c, master, _d, TDeployments, _, _e, _f, worker, _g, TDeployments, _, deploymentFactory, twinDeploymentHandler, finalTwinDeployments, deploymentNodeIds, _h, deploymentObjs_1, deploymentObj, oldDeployment, node_id, deploymentFound, _j, twinDeployments_1, twinDeployment, tDeployments, contracts;
             return __generator(this, function (_k) {
                 switch (_k.label) {
                     case 0:
@@ -257,12 +257,12 @@ var K8s = /** @class */ (function (_super) {
                         return [3 /*break*/, 7];
                     case 10:
                         deploymentFactory = new deployment_1.DeploymentFactory();
-                        finalTwinDeployments = [];
                         twinDeploymentHandler = new twinDeploymentHandler_1.TwinDeploymentHandler();
+                        finalTwinDeployments = [];
+                        finalTwinDeployments = twinDeployments.filter(function (d) { return d.operation === models_2.Operations.update; });
                         twinDeployments = twinDeploymentHandler.deployMerge(twinDeployments);
                         deploymentNodeIds = this._getDeploymentNodeIds(options.name);
-                        finalTwinDeployments = twinDeployments.filter(function (d) { return !deploymentNodeIds.includes(d.nodeId); });
-                        finalTwinDeployments = finalTwinDeployments.concat(twinDeployments.filter(function (d) { return d.operation === models_2.Operations.update; }));
+                        finalTwinDeployments = finalTwinDeployments.concat(twinDeployments.filter(function (d) { return !deploymentNodeIds.includes(d.nodeId); }));
                         _h = 0, deploymentObjs_1 = deploymentObjs;
                         _k.label = 11;
                     case 11:

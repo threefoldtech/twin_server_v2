@@ -180,12 +180,12 @@ class K8s extends BaseModule {
 
         }
         let deploymentFactory = new DeploymentFactory();
-        let finalTwinDeployments = []
         let twinDeploymentHandler = new TwinDeploymentHandler()
+        let finalTwinDeployments = []
+        finalTwinDeployments = twinDeployments.filter(d => d.operation === Operations.update)
         twinDeployments = twinDeploymentHandler.deployMerge(twinDeployments)
         const deploymentNodeIds = this._getDeploymentNodeIds(options.name)
-        finalTwinDeployments = twinDeployments.filter(d => !deploymentNodeIds.includes(d.nodeId))
-        finalTwinDeployments = finalTwinDeployments.concat(twinDeployments.filter(d => d.operation === Operations.update))
+        finalTwinDeployments = finalTwinDeployments.concat(twinDeployments.filter(d => !deploymentNodeIds.includes(d.nodeId)))
 
         for (const deploymentObj of deploymentObjs) {
             let oldDeployment = deploymentFactory.fromObj(deploymentObj)

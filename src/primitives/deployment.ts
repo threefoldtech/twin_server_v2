@@ -87,9 +87,12 @@ class DeploymentFactory {
                     await tfclient.connect()
                     const contract = await tfclient.contracts.get(oldDeployment.contract_id)
                     const node_id = contract["node_id"]
-                    network.deleteReservedIp(node_id, w.data["network"]["interfaces"][0]["ip"])
-                    const oldMachineIp = workload.data["network"]["interfaces"][0]["ip"]
-                    w.data["network"]["interfaces"][0]["ip"] = oldMachineIp
+                    const oldIp = workload.data["network"]["interfaces"][0]["ip"]
+                    const newIp = w.data["network"]["interfaces"][0]["ip"]
+                    if (newIp !== oldIp) {
+                        network.deleteReservedIp(node_id, newIp)
+                        w.data["network"]["interfaces"][0]["ip"] = oldIp
+                    }
                 }
                 if (w.challenge() === workload.challenge()) {
                     workload.version = oldVersion

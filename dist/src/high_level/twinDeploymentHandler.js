@@ -199,10 +199,9 @@ var TwinDeploymentHandler = /** @class */ (function () {
             twinDeployments[0].deployment.version += 1;
             return twinDeployments[0];
         }
-        // TODO: in case of the deployment has a deleted workloads
-        // it will be added after the merge, the code should be smart to detect that
         var workloadMap = {};
         var publicIps = 0;
+        var network = null;
         for (var _i = 0, twinDeployments_2 = twinDeployments; _i < twinDeployments_2.length; _i++) {
             var twinDeployment = twinDeployments_2[_i];
             for (var _a = 0, _b = twinDeployment.deployment.workloads; _a < _b.length; _a++) {
@@ -215,6 +214,9 @@ var TwinDeploymentHandler = /** @class */ (function () {
                 }
             }
             publicIps += twinDeployment.publicIps;
+            if (!network && twinDeployment.network) {
+                network = twinDeployment.network;
+            }
         }
         var workloads = [];
         for (var _c = 0, _d = Object.keys(workloadMap); _c < _d.length; _c++) {
@@ -234,6 +236,7 @@ var TwinDeploymentHandler = /** @class */ (function () {
         var d = twinDeployments[0];
         d.deployment.workloads = workloads;
         d.publicIps = publicIps;
+        d.network = network;
         d.deployment.version += 1;
         return d;
     };
@@ -261,9 +264,15 @@ var TwinDeploymentHandler = /** @class */ (function () {
     TwinDeploymentHandler.prototype.merge = function (twinDeployments) {
         var deployments = [];
         deployments = deployments.concat(this.deployMerge(twinDeployments));
-        //TODO: check that nothing common between updated deployments and deleted deployments
-        deployments = deployments.concat(this.updateMerge(twinDeployments));
-        deployments = deployments.concat(twinDeployments.filter(function (d) { return d.operation === models_1.Operations.delete; }));
+        var deletedDeployments = twinDeployments.filter(function (d) { return d.operation === models_1.Operations.delete; });
+        var deletedContracts = [];
+        for (var _i = 0, deletedDeployments_1 = deletedDeployments; _i < deletedDeployments_1.length; _i++) {
+            var d = deletedDeployments_1[_i];
+            deletedContracts.push(d.deployment.contract_id);
+        }
+        var updatedDeployment = this.updateMerge(twinDeployments);
+        deployments = deployments.concat(updatedDeployment.filter(function (d) { return !deletedContracts.includes(d.deployment.contract_id); }));
+        deployments = deployments.concat(deletedDeployments);
         return deployments;
     };
     TwinDeploymentHandler.prototype.handle = function (twinDeployments) {
@@ -277,7 +286,7 @@ var TwinDeploymentHandler = /** @class */ (function () {
                         _i = 0, twinDeployments_4 = twinDeployments;
                         _c.label = 1;
                     case 1:
-                        if (!(_i < twinDeployments_4.length)) return [3 /*break*/, 10];
+                        if (!(_i < twinDeployments_4.length)) return [3 /*break*/, 12];
                         twinDeployment = twinDeployments_4[_i];
                         for (_a = 0, _b = twinDeployment.deployment.workloads; _a < _b.length; _a++) {
                             workload = _b[_a];
@@ -299,25 +308,30 @@ var TwinDeploymentHandler = /** @class */ (function () {
                     case 3:
                         _c.sent();
                         _c.label = 4;
-                    case 4: return [3 /*break*/, 9];
+                    case 4: return [3 /*break*/, 11];
                     case 5:
-                        if (!(twinDeployment.operation === models_1.Operations.update)) return [3 /*break*/, 7];
+                        if (!(twinDeployment.operation === models_1.Operations.update)) return [3 /*break*/, 9];
                         return [4 /*yield*/, this.update(twinDeployment.deployment, twinDeployment.publicIps)];
                     case 6:
                         contract = _c.sent();
                         contracts.updated.push(contract);
-                        return [3 /*break*/, 9];
+                        if (!twinDeployment.network) return [3 /*break*/, 8];
+                        return [4 /*yield*/, twinDeployment.network.save(contract["contract_id"], contract["node_id"])];
                     case 7:
-                        if (!(twinDeployment.operation === models_1.Operations.delete)) return [3 /*break*/, 9];
+                        _c.sent();
+                        _c.label = 8;
+                    case 8: return [3 /*break*/, 11];
+                    case 9:
+                        if (!(twinDeployment.operation === models_1.Operations.delete)) return [3 /*break*/, 11];
                         return [4 /*yield*/, this.delete(twinDeployment.deployment.contract_id)];
-                    case 8:
+                    case 10:
                         contract = _c.sent();
                         contracts.deleted.push({ "contract_id": contract });
-                        _c.label = 9;
-                    case 9:
+                        _c.label = 11;
+                    case 11:
                         _i++;
                         return [3 /*break*/, 1];
-                    case 10: return [2 /*return*/, contracts];
+                    case 12: return [2 /*return*/, contracts];
                 }
             });
         });

@@ -68,7 +68,7 @@ var DeploymentFactory = /** @class */ (function () {
     DeploymentFactory.prototype.UpdateDeployment = function (oldDeployment, newDeployment, network) {
         if (network === void 0) { network = null; }
         return __awaiter(this, void 0, void 0, function () {
-            var oldWorkloadNames, newWorkloadNames, deletedWorkloads, newWorkloads, foundUpdate, deploymentVersion, _i, _a, workload, _b, _c, workload, _d, _e, workload, _f, _g, w, oldVersion, tfclient, contract, node_id, oldMachineIp;
+            var oldWorkloadNames, newWorkloadNames, deletedWorkloads, newWorkloads, foundUpdate, deploymentVersion, _i, _a, workload, _b, _c, workload, _d, _e, workload, _f, _g, w, oldVersion, tfclient, contract, node_id, oldIp, newIp;
             return __generator(this, function (_h) {
                 switch (_h.label) {
                     case 0:
@@ -128,9 +128,12 @@ var DeploymentFactory = /** @class */ (function () {
                     case 4:
                         contract = _h.sent();
                         node_id = contract["node_id"];
-                        network.deleteReservedIp(node_id, w.data["network"]["interfaces"][0]["ip"]);
-                        oldMachineIp = workload.data["network"]["interfaces"][0]["ip"];
-                        w.data["network"]["interfaces"][0]["ip"] = oldMachineIp;
+                        oldIp = workload.data["network"]["interfaces"][0]["ip"];
+                        newIp = w.data["network"]["interfaces"][0]["ip"];
+                        if (newIp !== oldIp) {
+                            network.deleteReservedIp(node_id, newIp);
+                            w.data["network"]["interfaces"][0]["ip"] = oldIp;
+                        }
                         _h.label = 5;
                     case 5:
                         if (w.challenge() === workload.challenge()) {

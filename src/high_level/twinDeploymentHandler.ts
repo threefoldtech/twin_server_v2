@@ -116,10 +116,10 @@ class TwinDeploymentHandler {
             twinDeployments[0].deployment.version += 1
             return twinDeployments[0]
         }
-        // TODO: in case of the deployment has a deleted workloads
-        // it will be added after the merge, the code should be smart to detect that
+
         let workloadMap = {}
         let publicIps = 0
+        let network = null
         for (const twinDeployment of twinDeployments) {
             for (const workload of twinDeployment.deployment.workloads) {
                 if (workloadMap.hasOwnProperty(workload.name)) {
@@ -130,6 +130,9 @@ class TwinDeploymentHandler {
                 }
             }
             publicIps += twinDeployment.publicIps
+            if (!network && twinDeployment.network) {
+                network = twinDeployment.network
+            }
         }
 
         let workloads = []
@@ -148,6 +151,7 @@ class TwinDeploymentHandler {
         let d = twinDeployments[0]
         d.deployment.workloads = workloads
         d.publicIps = publicIps
+        d.network = network
         d.deployment.version += 1
         return d
 
@@ -176,9 +180,14 @@ class TwinDeploymentHandler {
     merge(twinDeployments: TwinDeployment[]): TwinDeployment[] {
         let deployments = []
         deployments = deployments.concat(this.deployMerge(twinDeployments))
-        //TODO: check that nothing common between updated deployments and deleted deployments
-        deployments = deployments.concat(this.updateMerge(twinDeployments))
-        deployments = deployments.concat(twinDeployments.filter(d => d.operation === Operations.delete))
+        let deletedDeployments = twinDeployments.filter(d => d.operation === Operations.delete)
+        let deletedContracts = []
+        for (const d of deletedDeployments) {
+            deletedContracts.push(d.deployment.contract_id)
+        }
+        let updatedDeployment = this.updateMerge(twinDeployments)
+        deployments = deployments.concat(updatedDeployment.filter(d => !deletedContracts.includes(d.deployment.contract_id)))
+        deployments = deployments.concat(deletedDeployments)
         return deployments
     }
 
@@ -207,6 +216,9 @@ class TwinDeploymentHandler {
             else if (twinDeployment.operation === Operations.update) {
                 const contract = await this.update(twinDeployment.deployment, twinDeployment.publicIps)
                 contracts.updated.push(contract)
+                if (twinDeployment.network) {
+                    await twinDeployment.network.save(contract["contract_id"], contract["node_id"])
+                }
             }
             else if (twinDeployment.operation === Operations.delete) {
                 const contract = await this.delete(twinDeployment.deployment.contract_id)
