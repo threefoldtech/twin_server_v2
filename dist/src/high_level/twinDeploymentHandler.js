@@ -220,6 +220,9 @@ var TwinDeploymentHandler = /** @class */ (function () {
         for (var _c = 0, _d = Object.keys(workloadMap); _c < _d.length; _c++) {
             var name_1 = _d[_c];
             var w = workloadMap[name_1][0];
+            if (workloadMap[name_1].length < twinDeployments.length && w.version <= twinDeployments[0].deployment.version) {
+                continue;
+            }
             for (var _e = 0, _f = workloadMap[name_1]; _e < _f.length; _e++) {
                 var workload = _f[_e];
                 if (w.version < workload.version) {
@@ -258,6 +261,7 @@ var TwinDeploymentHandler = /** @class */ (function () {
     TwinDeploymentHandler.prototype.merge = function (twinDeployments) {
         var deployments = [];
         deployments = deployments.concat(this.deployMerge(twinDeployments));
+        //TODO: check that nothing common between updated deployments and deleted deployments
         deployments = deployments.concat(this.updateMerge(twinDeployments));
         deployments = deployments.concat(twinDeployments.filter(function (d) { return d.operation === models_1.Operations.delete; }));
         return deployments;

@@ -4,7 +4,6 @@ import { Addr } from "netaddr"
 import { DeploymentFactory } from "../primitives/deployment"
 import { Network } from "../primitives/network"
 import { TwinDeployment, Operations } from "../high_level/models"
-import { TwinDeploymentHandler } from "../high_level/twinDeploymentHandler"
 import { default as config } from "../../config.json"
 
 

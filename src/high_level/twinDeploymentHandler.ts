@@ -107,8 +107,6 @@ class TwinDeploymentHandler {
         return contract_id
     }
 
-
-
     _updateToLatest(twinDeployments: TwinDeployment[]): TwinDeployment {
         // all deployment pass should be with the same contract id to merge them to one deployment with all updates
         if (twinDeployments.length === 0) {
@@ -117,7 +115,6 @@ class TwinDeploymentHandler {
         else if (twinDeployments.length === 1) {
             twinDeployments[0].deployment.version += 1
             return twinDeployments[0]
-
         }
         // TODO: in case of the deployment has a deleted workloads
         // it will be added after the merge, the code should be smart to detect that
@@ -138,6 +135,9 @@ class TwinDeploymentHandler {
         let workloads = []
         for (const name of Object.keys(workloadMap)) {
             let w = workloadMap[name][0]
+            if (workloadMap[name].length < twinDeployments.length && w.version <= twinDeployments[0].deployment.version) {
+                continue
+            }
             for (const workload of workloadMap[name]) {
                 if (w.version < workload.version) {
                     w = workload
@@ -145,7 +145,6 @@ class TwinDeploymentHandler {
             }
             workloads.push(w)
         }
-
         let d = twinDeployments[0]
         d.deployment.workloads = workloads
         d.publicIps = publicIps
@@ -166,20 +165,18 @@ class TwinDeploymentHandler {
             else {
                 deploymentMap[twinDeployment.deployment.contract_id] = [twinDeployment]
             }
-
         }
-
         let deployments = []
         for (let key of Object.keys(deploymentMap)) {
             deployments.push(this._updateToLatest(deploymentMap[key]))
         }
         return deployments
-
     }
 
     merge(twinDeployments: TwinDeployment[]): TwinDeployment[] {
         let deployments = []
         deployments = deployments.concat(this.deployMerge(twinDeployments))
+        //TODO: check that nothing common between updated deployments and deleted deployments
         deployments = deployments.concat(this.updateMerge(twinDeployments))
         deployments = deployments.concat(twinDeployments.filter(d => d.operation === Operations.delete))
         return deployments
