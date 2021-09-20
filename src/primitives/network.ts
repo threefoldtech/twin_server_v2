@@ -459,7 +459,7 @@ class Network {
         if (!result[0].err && result[0].dat) {
             const data = JSON.parse(result[0].dat)
             for (const iface of Object.keys(data)) {
-                if (iface === "ygg0") {
+                if (iface !== "zos") {
                     continue
                 }
                 for (const ip of data[iface]) {

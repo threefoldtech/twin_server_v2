@@ -610,7 +610,7 @@ var Network = /** @class */ (function () {
                             data = JSON.parse(result[0].dat);
                             for (_i = 0, _a = Object.keys(data); _i < _a.length; _i++) {
                                 iface = _a[_i];
-                                if (iface === "ygg0") {
+                                if (iface !== "zos") {
                                     continue;
                                 }
                                 for (_b = 0, _c = data[iface]; _b < _c.length; _b++) {
