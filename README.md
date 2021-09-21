@@ -39,6 +39,8 @@ tsc --build tsconfig.json
 
 ## Running
 
+Run RMB server first with your twin id.
+
 ```bash
 node dist/src/server.js
 ```
