@@ -13,44 +13,71 @@ Module should be:
 ### Twins
 
 - **Create**
+
    cmd: `twinserver.twins.create`
+
    payload: `'{"ip": "<yggdrasil ip>"}'`
+
 - **Get**
+
    cmd: `twinserver.twins.get`
+
    payload: `'{"id": <twin id>}'`
+
 - **List**
+
    cmd: `twinserver.twins.list`
+
    payload: `'""'`
+
 - **Delete**
+
    cmd: `twinserver.twins.delete`
+
    payload: `'{"id": <twin id>}'`
 
 ### Contracts
 
 - **Create**
-   cmd: `twinserver.contracts.create`  
+
+   cmd: `twinserver.contracts.create`
+
    payload: `'{"node_id": "<zos node id>", "hash": "<deployment challenge hash>", "data": "<deployment data>", "public_ip": <number of public IPs>}'`
+
 - **Get**
+
    cmd: `twinserver.contracts.get`
+
    payload: `'{"id": <contract id>}'`
+
 - **Update**
+
     cmd: `twinserver.contracts.update`
+
     payload: `'{"id": <contract id>, "hash": "<deployment challenge hash>", "data": "<deployment data>"}'`
+
 - **Cancel**
+
    cmd: `twinserver.contracts.cancel`
+
    payload: `'{"id": <contract id>}'`
 
 ### ZOS
 
 - **Deploy**
+
    cmd: `twinserver.zos.deploy`
+
    payload: the same as zos deployment without signing with additional parameter `'{"node_id": <zos node id> }'`
+
 **Note:** `node_id` will be optional when the grid3_proxy_server is ready to be used.
 
 ### Generic Machine
 
 - **Deploy**
+
     cmd: `twinserver.machine.deploy`
+
     payload:
 
 ```json
@@ -85,15 +112,21 @@ Module should be:
 **Note:** disk size in GB, memory in MB, disk name should be different than the machine name
 
 - **List**
+
 cmd: `twinserver.machine.list`
+
 payload: `'""'`
 
 - **Get**
+
 cmd: `twinserver.machine.get`
+
 payload: `{"name": "<deployment name>"}`
 
 - **Delete**
+
 cmd: `twinserver.machine.delete`
+
 payload: `{"name": "<deployment name>"}`
 
 ### Kubernetes
@@ -101,7 +134,9 @@ payload: `{"name": "<deployment name>"}`
 single master and multiple workers.
 
 - **Deploy**
+
     cmd: `twinserver.k8s.deploy`
+
     payload:
 
 ```json
@@ -141,19 +176,27 @@ single master and multiple workers.
 **Note:** disk size in GB, memory in MB, masters and workers names should be different
 
 - **List**
+
 cmd: `twinserver.k8s.list`
+
 payload: `'""'`
 
 - **Get**
+
 cmd: `twinserver.k8s.get`
+
 payload: `{"name": "<deployment name>"}`
 
 - **Delete**
+
 cmd: `twinserver.k8s.delete`
+
 payload: `{"name": "<deployment name>"}`
 
 - **Add worker**
+
 cmd: `twinserver.k8s.add_worker`
+
 payload:
 
 ```json
@@ -169,7 +212,9 @@ payload:
 ```
 
 - **Delete worker**
+
 cmd: `twinserver.k8s.delete_worker`
+
 payload:
 
 ```json
@@ -182,7 +227,9 @@ payload:
 ### zdb
 
 - **Deploy**
+
     cmd: `twinserver.zdbs.deploy`
+
     payload:
 
 ```json
@@ -215,19 +262,27 @@ payload:
 **Note:** disk size in GB, zdb names should be different
 
 - **List**
+
 cmd: `twinserver.zdbs.list`
+
 payload: `'""'`
 
 - **Get**
+
 cmd: `twinserver.zdbs.get`
+
 payload: `{"name": "<deployment name>"}`
 
 - **Delete**
+
 cmd: `twinserver.zdbs.delete`
+
 payload: `{"name": "<deployment name>"}`
 
 - **Add zdb**
+
 cmd: `twinserver.zdbs.add_zdb`
+
 payload:
 
 ```json
@@ -246,7 +301,9 @@ payload:
 ```
 
 - **Delete zdb**
+
 cmd: `twinserver.zdbs.delete_zdb`
+
 payload:
 
 ```json
