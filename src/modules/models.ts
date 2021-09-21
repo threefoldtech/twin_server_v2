@@ -23,7 +23,7 @@ class Machines {
     entrypoint: string;
     metadata: string;
     description: string;
-    env: Object;
+    env: Record<string, unknown>;
 }
 
 class KubernetesNode {
@@ -33,7 +33,6 @@ class KubernetesNode {
     memory: number;
     disk_size: number;
     public_ip: boolean;
-
 }
 
 class K8S {
@@ -112,9 +111,7 @@ class TwinGet {
     id: number;
 }
 
-class TwinList {
-
-}
+class TwinList {}
 
 class TwinDelete {
     id: number;
@@ -168,6 +165,7 @@ class DeployGatewayName{
 // }
 
 export {
+    Disks,
     Machines,
     K8S,
     AddWorker,

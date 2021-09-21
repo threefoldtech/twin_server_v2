@@ -1,13 +1,14 @@
-import { Deployment, WorkloadTypes } from "grid3_client"
+import { Deployment, WorkloadTypes } from "grid3_client";
 
-import { Network } from "../primitives/network"
-import { VirtualMachine } from "../high_level//machine"
-import { HighLevelBase } from "./base"
+import { Network } from "../primitives/network";
+import { VirtualMachine } from "../high_level//machine";
+import { HighLevelBase } from "./base";
 
-const Flist = "https://hub.grid.tf/ahmed_hanafy_1/ahmedhanafy725-k3s-latest.flist"
+const Flist = "https://hub.grid.tf/ahmed_hanafy_1/ahmedhanafy725-k3s-latest.flist";
 
 class Kubernetes extends HighLevelBase {
-    async add_master(name: string,
+    async add_master(
+        name: string,
         nodeId: number,
         secret: string,
         cpu: number,
@@ -16,25 +17,26 @@ class Kubernetes extends HighLevelBase {
         publicIp: boolean,
         network: Network,
         sshKey: string,
-        metadata: string = "",
-        description: string = "") {
-
-        const machine = new VirtualMachine()
-        const mountpoint = "/mnt/data"
+        metadata = "",
+        description = "",
+    ) {
+        const machine = new VirtualMachine();
+        const mountpoint = "/mnt/data";
         const env = {
-            "SSH_KEY": sshKey,
-            "K3S_TOKEN": secret,
-            "K3S_DATA_DIR": mountpoint,
-            "K3S_FLANNEL_IFACE": "eth0",
-            "K3S_NODE_NAME": name,
-            "K3S_URL": ""
-        }
+            SSH_KEY: sshKey,
+            K3S_TOKEN: secret,
+            K3S_DATA_DIR: mountpoint,
+            K3S_FLANNEL_IFACE: "eth0",
+            K3S_NODE_NAME: name,
+            K3S_URL: "",
+        };
         const disk = {
-            "name": `${name}_disk`,
-            "size": diskSize,
-            "mountpoint": mountpoint
-        }
-        return await machine.create(name,
+            name: `${name}_disk`,
+            size: diskSize,
+            mountpoint: mountpoint,
+        };
+        return await machine.create(
+            name,
             nodeId,
             Flist,
             cpu,
@@ -45,10 +47,12 @@ class Kubernetes extends HighLevelBase {
             "/sbin/zinit init",
             env,
             metadata,
-            description)
+            description,
+        );
     }
 
-    async add_worker(name: string,
+    async add_worker(
+        name: string,
         nodeId: number,
         secret: string,
         masterIp: string,
@@ -58,25 +62,26 @@ class Kubernetes extends HighLevelBase {
         publicIp: boolean,
         network: Network,
         sshKey: string,
-        metadata: string = "",
-        description: string = "") {
-
-        const machine = new VirtualMachine()
-        const mountpoint = "/mnt/data"
+        metadata = "",
+        description = "",
+    ) {
+        const machine = new VirtualMachine();
+        const mountpoint = "/mnt/data";
         const env = {
-            "SSH_KEY": sshKey,
-            "K3S_TOKEN": secret,
-            "K3S_DATA_DIR": mountpoint,
-            "K3S_FLANNEL_IFACE": "eth0",
-            "K3S_NODE_NAME": name,
-            "K3S_URL": `https://${masterIp}:6443`
-        }
+            SSH_KEY: sshKey,
+            K3S_TOKEN: secret,
+            K3S_DATA_DIR: mountpoint,
+            K3S_FLANNEL_IFACE: "eth0",
+            K3S_NODE_NAME: name,
+            K3S_URL: `https://${masterIp}:6443`,
+        };
         const disk = {
-            "name": `${name}_disk`,
-            "size": diskSize,
-            "mountpoint": mountpoint
-        }
-        return await machine.create(name,
+            name: `${name}_disk`,
+            size: diskSize,
+            mountpoint: mountpoint,
+        };
+        return await machine.create(
+            name,
             nodeId,
             Flist,
             cpu,
@@ -87,11 +92,16 @@ class Kubernetes extends HighLevelBase {
             "/sbin/zinit init",
             env,
             metadata,
-            description)
+            description,
+        );
     }
 
     async deleteNode(deployment: Deployment, names: string[]) {
-        return await this._delete(deployment, names, [WorkloadTypes.zmachine, WorkloadTypes.zmount, WorkloadTypes.ipv4])
+        return await this._delete(deployment, names, [
+            WorkloadTypes.zmachine,
+            WorkloadTypes.zmount,
+            WorkloadTypes.ipv4,
+        ]);
     }
 }
-export { Kubernetes }
+export { Kubernetes };

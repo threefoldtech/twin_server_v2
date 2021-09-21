@@ -1,6 +1,6 @@
-import 'reflect-metadata';
+import "reflect-metadata";
 
-const metadataKey = 'exposeDecorator';
+const metadataKey = "exposeDecorator";
 
 function expose(target, propertyKey) {
     Reflect.defineMetadata(metadataKey, true, target, propertyKey);
@@ -9,7 +9,4 @@ function expose(target, propertyKey) {
 function isExposed<T>(instance: T, propertyKey: string) {
     return Reflect.hasMetadata(metadataKey, instance, propertyKey);
 }
-export {
-    expose,
-    isExposed
-}
+export { expose, isExposed };

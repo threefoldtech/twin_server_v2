@@ -2,27 +2,26 @@ import * as FS from "fs";
 import * as PATH from "path";
 import getAppDataPath from "appdata-path";
 
-const appsPath = getAppDataPath()
-const appPath = PATH.join(appsPath, "twinserver")
+const appsPath = getAppDataPath();
+const appPath = PATH.join(appsPath, "twinserver");
 
 function loadFromFile(path: string) {
-    const data = FS.readFileSync(path)
-    return JSON.parse(data.toString())
+    const data = FS.readFileSync(path);
+    return JSON.parse(data.toString());
 }
 
 function dumpToFile(path: string, data) {
-    return FS.writeFileSync(path, JSON.stringify(data))
+    return FS.writeFileSync(path, JSON.stringify(data));
 }
 
-function updatejson(path: string, name: string, data: Object = null, action: string = "add") {
-    let storedData = loadFromFile(path)
+function updatejson(path: string, name: string, data = null, action = "add") {
+    const storedData = loadFromFile(path);
     if (action === "add") {
-        storedData[name] = data
+        storedData[name] = data;
+    } else if (action === "delete") {
+        delete storedData[name];
     }
-    else if (action === "delete") {
-        delete storedData[name]
-    }
-    dumpToFile(path, storedData)
+    dumpToFile(path, storedData);
 }
 
-export { loadFromFile, dumpToFile, updatejson, appPath }
+export { loadFromFile, dumpToFile, updatejson, appPath };

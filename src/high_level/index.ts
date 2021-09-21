@@ -1,3 +1,3 @@
-export * from './twinDeploymentHandler'
-export * from "./machine"
-export * from "./models"
+export * from "./twinDeploymentHandler";
+export * from "./machine";
+export * from "./models";

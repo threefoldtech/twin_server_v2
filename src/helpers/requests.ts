@@ -1,11 +1,11 @@
 import * as request from "request-promise-native";
 
 async function send(method, url, body, headers) {
-    let options = {
+    const options = {
         uri: url,
         body: body,
-        headers: headers
-    }
+        headers: headers,
+    };
     return await request[method](options);
 }
-export { send }
+export { send };
