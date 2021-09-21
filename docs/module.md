@@ -5,8 +5,8 @@
 Module should be:
 
 - In [modules directory](../src/modules).
-- A class and its methods should have [expose decorater](../src/helpers/expose)
-- Exported in [index file](../src/modules)
+- A class and its methods should have [expose decorater](../src/helpers/expose.ts)
+- Exported in [index file](../src/modules/index.ts)
 
 ## Supported Modules
 
