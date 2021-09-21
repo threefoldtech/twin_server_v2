@@ -19,7 +19,7 @@ class WireGuardKeys {
 class Node {
     node_id: number;
     contract_id: number;
-    reserved_ips: string[];
+    reserved_ips: string[] = [];
 }
 
 class AccessPoint {
@@ -112,6 +112,11 @@ class Network {
         znet_workload.data = znet;
         znet_workload.metadata = metadata;
         znet_workload.description = description;
+
+        let node = new Node()
+        node.node_id = node_id;
+        this.nodes.push(node)
+
         return znet_workload;
     }
 
@@ -121,9 +126,8 @@ class Network {
             return 0
         }
         let contract_id = 0
-        network = this.getNetworks()[this.name];
         let nodes = []
-        for (const node of network["nodes"]) {
+        for (const node of this.nodes) {
             if (node.node_id !== node_id) {
                 nodes.push(node)
             }
@@ -131,15 +135,13 @@ class Network {
                 contract_id = node.contract_id
             }
         }
-        this.nodes = this.nodes.filter(node => node.node_id !== node_id)
+        this.nodes = nodes
         this.networks = this.networks.filter(net => net["node_id"] !== node_id)
         const net = this.networks.filter(net => net["node_id"] === node_id)
         this.reservedSubnets = this.reservedSubnets.filter(subnet => subnet === net[0].subnet)
-        if (nodes.length === 0) {
-            this.delete()
-        }
-        network.nodes = nodes;
-        this._save(network)
+        // if (nodes.length === 0) {
+        //     this.delete()
+        // }
         return contract_id
     }
 
@@ -294,21 +296,13 @@ class Network {
         }
         if (ip) {
             ip = ip.toString().split("/")[0]
-            let found = false
             for (const node of this.nodes) {
                 if (node.node_id === node_id) {
                     node.reserved_ips.push(ip)
-                    found = true
-                    break
+                    return ip
                 }
             }
-            if (!found) {
-                let node = new Node()
-                node.node_id = node_id
-                node.reserved_ips = [ip]
-                this.nodes.push(node)
-            }
-            return ip
+            throw Error(`node_id is not in the network. Please add it first`)
         }
     }
 
@@ -328,16 +322,6 @@ class Network {
                 node.reserved_ips = node.reserved_ips.filter(item => item !== ip)
             }
         }
-        let network = this.getNetworks()[this.name];
-        let nodes = []
-        for (const node of network["nodes"]) {
-            if (node.node_id === node_id) {
-                node.reserved_ips = node.reserved_ips.filter(item => item !== ip)
-            }
-            nodes.push(node)
-        }
-        network.nodes = nodes;
-        this._save(network)
         return ip
     }
 
@@ -485,7 +469,7 @@ AllowedIPs = ${this.ipRange}, ${networkIP}
 PersistentKeepalive = 25\nEndpoint = ${endpoint}`
     }
 
-    async save(contract_id: string, node_id: number) {
+    async save(contract_id: number = 0, node_id: number = 0) {
         let network;
         if (this.exists()) {
             network = this.getNetworks()[this.name];
@@ -496,23 +480,27 @@ PersistentKeepalive = 25\nEndpoint = ${endpoint}`
                 "nodes": []
             }
         }
-        let nodeFound = false
-        for (let node of network.nodes) {
-            if (node["node_id"] === node_id) {
-                node["reserved_ips"] = this.getNodeReservedIps(node_id)
-                nodeFound = true
-                break
-            }
-        }
-        if (!nodeFound) {
-            const node = {
-                "contract_id": contract_id,
-                "node_id": node_id,
-                "reserved_ips": this.getNodeReservedIps(node_id),
-            }
-            network.nodes.push(node)
+
+        if (this.nodes.length === 0) {
+            this.delete()
+            return
         }
 
+        let nodes = []
+        for (let node of this.nodes) {
+            if (node.node_id === node_id) {
+                node.contract_id = contract_id
+            }
+            if (!node.contract_id) {
+                continue
+            }
+            nodes.push({
+                "contract_id": node.contract_id,
+                "node_id": node.node_id,
+                "reserved_ips": this.getNodeReservedIps(node.node_id),
+            })
+        }
+        network.nodes = nodes
         this._save(network)
     }
 

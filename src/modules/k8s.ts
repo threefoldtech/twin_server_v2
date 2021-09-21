@@ -200,7 +200,7 @@ class K8s extends BaseModule {
                 if (!oldDeployment) {
                     continue
                 }
-                finalTwinDeployments.push(new TwinDeployment(oldDeployment, Operations.update, 0, 0))
+                finalTwinDeployments.push(new TwinDeployment(oldDeployment, Operations.update, 0, 0, network))
                 break
             }
             if (!deploymentFound) {

@@ -70,6 +70,86 @@ class TwinDeploymentHandler {
         return contract
     }
 
+    async delete(contract_id: number): Promise<number> {
+        const tfclient = new TFClient(config.url, config.mnemonic)
+        await tfclient.connect()
+        try {
+            await tfclient.contracts.cancel(contract_id);
+        }
+        catch (err) {
+            throw Error(`Failed to cancel contract ${contract_id} due to: ${err}`)
+        }
+        finally {
+            tfclient.disconnect()
+        }
+        return contract_id
+    }
+
+    async getDeployment(contract_id) {
+        await this.tfclient.connect()
+        const contract = await this.tfclient.contracts.get(contract_id)
+        const node_twin_id = await getNodeTwinId(contract["node_id"])
+        let msg = this.rmb.prepare("zos.deployment.get", [node_twin_id], 0, 2);
+        const payload = { "contract_id": contract_id }
+        this.rmb.send(msg, JSON.stringify(payload))
+        const result = await this.rmb.read(msg)
+        if (result[0].err) {
+            console.error(`Could not get deployment ${contract_id} due to error: ${result[0].err} `)
+        }
+        const res = JSON.parse(result[0].dat)
+        return res
+    }
+
+    checkWorkload(workload, targetWorkload) {
+        let state = false
+        if (workload.result.state === "error") {
+            throw Error(`Failed to deploy ${workload.type} with name ${workload.name} due to: ${workload.result.message}`)
+        }
+        else if (workload.result.state === "ok") {
+            state = true
+        }
+        if (workload.version === targetWorkload.version) {
+            return state
+        }
+        return false
+    }
+
+    async waitForDeployment(twinDeployment: TwinDeployment, timeout: number = 5) {
+        const now = new Date().getTime()
+        while (new Date().getTime() < now + timeout * 1000 * 60) {
+            const deployment = await this.getDeployment(twinDeployment.deployment.contract_id)
+            if (deployment.workloads.length !== twinDeployment.deployment.workloads.length) {
+                await new Promise(f => setTimeout(f, 1000));
+                continue
+            }
+            let readyWorkloads = 0
+            for (let i = 0; i < deployment.workloads.length; i++) {
+                if (this.checkWorkload(deployment.workloads[i], twinDeployment.deployment.workloads[i])) {
+                    readyWorkloads += 1
+                }
+            }
+            if (readyWorkloads === twinDeployment.deployment.workloads.length) {
+                return true
+            }
+            await new Promise(f => setTimeout(f, 1000));
+        }
+    }
+
+    async waitForDeployments(twinDeployments: TwinDeployment[], timeout: number = 5) {
+        let promises = []
+        for (const twinDeployment of twinDeployments) {
+            if ([Operations.deploy, Operations.update].includes(twinDeployment.operation)) {
+                promises.push(this.waitForDeployment(twinDeployment, timeout))
+            }
+        }
+        for (const promise of promises) {
+            if (!await promise) {
+                return false
+            }
+        }
+        return true
+    }
+
     deployMerge(twinDeployments: TwinDeployment[]): TwinDeployment[] {
         let deploymentMap = {}
         for (let twinDeployment of twinDeployments) {
@@ -90,21 +170,6 @@ class TwinDeploymentHandler {
             deployments.push(deploymentMap[key])
         }
         return deployments
-    }
-
-    async delete(contract_id: number): Promise<number> {
-        const tfclient = new TFClient(config.url, config.mnemonic)
-        await tfclient.connect()
-        try {
-            await tfclient.contracts.cancel(contract_id);
-        }
-        catch (err) {
-            throw Error(`Failed to cancel contract ${contract_id} due to: ${err}`)
-        }
-        finally {
-            tfclient.disconnect()
-        }
-        return contract_id
     }
 
     _updateToLatest(twinDeployments: TwinDeployment[]): TwinDeployment {
@@ -203,17 +268,19 @@ class TwinDeploymentHandler {
                     workload["data"] = twinDeployment.network.updateNetwork(workload.data);
                 }
             }
-            twinDeployment.deployment.sign(config.twin_id, config.mnemonic)
             if (twinDeployment.operation === Operations.deploy) {
+                twinDeployment.deployment.sign(config.twin_id, config.mnemonic)
                 const contract = await this.deploy(twinDeployment.deployment,
                     twinDeployment.nodeId,
                     twinDeployment.publicIps)
+                twinDeployment.deployment.contract_id = contract["contract_id"]
                 contracts.created.push(contract)
                 if (twinDeployment.network) {
                     await twinDeployment.network.save(contract["contract_id"], contract["node_id"])
                 }
             }
             else if (twinDeployment.operation === Operations.update) {
+                twinDeployment.deployment.sign(config.twin_id, config.mnemonic)
                 const contract = await this.update(twinDeployment.deployment, twinDeployment.publicIps)
                 contracts.updated.push(contract)
                 if (twinDeployment.network) {
@@ -223,8 +290,12 @@ class TwinDeploymentHandler {
             else if (twinDeployment.operation === Operations.delete) {
                 const contract = await this.delete(twinDeployment.deployment.contract_id)
                 contracts.deleted.push({ "contract_id": contract })
+                if (twinDeployment.network) {
+                    await twinDeployment.network.save()
+                }
             }
         }
+        await this.waitForDeployments(twinDeployments)
         return contracts
     }
 }

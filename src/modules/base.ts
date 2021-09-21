@@ -116,6 +116,17 @@ class BaseModule {
             contracts.deleted = contracts.deleted.concat(contract["deleted"])
             contracts.updated = contracts.updated.concat(contract["updated"])
         }
+        let deletedContracts = []
+        for (const c of contracts.deleted) {
+            deletedContracts.push(c["contract_id"])
+        }
+        let updatedContracts = []
+        for (const c of contracts.updated) {
+            if (!deletedContracts.includes(c["contract_id"])) {
+                updatedContracts.push(c)
+            }
+        }
+        contracts.updated = updatedContracts
         updatejson(path, name, "", "delete")
         return contracts
     }

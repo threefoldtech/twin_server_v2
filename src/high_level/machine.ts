@@ -145,7 +145,7 @@ class VirtualMachine extends HighLevelBase {
         if (!updatedDeployment) {
             throw Error("Nothing found to be updated")
         }
-        return new TwinDeployment(updatedDeployment, Operations.update, 0, 0)
+        return new TwinDeployment(updatedDeployment, Operations.update, 0, 0, network)
 
     }
 

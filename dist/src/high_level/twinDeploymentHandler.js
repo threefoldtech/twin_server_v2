@@ -140,28 +140,6 @@ var TwinDeploymentHandler = /** @class */ (function () {
             });
         });
     };
-    TwinDeploymentHandler.prototype.deployMerge = function (twinDeployments) {
-        var deploymentMap = {};
-        for (var _i = 0, twinDeployments_1 = twinDeployments; _i < twinDeployments_1.length; _i++) {
-            var twinDeployment = twinDeployments_1[_i];
-            if (twinDeployment.operation !== models_1.Operations.deploy) {
-                continue;
-            }
-            if (Object.keys(deploymentMap).includes(twinDeployment.nodeId.toString())) {
-                deploymentMap[twinDeployment.nodeId].deployment.workloads = deploymentMap[twinDeployment.nodeId].deployment.workloads.concat(twinDeployment.deployment.workloads);
-                deploymentMap[twinDeployment.nodeId].publicIps += twinDeployment.publicIps;
-            }
-            else {
-                deploymentMap[twinDeployment.nodeId] = twinDeployment;
-            }
-        }
-        var deployments = [];
-        for (var _a = 0, _b = Object.keys(deploymentMap); _a < _b.length; _a++) {
-            var key = _b[_a];
-            deployments.push(deploymentMap[key]);
-        }
-        return deployments;
-    };
     TwinDeploymentHandler.prototype.delete = function (contract_id) {
         return __awaiter(this, void 0, void 0, function () {
             var tfclient, err_3;
@@ -190,6 +168,141 @@ var TwinDeploymentHandler = /** @class */ (function () {
             });
         });
     };
+    TwinDeploymentHandler.prototype.getDeployment = function (contract_id) {
+        return __awaiter(this, void 0, void 0, function () {
+            var contract, node_twin_id, msg, payload, result, res;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.tfclient.connect()];
+                    case 1:
+                        _a.sent();
+                        return [4 /*yield*/, this.tfclient.contracts.get(contract_id)];
+                    case 2:
+                        contract = _a.sent();
+                        return [4 /*yield*/, index_1.getNodeTwinId(contract["node_id"])];
+                    case 3:
+                        node_twin_id = _a.sent();
+                        msg = this.rmb.prepare("zos.deployment.get", [node_twin_id], 0, 2);
+                        payload = { "contract_id": contract_id };
+                        this.rmb.send(msg, JSON.stringify(payload));
+                        return [4 /*yield*/, this.rmb.read(msg)];
+                    case 4:
+                        result = _a.sent();
+                        if (result[0].err) {
+                            console.error("Could not get deployment " + contract_id + " due to error: " + result[0].err + " ");
+                        }
+                        res = JSON.parse(result[0].dat);
+                        return [2 /*return*/, res];
+                }
+            });
+        });
+    };
+    TwinDeploymentHandler.prototype.checkWorkload = function (workload, targetWorkload) {
+        var state = false;
+        if (workload.result.state === "error") {
+            throw Error("Failed to deploy " + workload.type + " with name " + workload.name + " due to: " + workload.result.message);
+        }
+        else if (workload.result.state === "ok") {
+            state = true;
+        }
+        if (workload.version === targetWorkload.version) {
+            return state;
+        }
+        return false;
+    };
+    TwinDeploymentHandler.prototype.waitForDeployment = function (twinDeployment, timeout) {
+        if (timeout === void 0) { timeout = 5; }
+        return __awaiter(this, void 0, void 0, function () {
+            var now, deployment, readyWorkloads, i;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        now = new Date().getTime();
+                        _a.label = 1;
+                    case 1:
+                        if (!(new Date().getTime() < now + timeout * 1000 * 60)) return [3 /*break*/, 6];
+                        return [4 /*yield*/, this.getDeployment(twinDeployment.deployment.contract_id)];
+                    case 2:
+                        deployment = _a.sent();
+                        if (!(deployment.workloads.length !== twinDeployment.deployment.workloads.length)) return [3 /*break*/, 4];
+                        return [4 /*yield*/, new Promise(function (f) { return setTimeout(f, 1000); })];
+                    case 3:
+                        _a.sent();
+                        return [3 /*break*/, 1];
+                    case 4:
+                        readyWorkloads = 0;
+                        for (i = 0; i < deployment.workloads.length; i++) {
+                            if (this.checkWorkload(deployment.workloads[i], twinDeployment.deployment.workloads[i])) {
+                                readyWorkloads += 1;
+                            }
+                        }
+                        if (readyWorkloads === twinDeployment.deployment.workloads.length) {
+                            return [2 /*return*/, true];
+                        }
+                        return [4 /*yield*/, new Promise(function (f) { return setTimeout(f, 1000); })];
+                    case 5:
+                        _a.sent();
+                        return [3 /*break*/, 1];
+                    case 6: return [2 /*return*/];
+                }
+            });
+        });
+    };
+    TwinDeploymentHandler.prototype.waitForDeployments = function (twinDeployments, timeout) {
+        if (timeout === void 0) { timeout = 5; }
+        return __awaiter(this, void 0, void 0, function () {
+            var promises, _i, twinDeployments_1, twinDeployment, _a, promises_1, promise;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0:
+                        promises = [];
+                        for (_i = 0, twinDeployments_1 = twinDeployments; _i < twinDeployments_1.length; _i++) {
+                            twinDeployment = twinDeployments_1[_i];
+                            if ([models_1.Operations.deploy, models_1.Operations.update].includes(twinDeployment.operation)) {
+                                promises.push(this.waitForDeployment(twinDeployment, timeout));
+                            }
+                        }
+                        _a = 0, promises_1 = promises;
+                        _b.label = 1;
+                    case 1:
+                        if (!(_a < promises_1.length)) return [3 /*break*/, 4];
+                        promise = promises_1[_a];
+                        return [4 /*yield*/, promise];
+                    case 2:
+                        if (!(_b.sent())) {
+                            return [2 /*return*/, false];
+                        }
+                        _b.label = 3;
+                    case 3:
+                        _a++;
+                        return [3 /*break*/, 1];
+                    case 4: return [2 /*return*/, true];
+                }
+            });
+        });
+    };
+    TwinDeploymentHandler.prototype.deployMerge = function (twinDeployments) {
+        var deploymentMap = {};
+        for (var _i = 0, twinDeployments_2 = twinDeployments; _i < twinDeployments_2.length; _i++) {
+            var twinDeployment = twinDeployments_2[_i];
+            if (twinDeployment.operation !== models_1.Operations.deploy) {
+                continue;
+            }
+            if (Object.keys(deploymentMap).includes(twinDeployment.nodeId.toString())) {
+                deploymentMap[twinDeployment.nodeId].deployment.workloads = deploymentMap[twinDeployment.nodeId].deployment.workloads.concat(twinDeployment.deployment.workloads);
+                deploymentMap[twinDeployment.nodeId].publicIps += twinDeployment.publicIps;
+            }
+            else {
+                deploymentMap[twinDeployment.nodeId] = twinDeployment;
+            }
+        }
+        var deployments = [];
+        for (var _a = 0, _b = Object.keys(deploymentMap); _a < _b.length; _a++) {
+            var key = _b[_a];
+            deployments.push(deploymentMap[key]);
+        }
+        return deployments;
+    };
     TwinDeploymentHandler.prototype._updateToLatest = function (twinDeployments) {
         // all deployment pass should be with the same contract id to merge them to one deployment with all updates
         if (twinDeployments.length === 0) {
@@ -202,8 +315,8 @@ var TwinDeploymentHandler = /** @class */ (function () {
         var workloadMap = {};
         var publicIps = 0;
         var network = null;
-        for (var _i = 0, twinDeployments_2 = twinDeployments; _i < twinDeployments_2.length; _i++) {
-            var twinDeployment = twinDeployments_2[_i];
+        for (var _i = 0, twinDeployments_3 = twinDeployments; _i < twinDeployments_3.length; _i++) {
+            var twinDeployment = twinDeployments_3[_i];
             for (var _a = 0, _b = twinDeployment.deployment.workloads; _a < _b.length; _a++) {
                 var workload = _b[_a];
                 if (workloadMap.hasOwnProperty(workload.name)) {
@@ -242,8 +355,8 @@ var TwinDeploymentHandler = /** @class */ (function () {
     };
     TwinDeploymentHandler.prototype.updateMerge = function (twinDeployments) {
         var deploymentMap = {};
-        for (var _i = 0, twinDeployments_3 = twinDeployments; _i < twinDeployments_3.length; _i++) {
-            var twinDeployment = twinDeployments_3[_i];
+        for (var _i = 0, twinDeployments_4 = twinDeployments; _i < twinDeployments_4.length; _i++) {
+            var twinDeployment = twinDeployments_4[_i];
             if (twinDeployment.operation !== models_1.Operations.update) {
                 continue;
             }
@@ -277,17 +390,17 @@ var TwinDeploymentHandler = /** @class */ (function () {
     };
     TwinDeploymentHandler.prototype.handle = function (twinDeployments) {
         return __awaiter(this, void 0, void 0, function () {
-            var contracts, _i, twinDeployments_4, twinDeployment, _a, _b, workload, contract, contract, contract;
+            var contracts, _i, twinDeployments_5, twinDeployment, _a, _b, workload, contract, contract, contract;
             return __generator(this, function (_c) {
                 switch (_c.label) {
                     case 0:
                         twinDeployments = this.merge(twinDeployments);
                         contracts = { "created": [], "updated": [], "deleted": [] };
-                        _i = 0, twinDeployments_4 = twinDeployments;
+                        _i = 0, twinDeployments_5 = twinDeployments;
                         _c.label = 1;
                     case 1:
-                        if (!(_i < twinDeployments_4.length)) return [3 /*break*/, 12];
-                        twinDeployment = twinDeployments_4[_i];
+                        if (!(_i < twinDeployments_5.length)) return [3 /*break*/, 13];
+                        twinDeployment = twinDeployments_5[_i];
                         for (_a = 0, _b = twinDeployment.deployment.workloads; _a < _b.length; _a++) {
                             workload = _b[_a];
                             if (!twinDeployment.network) {
@@ -297,20 +410,22 @@ var TwinDeploymentHandler = /** @class */ (function () {
                                 workload["data"] = twinDeployment.network.updateNetwork(workload.data);
                             }
                         }
-                        twinDeployment.deployment.sign(config_json_1.default.twin_id, config_json_1.default.mnemonic);
                         if (!(twinDeployment.operation === models_1.Operations.deploy)) return [3 /*break*/, 5];
+                        twinDeployment.deployment.sign(config_json_1.default.twin_id, config_json_1.default.mnemonic);
                         return [4 /*yield*/, this.deploy(twinDeployment.deployment, twinDeployment.nodeId, twinDeployment.publicIps)];
                     case 2:
                         contract = _c.sent();
+                        twinDeployment.deployment.contract_id = contract["contract_id"];
                         contracts.created.push(contract);
                         if (!twinDeployment.network) return [3 /*break*/, 4];
                         return [4 /*yield*/, twinDeployment.network.save(contract["contract_id"], contract["node_id"])];
                     case 3:
                         _c.sent();
                         _c.label = 4;
-                    case 4: return [3 /*break*/, 11];
+                    case 4: return [3 /*break*/, 12];
                     case 5:
                         if (!(twinDeployment.operation === models_1.Operations.update)) return [3 /*break*/, 9];
+                        twinDeployment.deployment.sign(config_json_1.default.twin_id, config_json_1.default.mnemonic);
                         return [4 /*yield*/, this.update(twinDeployment.deployment, twinDeployment.publicIps)];
                     case 6:
                         contract = _c.sent();
@@ -320,18 +435,25 @@ var TwinDeploymentHandler = /** @class */ (function () {
                     case 7:
                         _c.sent();
                         _c.label = 8;
-                    case 8: return [3 /*break*/, 11];
+                    case 8: return [3 /*break*/, 12];
                     case 9:
-                        if (!(twinDeployment.operation === models_1.Operations.delete)) return [3 /*break*/, 11];
+                        if (!(twinDeployment.operation === models_1.Operations.delete)) return [3 /*break*/, 12];
                         return [4 /*yield*/, this.delete(twinDeployment.deployment.contract_id)];
                     case 10:
                         contract = _c.sent();
                         contracts.deleted.push({ "contract_id": contract });
-                        _c.label = 11;
+                        if (!twinDeployment.network) return [3 /*break*/, 12];
+                        return [4 /*yield*/, twinDeployment.network.save()];
                     case 11:
+                        _c.sent();
+                        _c.label = 12;
+                    case 12:
                         _i++;
                         return [3 /*break*/, 1];
-                    case 12: return [2 /*return*/, contracts];
+                    case 13: return [4 /*yield*/, this.waitForDeployments(twinDeployments)];
+                    case 14:
+                        _c.sent();
+                        return [2 /*return*/, contracts];
                 }
             });
         });

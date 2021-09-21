@@ -71,6 +71,7 @@ var WireGuardKeys = /** @class */ (function () {
 }());
 var Node = /** @class */ (function () {
     function Node() {
+        this.reserved_ips = [];
     }
     return Node;
 }());
@@ -150,7 +151,7 @@ var Network = /** @class */ (function () {
         if (metadata === void 0) { metadata = ""; }
         if (description === void 0) { description = ""; }
         return __awaiter(this, void 0, void 0, function () {
-            var keypair, znet, _a, znet_workload;
+            var keypair, znet, _a, znet_workload, node;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
@@ -182,6 +183,9 @@ var Network = /** @class */ (function () {
                         znet_workload.data = znet;
                         znet_workload.metadata = metadata;
                         znet_workload.description = description;
+                        node = new Node();
+                        node.node_id = node_id;
+                        this.nodes.push(node);
                         return [2 /*return*/, znet_workload];
                 }
             });
@@ -193,9 +197,8 @@ var Network = /** @class */ (function () {
             return 0;
         }
         var contract_id = 0;
-        network = this.getNetworks()[this.name];
         var nodes = [];
-        for (var _i = 0, _a = network["nodes"]; _i < _a.length; _i++) {
+        for (var _i = 0, _a = this.nodes; _i < _a.length; _i++) {
             var node = _a[_i];
             if (node.node_id !== node_id) {
                 nodes.push(node);
@@ -204,15 +207,13 @@ var Network = /** @class */ (function () {
                 contract_id = node.contract_id;
             }
         }
-        this.nodes = this.nodes.filter(function (node) { return node.node_id !== node_id; });
+        this.nodes = nodes;
         this.networks = this.networks.filter(function (net) { return net["node_id"] !== node_id; });
         var net = this.networks.filter(function (net) { return net["node_id"] === node_id; });
         this.reservedSubnets = this.reservedSubnets.filter(function (subnet) { return subnet === net[0].subnet; });
-        if (nodes.length === 0) {
-            this.delete();
-        }
-        network.nodes = nodes;
-        this._save(network);
+        // if (nodes.length === 0) {
+        //     this.delete()
+        // }
         return contract_id;
     };
     Network.prototype.updateNetwork = function (znet) {
@@ -411,22 +412,14 @@ var Network = /** @class */ (function () {
         }
         if (ip) {
             ip = ip.toString().split("/")[0];
-            var found = false;
             for (var _i = 0, _a = this.nodes; _i < _a.length; _i++) {
                 var node = _a[_i];
                 if (node.node_id === node_id) {
                     node.reserved_ips.push(ip);
-                    found = true;
-                    break;
+                    return ip;
                 }
             }
-            if (!found) {
-                var node = new Node();
-                node.node_id = node_id;
-                node.reserved_ips = [ip];
-                this.nodes.push(node);
-            }
-            return ip;
+            throw Error("node_id is not in the network. Please add it first");
         }
     };
     Network.prototype.getNodeReservedIps = function (node_id) {
@@ -446,17 +439,6 @@ var Network = /** @class */ (function () {
                 node.reserved_ips = node.reserved_ips.filter(function (item) { return item !== ip; });
             }
         }
-        var network = this.getNetworks()[this.name];
-        var nodes = [];
-        for (var _b = 0, _c = network["nodes"]; _b < _c.length; _b++) {
-            var node = _c[_b];
-            if (node.node_id === node_id) {
-                node.reserved_ips = node.reserved_ips.filter(function (item) { return item !== ip; });
-            }
-            nodes.push(node);
-        }
-        network.nodes = nodes;
-        this._save(network);
         return ip;
     };
     Network.prototype.getNodeSubnet = function (node_id) {
@@ -636,8 +618,10 @@ var Network = /** @class */ (function () {
         return "[Interface]\nAddress = " + userIP + "\nPrivateKey = " + userprivKey + "\n\n[Peer]\nPublicKey = " + peerPubkey + "\nAllowedIPs = " + this.ipRange + ", " + networkIP + "\nPersistentKeepalive = 25\nEndpoint = " + endpoint;
     };
     Network.prototype.save = function (contract_id, node_id) {
+        if (contract_id === void 0) { contract_id = 0; }
+        if (node_id === void 0) { node_id = 0; }
         return __awaiter(this, void 0, void 0, function () {
-            var network, nodeFound, _i, _a, node, node;
+            var network, nodes, _i, _a, node;
             return __generator(this, function (_b) {
                 if (this.exists()) {
                     network = this.getNetworks()[this.name];
@@ -648,23 +632,26 @@ var Network = /** @class */ (function () {
                         "nodes": []
                     };
                 }
-                nodeFound = false;
-                for (_i = 0, _a = network.nodes; _i < _a.length; _i++) {
+                if (this.nodes.length === 0) {
+                    this.delete();
+                    return [2 /*return*/];
+                }
+                nodes = [];
+                for (_i = 0, _a = this.nodes; _i < _a.length; _i++) {
                     node = _a[_i];
-                    if (node["node_id"] === node_id) {
-                        node["reserved_ips"] = this.getNodeReservedIps(node_id);
-                        nodeFound = true;
-                        break;
+                    if (node.node_id === node_id) {
+                        node.contract_id = contract_id;
                     }
+                    if (!node.contract_id) {
+                        continue;
+                    }
+                    nodes.push({
+                        "contract_id": node.contract_id,
+                        "node_id": node.node_id,
+                        "reserved_ips": this.getNodeReservedIps(node.node_id),
+                    });
                 }
-                if (!nodeFound) {
-                    node = {
-                        "contract_id": contract_id,
-                        "node_id": node_id,
-                        "reserved_ips": this.getNodeReservedIps(node_id),
-                    };
-                    network.nodes.push(node);
-                }
+                network.nodes = nodes;
                 this._save(network);
                 return [2 /*return*/];
             });

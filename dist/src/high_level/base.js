@@ -89,38 +89,44 @@ var HighLevelBase = /** @class */ (function () {
     };
     HighLevelBase.prototype._deleteMachineNetwork = function (deployment, remainingWorkloads, deletedMachineWorkloads, node_id) {
         return __awaiter(this, void 0, void 0, function () {
-            var twinDeployments, deploymentFactory, _loop_1, _i, deletedMachineWorkloads_1, workload;
+            var twinDeployments, deletedNodes, deletedIps, deploymentFactory, _loop_1, _i, deletedMachineWorkloads_1, workload;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
                         twinDeployments = [];
+                        deletedNodes = [];
+                        deletedIps = [];
                         deploymentFactory = new deployment_1.DeploymentFactory();
                         _loop_1 = function (workload) {
-                            var networkName, networkIpRange, network, contract_id, _b, _c, d, d;
-                            return __generator(this, function (_d) {
-                                switch (_d.label) {
+                            var networkName, networkIpRange, network, deletedIp, contract_id, _b, _c, d, contract_id_1, _d, _e, d;
+                            return __generator(this, function (_f) {
+                                switch (_f.label) {
                                     case 0:
                                         networkName = workload.data["network"].interfaces[0].network;
                                         networkIpRange = netaddr_1.Addr(workload.data["network"].interfaces[0].ip).mask(16).toString();
                                         network = new network_1.Network(networkName, networkIpRange);
                                         return [4 /*yield*/, network.load(true)];
                                     case 1:
-                                        _d.sent();
-                                        network.deleteReservedIp(node_id, workload.data["network"].interfaces[0].ip);
+                                        _f.sent();
+                                        deletedIp = network.deleteReservedIp(node_id, workload.data["network"].interfaces[0].ip);
                                         if (network.getNodeReservedIps(node_id).length !== 0) {
+                                            deletedIps.push(deletedIp);
                                             return [2 /*return*/, "continue"];
                                         }
                                         if (network.hasAccessPoint(node_id) && network.nodes.length !== 1) {
+                                            deletedIps.push(deletedIp);
                                             return [2 /*return*/, "continue"];
                                         }
                                         contract_id = network.deleteNode(node_id);
                                         if (contract_id === deployment.contract_id) {
                                             if (remainingWorkloads.length === 1) {
-                                                twinDeployments.push(new models_1.TwinDeployment(deployment, models_1.Operations.delete, 0, 0));
+                                                twinDeployments.push(new models_1.TwinDeployment(deployment, models_1.Operations.delete, 0, 0, network));
                                                 remainingWorkloads = [];
                                             }
                                             else {
                                                 remainingWorkloads = remainingWorkloads.filter(function (item) { return item.name !== networkName; });
+                                                deletedIps.push(deletedIp);
+                                                deletedNodes.push(node_id);
                                             }
                                         }
                                         else {
@@ -132,24 +138,30 @@ var HighLevelBase = /** @class */ (function () {
                                                     continue;
                                                 }
                                                 if (d.workloads.length === 1) {
-                                                    twinDeployments.push(new models_1.TwinDeployment(d, models_1.Operations.delete, 0, 0));
+                                                    twinDeployments.push(new models_1.TwinDeployment(d, models_1.Operations.delete, 0, 0, network));
                                                 }
                                                 else {
                                                     d.workloads = d.workloads.filter(function (item) { return item.name !== networkName; });
-                                                    twinDeployments.push(new models_1.TwinDeployment(d, models_1.Operations.update, 0, 0));
+                                                    twinDeployments.push(new models_1.TwinDeployment(d, models_1.Operations.update, 0, 0, network));
                                                 }
                                             }
                                         }
                                         // in case of the network got more accesspoints on different nodes this won't be valid
                                         if (network.nodes.length === 1 && network.getNodeReservedIps(network.nodes[0].node_id).length === 0) {
-                                            network.deleteNode(network.nodes[0].node_id);
-                                            d = deploymentFactory.fromObj(network.deployments[0]);
-                                            if (d.workloads.length === 1) {
-                                                twinDeployments.push(new models_1.TwinDeployment(d, models_1.Operations.delete, 0, 0));
-                                            }
-                                            else {
-                                                d.workloads = d.workloads.filter(function (item) { return item.name !== networkName; });
-                                                twinDeployments.push(new models_1.TwinDeployment(d, models_1.Operations.update, 0, 0));
+                                            contract_id_1 = network.deleteNode(network.nodes[0].node_id);
+                                            for (_d = 0, _e = network.deployments; _d < _e.length; _d++) {
+                                                d = _e[_d];
+                                                d = deploymentFactory.fromObj(d);
+                                                if (d.contract_id !== contract_id_1) {
+                                                    continue;
+                                                }
+                                                if (d.workloads.length === 1) {
+                                                    twinDeployments.push(new models_1.TwinDeployment(d, models_1.Operations.delete, 0, 0, network));
+                                                }
+                                                else {
+                                                    d.workloads = d.workloads.filter(function (item) { return item.name !== networkName; });
+                                                    twinDeployments.push(new models_1.TwinDeployment(d, models_1.Operations.update, 0, 0, network));
+                                                }
                                             }
                                         }
                                         return [2 /*return*/];
@@ -168,7 +180,7 @@ var HighLevelBase = /** @class */ (function () {
                     case 3:
                         _i++;
                         return [3 /*break*/, 1];
-                    case 4: return [2 /*return*/, [twinDeployments, remainingWorkloads]];
+                    case 4: return [2 /*return*/, [twinDeployments, remainingWorkloads, deletedNodes, deletedIps]];
                 }
             });
         });
@@ -176,9 +188,9 @@ var HighLevelBase = /** @class */ (function () {
     HighLevelBase.prototype._delete = function (deployment, names, types) {
         if (types === void 0) { types = [grid3_client_1.WorkloadTypes.ipv4, grid3_client_1.WorkloadTypes.zmachine, grid3_client_1.WorkloadTypes.zmount, grid3_client_1.WorkloadTypes.zdb]; }
         return __awaiter(this, void 0, void 0, function () {
-            var tfclient, twinDeployments, deploymentFactory, contract, node_id, numberOfWorkloads, _a, remainingWorkloads, deletedMachineWorkloads, _b, newTwinDeployments, newRemainingWorkloads;
-            return __generator(this, function (_c) {
-                switch (_c.label) {
+            var tfclient, twinDeployments, deploymentFactory, contract, node_id, numberOfWorkloads, _a, remainingWorkloads, deletedMachineWorkloads, _b, newTwinDeployments, newRemainingWorkloads, deletedNodes, deletedIps, network, _i, remainingWorkloads_1, workload, _c, deletedNodes_1, deleteNode, _d, deletedIps_1, deleteIp;
+            return __generator(this, function (_e) {
+                switch (_e.label) {
                     case 0:
                         if (types.includes(grid3_client_1.WorkloadTypes.network)) {
                             throw Error("network can't be deleted");
@@ -186,12 +198,12 @@ var HighLevelBase = /** @class */ (function () {
                         tfclient = new grid3_client_1.TFClient(config_json_1.default.url, config_json_1.default.mnemonic);
                         return [4 /*yield*/, tfclient.connect()];
                     case 1:
-                        _c.sent();
+                        _e.sent();
                         twinDeployments = [];
                         deploymentFactory = new deployment_1.DeploymentFactory();
                         return [4 /*yield*/, tfclient.contracts.get(deployment.contract_id)];
                     case 2:
-                        contract = _c.sent();
+                        contract = _e.sent();
                         node_id = contract["node_id"];
                         numberOfWorkloads = deployment.workloads.length;
                         deployment = deploymentFactory.fromObj(deployment);
@@ -201,14 +213,38 @@ var HighLevelBase = /** @class */ (function () {
                         }
                         return [4 /*yield*/, this._deleteMachineNetwork(deployment, remainingWorkloads, deletedMachineWorkloads, node_id)];
                     case 3:
-                        _b = _c.sent(), newTwinDeployments = _b[0], newRemainingWorkloads = _b[1];
+                        _b = _e.sent(), newTwinDeployments = _b[0], newRemainingWorkloads = _b[1], deletedNodes = _b[2], deletedIps = _b[3];
                         twinDeployments = twinDeployments.concat(newTwinDeployments);
                         remainingWorkloads = newRemainingWorkloads;
-                        if (remainingWorkloads.length !== 0 && remainingWorkloads.length < numberOfWorkloads) {
-                            deployment.workloads = remainingWorkloads;
-                            twinDeployments.push(new models_1.TwinDeployment(deployment, models_1.Operations.update, 0, 0));
+                        if (!(remainingWorkloads.length !== 0 && remainingWorkloads.length < numberOfWorkloads)) return [3 /*break*/, 8];
+                        network = null;
+                        _i = 0, remainingWorkloads_1 = remainingWorkloads;
+                        _e.label = 4;
+                    case 4:
+                        if (!(_i < remainingWorkloads_1.length)) return [3 /*break*/, 7];
+                        workload = remainingWorkloads_1[_i];
+                        if (!(workload.type === grid3_client_1.WorkloadTypes.network)) return [3 /*break*/, 6];
+                        network = new network_1.Network(workload.name, workload.data.ip_range);
+                        return [4 /*yield*/, network.load(true)];
+                    case 5:
+                        _e.sent();
+                        return [3 /*break*/, 7];
+                    case 6:
+                        _i++;
+                        return [3 /*break*/, 4];
+                    case 7:
+                        for (_c = 0, deletedNodes_1 = deletedNodes; _c < deletedNodes_1.length; _c++) {
+                            deleteNode = deletedNodes_1[_c];
+                            network.deleteNode(deleteNode);
                         }
-                        return [2 /*return*/, twinDeployments];
+                        for (_d = 0, deletedIps_1 = deletedIps; _d < deletedIps_1.length; _d++) {
+                            deleteIp = deletedIps_1[_d];
+                            network.deleteReservedIp(node_id, deleteIp);
+                        }
+                        deployment.workloads = remainingWorkloads;
+                        twinDeployments.push(new models_1.TwinDeployment(deployment, models_1.Operations.update, 0, 0, network));
+                        _e.label = 8;
+                    case 8: return [2 /*return*/, twinDeployments];
                 }
             });
         });

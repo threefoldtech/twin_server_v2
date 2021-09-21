@@ -176,9 +176,9 @@ var BaseModule = /** @class */ (function () {
     };
     BaseModule.prototype._delete = function (name) {
         return __awaiter(this, void 0, void 0, function () {
-            var path, data, contracts, twinDeploymentHandler, deployments, highlvl, _i, deployments_1, deployment, twinDeployments, contract;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
+            var path, data, contracts, twinDeploymentHandler, deployments, highlvl, _i, deployments_1, deployment, twinDeployments, contract, deletedContracts, _a, _b, c, updatedContracts, _c, _d, c;
+            return __generator(this, function (_e) {
+                switch (_e.label) {
                     case 0:
                         path = PATH.join(jsonfs_1.appPath, this.fileName);
                         data = jsonfs_1.loadFromFile(path);
@@ -189,26 +189,39 @@ var BaseModule = /** @class */ (function () {
                         twinDeploymentHandler = new twinDeploymentHandler_1.TwinDeploymentHandler();
                         return [4 /*yield*/, this._get(name)];
                     case 1:
-                        deployments = _a.sent();
+                        deployments = _e.sent();
                         highlvl = new base_1.HighLevelBase;
                         _i = 0, deployments_1 = deployments;
-                        _a.label = 2;
+                        _e.label = 2;
                     case 2:
                         if (!(_i < deployments_1.length)) return [3 /*break*/, 6];
                         deployment = deployments_1[_i];
                         return [4 /*yield*/, highlvl._delete(deployment, [])];
                     case 3:
-                        twinDeployments = _a.sent();
+                        twinDeployments = _e.sent();
                         return [4 /*yield*/, twinDeploymentHandler.handle(twinDeployments)];
                     case 4:
-                        contract = _a.sent();
+                        contract = _e.sent();
                         contracts.deleted = contracts.deleted.concat(contract["deleted"]);
                         contracts.updated = contracts.updated.concat(contract["updated"]);
-                        _a.label = 5;
+                        _e.label = 5;
                     case 5:
                         _i++;
                         return [3 /*break*/, 2];
                     case 6:
+                        deletedContracts = [];
+                        for (_a = 0, _b = contracts.deleted; _a < _b.length; _a++) {
+                            c = _b[_a];
+                            deletedContracts.push(c["contract_id"]);
+                        }
+                        updatedContracts = [];
+                        for (_c = 0, _d = contracts.updated; _c < _d.length; _c++) {
+                            c = _d[_c];
+                            if (!deletedContracts.includes(c["contract_id"])) {
+                                updatedContracts.push(c);
+                            }
+                        }
+                        contracts.updated = updatedContracts;
                         jsonfs_1.updatejson(path, name, "", "delete");
                         return [2 /*return*/, contracts];
                 }

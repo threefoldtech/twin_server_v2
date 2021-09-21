@@ -186,7 +186,7 @@ var VirtualMachine = /** @class */ (function (_super) {
                         if (!updatedDeployment) {
                             throw Error("Nothing found to be updated");
                         }
-                        return [2 /*return*/, new models_1.TwinDeployment(updatedDeployment, models_1.Operations.update, 0, 0)];
+                        return [2 /*return*/, new models_1.TwinDeployment(updatedDeployment, models_1.Operations.update, 0, 0, network)];
                 }
             });
         });

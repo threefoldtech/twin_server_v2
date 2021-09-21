@@ -286,7 +286,7 @@ var K8s = /** @class */ (function (_super) {
                         if (!oldDeployment) {
                             return [3 /*break*/, 14];
                         }
-                        finalTwinDeployments.push(new models_2.TwinDeployment(oldDeployment, models_2.Operations.update, 0, 0));
+                        finalTwinDeployments.push(new models_2.TwinDeployment(oldDeployment, models_2.Operations.update, 0, 0, network));
                         return [3 /*break*/, 15];
                     case 14:
                         _j++;

@@ -57,6 +57,8 @@ class HighLevelBase {
         node_id: number
     ) {
         let twinDeployments = []
+        let deletedNodes = []
+        let deletedIps = []
         const deploymentFactory = new DeploymentFactory()
         for (const workload of deletedMachineWorkloads) {
             const networkName = workload.data["network"].interfaces[0].network
@@ -64,22 +66,26 @@ class HighLevelBase {
             let network = new Network(networkName, networkIpRange)
             await network.load(true)
 
-            network.deleteReservedIp(node_id, workload.data["network"].interfaces[0].ip)
+            const deletedIp = network.deleteReservedIp(node_id, workload.data["network"].interfaces[0].ip)
             if (network.getNodeReservedIps(node_id).length !== 0) {
+                deletedIps.push(deletedIp)
                 continue
             }
             if (network.hasAccessPoint(node_id) && network.nodes.length !== 1) {
+                deletedIps.push(deletedIp)
                 continue
             }
 
             const contract_id = network.deleteNode(node_id)
             if (contract_id === deployment.contract_id) {
                 if (remainingWorkloads.length === 1) {
-                    twinDeployments.push(new TwinDeployment(deployment, Operations.delete, 0, 0))
+                    twinDeployments.push(new TwinDeployment(deployment, Operations.delete, 0, 0, network))
                     remainingWorkloads = []
                 }
                 else {
                     remainingWorkloads = remainingWorkloads.filter(item => item.name !== networkName)
+                    deletedIps.push(deletedIp)
+                    deletedNodes.push(node_id)
                 }
             }
             else {
@@ -90,28 +96,33 @@ class HighLevelBase {
                         continue
                     }
                     if (d.workloads.length === 1) {
-                        twinDeployments.push(new TwinDeployment(d, Operations.delete, 0, 0))
+                        twinDeployments.push(new TwinDeployment(d, Operations.delete, 0, 0, network))
                     }
                     else {
                         d.workloads = d.workloads.filter(item => item.name !== networkName)
-                        twinDeployments.push(new TwinDeployment(d, Operations.update, 0, 0))
+                        twinDeployments.push(new TwinDeployment(d, Operations.update, 0, 0, network))
                     }
                 }
             }
             // in case of the network got more accesspoints on different nodes this won't be valid
             if (network.nodes.length === 1 && network.getNodeReservedIps(network.nodes[0].node_id).length === 0) {
-                network.deleteNode(network.nodes[0].node_id)
-                let d = deploymentFactory.fromObj(network.deployments[0])
-                if (d.workloads.length === 1) {
-                    twinDeployments.push(new TwinDeployment(d, Operations.delete, 0, 0))
-                }
-                else {
-                    d.workloads = d.workloads.filter(item => item.name !== networkName)
-                    twinDeployments.push(new TwinDeployment(d, Operations.update, 0, 0))
+                const contract_id = network.deleteNode(network.nodes[0].node_id)
+                for (let d of network.deployments) {
+                    d = deploymentFactory.fromObj(d)
+                    if (d.contract_id !== contract_id) {
+                        continue
+                    }
+                    if (d.workloads.length === 1) {
+                        twinDeployments.push(new TwinDeployment(d, Operations.delete, 0, 0, network))
+                    }
+                    else {
+                        d.workloads = d.workloads.filter(item => item.name !== networkName)
+                        twinDeployments.push(new TwinDeployment(d, Operations.update, 0, 0, network))
+                    }
                 }
             }
         }
-        return [twinDeployments, remainingWorkloads]
+        return [twinDeployments, remainingWorkloads, deletedNodes, deletedIps]
     }
 
     async _delete(deployment: Deployment,
@@ -137,13 +148,27 @@ class HighLevelBase {
         if (remainingWorkloads.length === 0) {
             twinDeployments.push(new TwinDeployment(deployment, Operations.delete, 0, 0))
         }
-        let [newTwinDeployments, newRemainingWorkloads] = await this._deleteMachineNetwork(deployment, remainingWorkloads, deletedMachineWorkloads, node_id)
+        let [newTwinDeployments, newRemainingWorkloads, deletedNodes, deletedIps] = await this._deleteMachineNetwork(deployment, remainingWorkloads, deletedMachineWorkloads, node_id)
         twinDeployments = twinDeployments.concat(newTwinDeployments)
         remainingWorkloads = newRemainingWorkloads
 
         if (remainingWorkloads.length !== 0 && remainingWorkloads.length < numberOfWorkloads) {
+            let network = null
+            for (const workload of remainingWorkloads) {
+                if (workload.type === WorkloadTypes.network) {
+                    network = new Network(workload.name, workload.data.ip_range)
+                    await network.load(true)
+                    break
+                }
+            }
+            for (const deleteNode of deletedNodes) {
+                network.deleteNode(deleteNode)
+            }
+            for (const deleteIp of deletedIps) {
+                network.deleteReservedIp(node_id, deleteIp)
+            }
             deployment.workloads = remainingWorkloads
-            twinDeployments.push(new TwinDeployment(deployment, Operations.update, 0, 0))
+            twinDeployments.push(new TwinDeployment(deployment, Operations.update, 0, 0, network))
         }
         return twinDeployments
     }
