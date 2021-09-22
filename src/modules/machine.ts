@@ -1,7 +1,7 @@
 import { WorkloadTypes } from "grid3_client";
 
 import { BaseModule } from "./base";
-import { Machines } from "./models";
+import { Machines, MachinesDelete, MachinesGet } from "./models";
 import { Network } from "../primitives/network";
 import { DeploymentFactory } from "../primitives/deployment";
 import { expose } from "../helpers/expose";
@@ -49,12 +49,12 @@ class Machine extends BaseModule {
     }
 
     @expose
-    async get(options) {
+    async get(options: MachinesGet) {
         return await this._get(options.name);
     }
 
     @expose
-    async delete(options) {
+    async delete(options: MachinesDelete) {
         return await this._delete(options.name);
     }
 

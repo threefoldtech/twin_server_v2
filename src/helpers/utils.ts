@@ -12,7 +12,7 @@ function getRandomNumber(min: number, max: number): number {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-function randomChoice(choices: any[]): any {
+function randomChoice(choices) {
     const random = Math.floor(Math.random() * choices.length);
     return choices[random];
 }

@@ -10,11 +10,11 @@ function loadFromFile(path: string) {
     return JSON.parse(data.toString());
 }
 
-function dumpToFile(path: string, data) {
-    return FS.writeFileSync(path, JSON.stringify(data));
+function dumpToFile(path: string, data): void {
+    FS.writeFileSync(path, JSON.stringify(data));
 }
 
-function updatejson(path: string, name: string, data = null, action = "add") {
+function updatejson(path: string, name: string, data = null, action = "add"): void {
     const storedData = loadFromFile(path);
     if (action === "add") {
         storedData[name] = data;

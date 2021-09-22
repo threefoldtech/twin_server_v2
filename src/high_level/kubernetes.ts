@@ -96,7 +96,7 @@ class Kubernetes extends HighLevelBase {
         );
     }
 
-    async deleteNode(deployment: Deployment, names: string[]) {
+    async delete(deployment: Deployment, names: string[]) {
         return await this._delete(deployment, names, [
             WorkloadTypes.zmachine,
             WorkloadTypes.zmount,

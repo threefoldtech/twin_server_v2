@@ -1,6 +1,6 @@
 import { TFClient } from "grid3_client";
 
-import { TwinCreate, TwinGet, TwinList, TwinDelete } from "./models";
+import { TwinCreate, TwinGet, TwinDelete } from "./models";
 import { expose } from "../helpers/index";
 import { default as config } from "../../config.json";
 
@@ -20,7 +20,7 @@ class Twins {
         return await this.client.twins.get(options.id);
     }
     @expose
-    async list(options: TwinList) {
+    async list() {
         await this.client.connect();
         return await this.client.twins.list();
     }

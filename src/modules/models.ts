@@ -11,6 +11,10 @@ class Network {
     ip_range: string;
 }
 
+class BaseGetDelete {
+    name: string;
+}
+
 class Machines {
     name: string;
     node_id: number;
@@ -25,6 +29,10 @@ class Machines {
     description: string;
     env: Record<string, unknown>;
 }
+
+class MachinesGet extends BaseGetDelete {}
+
+class MachinesDelete extends BaseGetDelete {}
 
 class KubernetesNode {
     name: string;
@@ -45,6 +53,10 @@ class K8S {
     description: string;
     ssh_key: string;
 }
+
+class K8SGet extends BaseGetDelete {}
+
+class K8SDelete extends BaseGetDelete {}
 
 class AddWorker extends KubernetesNode {
     deployment_name: string;
@@ -72,6 +84,10 @@ class ZDBS {
     metadata: string;
     description: string;
 }
+
+class ZDBGet extends BaseGetDelete {}
+
+class ZDBDelete extends BaseGetDelete {}
 
 class AddZDB extends ZDB {
     deployment_name: string;
@@ -110,8 +126,6 @@ class TwinCreate {
 class TwinGet {
     id: number;
 }
-
-class TwinList {}
 
 class TwinDelete {
     id: number;
@@ -167,10 +181,16 @@ class DeployGatewayName{
 export {
     Disks,
     Machines,
+    MachinesGet,
+    MachinesDelete,
     K8S,
+    K8SGet,
+    K8SDelete,
     AddWorker,
     DeleteWorker,
     ZDBS,
+    ZDBGet,
+    ZDBDelete,
     AddZDB,
     DeleteZDB,
     NodeContractCreate,
@@ -180,7 +200,6 @@ export {
     ContractCancel,
     TwinCreate,
     TwinGet,
-    TwinList,
     TwinDelete,
     WalletImport,
     WalletBalanceByName,

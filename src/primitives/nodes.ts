@@ -1,11 +1,11 @@
-import { default as isPrivateIP } from "private-ip";
+import { default as isIpPrivate } from "private-ip";
 import { default as IP } from "ip";
 
 import { send } from "../helpers/requests";
 
 const graphqlURL = "https://tfchain.dev.threefold.io/graphql/graphql";
 
-async function getNodeTwinId(node_id: number) {
+async function getNodeTwinId(node_id: number): Promise<number> {
     const headers = { "Content-Type": "application/json" };
     const body = `{
             nodes(where: { nodeId_eq: ${node_id} }) {
@@ -17,7 +17,7 @@ async function getNodeTwinId(node_id: number) {
     return res["data"]["nodes"][0]["twinId"];
 }
 
-async function getAccessNodes() {
+async function getAccessNodes(): Promise<Record<string, unknown>> {
     const headers = { "Content-Type": "application/json" };
     let body = `{
         nodes {
@@ -56,8 +56,8 @@ async function getAccessNodes() {
                 const ipv4 = conf["ipv4"];
                 const ipv6 = conf["ipv6"];
                 if (
-                    (IP.isV4Format(ipv4.split("/")[0]) && !isPrivateIP(ipv4)) ||
-                    (IP.isV6Format(ipv6.split("/")[0]) && !isPrivateIP(ipv6))
+                    (IP.isV4Format(ipv4.split("/")[0]) && !isIpPrivate(ipv4)) ||
+                    (IP.isV6Format(ipv6.split("/")[0]) && !isIpPrivate(ipv6))
                 ) {
                     accessNodes[nodeId] = { ipv4: ipv4, ipv6: ipv6 };
                 }

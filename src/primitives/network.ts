@@ -1,7 +1,7 @@
 import * as PATH from "path";
 
-import { default as Wg } from "wireguard-wrapper";
-import { default as Private } from "private-ip";
+import { Wg } from "wireguard-wrapper";
+import { default as isIpPrivate } from "private-ip";
 
 import { Addr } from "netaddr";
 import { Znet, Workload, WorkloadTypes, Peer, MessageBusClient, Deployment } from "grid3_client";
@@ -116,7 +116,6 @@ class Network {
     }
 
     deleteNode(node_id: number): number {
-        let network;
         if (!this.exists()) {
             return 0;
         }
@@ -147,7 +146,7 @@ class Network {
         }
     }
 
-    updateNetworkDeployments() {
+    updateNetworkDeployments(): void {
         for (const net of this.networks) {
             for (const deployment of this.deployments) {
                 const workloads = deployment["workloads"];
@@ -165,7 +164,7 @@ class Network {
         }
     }
 
-    async load(deployments = false) {
+    async load(deployments = false): Promise<void> {
         const networks = this.getNetworks();
         if (!Object.keys(networks).includes(this.name)) {
             return;
@@ -406,7 +405,7 @@ class Network {
     }
 
     isPrivateIP(ip: string): boolean {
-        return Private(ip);
+        return isIpPrivate(ip);
     }
 
     async getNodeEndpoint(node_id: number): Promise<string> {
@@ -498,21 +497,21 @@ PersistentKeepalive = 25\nEndpoint = ${endpoint}`;
         this._save(network);
     }
 
-    _save(network) {
+    _save(network): void {
         const networks = this.getNetworks();
         networks[this.name] = network;
         const path = PATH.join(appPath, "network.json");
         dumpToFile(path, networks);
     }
 
-    delete() {
+    delete(): void {
         const networks = this.getNetworks();
         delete networks[this.name];
         const path = PATH.join(appPath, "network.json");
         dumpToFile(path, networks);
     }
 
-    async generatePeers() {
+    async generatePeers(): Promise<void> {
         for (const n of this.networks) {
             n.peers = [];
             for (const net of this.networks) {

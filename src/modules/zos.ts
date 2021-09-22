@@ -1,5 +1,6 @@
 import { WorkloadTypes } from "grid3_client";
 
+import { ZOS } from "./models";
 import { expose } from "../helpers/index";
 import { default as config } from "../../config.json";
 import { TwinDeploymentHandler } from "../high_level/twinDeploymentHandler";
@@ -7,7 +8,7 @@ import { DeploymentFactory } from "../primitives/deployment";
 
 class Zos {
     @expose
-    async deploy(options) {
+    async deploy(options: ZOS) {
         // get node_id from the deployment
         const node_id = options.node_id;
         delete options.node_id;

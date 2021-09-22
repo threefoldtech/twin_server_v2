@@ -32,7 +32,7 @@ class DeploymentFactory {
         signature_requirement.requests = [signature_request];
 
         const deployment = new Deployment();
-        deployment.version = 0;
+        deployment.version = version;
         deployment.metadata = metadata;
         deployment.description = description;
         deployment.twin_id = config.twin_id;
@@ -123,7 +123,7 @@ class DeploymentFactory {
         return oldDeployment;
     }
 
-    fromObj(deployment) {
+    fromObj(deployment): Deployment {
         const d = new Deployment();
         Object.assign(d, deployment);
         const signature_requirement = new SignatureRequirement();

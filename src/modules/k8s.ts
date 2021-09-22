@@ -1,14 +1,13 @@
-import { Deployment, Workload, WorkloadTypes } from "grid3_client";
+import { Workload, WorkloadTypes } from "grid3_client";
 import { Addr } from "netaddr";
 
-import { AddWorker, DeleteWorker, K8S } from "./models";
+import { AddWorker, DeleteWorker, K8S, K8SDelete, K8SGet } from "./models";
 import { BaseModule } from "./base";
 import { expose } from "../helpers/index";
 import { TwinDeploymentHandler } from "../high_level/twinDeploymentHandler";
 import { TwinDeployment, Operations } from "../high_level/models";
 import { Kubernetes } from "../high_level/kubernetes";
 import { Network } from "../primitives/network";
-import { DeploymentFactory } from "../primitives/deployment";
 
 class K8s extends BaseModule {
     fileName = "kubernetes.json";
@@ -38,19 +37,7 @@ class K8s extends BaseModule {
         return ips;
     }
 
-    @expose
-    async deploy(options: K8S) {
-        if (options.masters.length > 1) {
-            throw Error("Multi master is not supported");
-        }
-
-        if (this.exists(options.name)) {
-            throw Error(`Another k8s deployment with the same name ${options.name} is already exist`);
-        }
-
-        const network = new Network(options.network.name, options.network.ip_range);
-        await network.load(true);
-
+    async _createDeployment(options: K8S, network: Network, masterIps: string[] = []): Promise<[TwinDeployment[], string]> {
         let deployments = [];
         let wireguardConfig = "";
         const kubernetes = new Kubernetes();
@@ -76,11 +63,12 @@ class K8s extends BaseModule {
             }
         }
 
-        const masterIps = this._getMastersIp(deployments);
         if (masterIps.length === 0) {
-            throw Error("Couldn't get master ip");
+            masterIps = this._getMastersIp(deployments);
+            if (masterIps.length === 0) {
+                throw Error("Couldn't get master ip");
+            }
         }
-
         for (const worker of options.workers) {
             const [twinDeployments, _] = await kubernetes.add_worker(
                 worker.name,
@@ -99,6 +87,23 @@ class K8s extends BaseModule {
 
             deployments = deployments.concat(twinDeployments);
         }
+        return [deployments, wireguardConfig];
+    }
+
+    @expose
+    async deploy(options: K8S) {
+        if (options.masters.length > 1) {
+            throw Error("Multi master is not supported");
+        }
+
+        if (this.exists(options.name)) {
+            throw Error(`Another k8s deployment with the same name ${options.name} is already exist`);
+        }
+
+        const network = new Network(options.network.name, options.network.ip_range);
+        await network.load(true);
+
+        const [deployments, wireguardConfig] = await this._createDeployment(options, network);
         const twinDeploymentHandler = new TwinDeploymentHandler();
         const contracts = await twinDeploymentHandler.handle(deployments);
         this.save(options.name, contracts, wireguardConfig);
@@ -111,12 +116,12 @@ class K8s extends BaseModule {
     }
 
     @expose
-    async get(options) {
+    async get(options: K8SGet) {
         return await this._get(options.name);
     }
 
     @expose
-    async delete(options) {
+    async delete(options: K8SDelete) {
         return await this._delete(options.name);
     }
 
@@ -128,8 +133,8 @@ class K8s extends BaseModule {
         if (options.masters.length > 1) {
             throw Error("Multi master is not supported");
         }
-        const deploymentObjs = await this._get(options.name);
-        for (const workload of deploymentObjs[0].workloads) {
+        const oldDeployments = await this._get(options.name);
+        for (const workload of oldDeployments[0].workloads) {
             if (workload.type !== WorkloadTypes.network) {
                 continue;
             }
@@ -138,7 +143,7 @@ class K8s extends BaseModule {
             }
         }
 
-        const masterIps = this._getMastersIp(deploymentObjs);
+        const masterIps = this._getMastersIp(oldDeployments);
         if (masterIps.length === 0) {
             throw Error("Couldn't get master ip");
         }
@@ -148,84 +153,10 @@ class K8s extends BaseModule {
         await network.load(true);
 
         //TODO: check that the master nodes are not changed
-        let twinDeployments = [];
         const kubernetes = new Kubernetes();
-        for (const master of options.masters) {
-            const [TDeployments, _] = await kubernetes.add_master(
-                master.name,
-                master.node_id,
-                options.secret,
-                master.cpu,
-                master.memory,
-                master.disk_size,
-                master.public_ip,
-                network,
-                options.ssh_key,
-                options.metadata,
-                options.description,
-            );
 
-            twinDeployments = twinDeployments.concat(TDeployments);
-        }
-        for (const worker of options.workers) {
-            const [TDeployments, _] = await kubernetes.add_worker(
-                worker.name,
-                worker.node_id,
-                options.secret,
-                masterIps[0],
-                worker.cpu,
-                worker.memory,
-                worker.disk_size,
-                worker.public_ip,
-                network,
-                options.ssh_key,
-                options.metadata,
-                options.description,
-            );
-
-            twinDeployments = twinDeployments.concat(TDeployments);
-        }
-        const deploymentFactory = new DeploymentFactory();
-        const twinDeploymentHandler = new TwinDeploymentHandler();
-        let finalTwinDeployments = [];
-        finalTwinDeployments = twinDeployments.filter(d => d.operation === Operations.update);
-        twinDeployments = twinDeploymentHandler.deployMerge(twinDeployments);
-        const deploymentNodeIds = this._getDeploymentNodeIds(options.name);
-        finalTwinDeployments = finalTwinDeployments.concat(
-            twinDeployments.filter(d => !deploymentNodeIds.includes(d.nodeId)),
-        );
-
-        for (const deploymentObj of deploymentObjs) {
-            let oldDeployment = deploymentFactory.fromObj(deploymentObj);
-            const node_id = this._getNodeIdFromContractId(options.name, oldDeployment.contract_id);
-            let deploymentFound = false;
-            for (const twinDeployment of twinDeployments) {
-                if (twinDeployment.nodeId !== node_id) {
-                    continue;
-                }
-                oldDeployment = await deploymentFactory.UpdateDeployment(
-                    oldDeployment,
-                    twinDeployment.deployment,
-                    network,
-                );
-                deploymentFound = true;
-                if (!oldDeployment) {
-                    continue;
-                }
-                finalTwinDeployments.push(new TwinDeployment(oldDeployment, Operations.update, 0, 0, network));
-                break;
-            }
-            if (!deploymentFound) {
-                const tDeployments = await kubernetes.deleteNode(oldDeployment, []);
-                finalTwinDeployments = finalTwinDeployments.concat(tDeployments);
-            }
-        }
-        const contracts = await twinDeploymentHandler.handle(finalTwinDeployments);
-        if (contracts.created.length === 0 && contracts.updated.length === 0 && contracts.deleted.length === 0) {
-            return "Nothing found to update";
-        }
-        this.save(options.name, contracts);
-        return { contracts: contracts };
+        let [twinDeployments, _] = await this._createDeployment(options, network, masterIps);
+        return await this._update(kubernetes, options.name, oldDeployments, twinDeployments, network);
     }
 
     @expose
@@ -233,9 +164,9 @@ class K8s extends BaseModule {
         if (!this.exists(options.deployment_name)) {
             throw Error(`There is no k8s deployment with name: ${options.deployment_name}`);
         }
-        const deploymentObjs = await this._get(options.deployment_name);
+        const oldDeployments = await this._get(options.deployment_name);
         const kubernetes = new Kubernetes();
-        const masterWorkloads = this._getMastersWorkload(deploymentObjs);
+        const masterWorkloads = this._getMastersWorkload(oldDeployments);
         if (masterWorkloads.length === 0) {
             throw Error("Couldn't get master node");
         }
@@ -259,33 +190,7 @@ class K8s extends BaseModule {
             masterWorkload.description,
         );
 
-        // twindeployments can be 2 deployments if there is access node deployment done,
-        // but as there is a deployment already so the access node deployment already done
-        // then we need only the machine deployment.
-        // but it may have a network update
-        const finalTwinDeployments = twinDeployments.filter(d => d.operation === Operations.update);
-        const twinDeployment = twinDeployments.pop();
-        const deploymentFactory = new DeploymentFactory();
-        const contract_id = this._getContractIdFromNodeId(options.deployment_name, options.node_id);
-        if (contract_id) {
-            for (const deploymentObj of deploymentObjs) {
-                const oldDeployment = deploymentFactory.fromObj(deploymentObj);
-                if (oldDeployment.contract_id !== contract_id) {
-                    continue;
-                }
-                const newDeployment = deploymentFactory.fromObj(deploymentObj);
-                newDeployment.workloads = newDeployment.workloads.concat(twinDeployment.deployment.workloads);
-                const deployment = await deploymentFactory.UpdateDeployment(oldDeployment, newDeployment, network);
-                twinDeployment.deployment = deployment;
-                twinDeployment.operation = Operations.update;
-                break;
-            }
-        }
-        finalTwinDeployments.push(twinDeployment);
-        const twinDeploymentHandler = new TwinDeploymentHandler();
-        const contracts = await twinDeploymentHandler.handle(finalTwinDeployments);
-        this.save(options.deployment_name, contracts);
-        return { contracts: contracts };
+        return await this._add(options.deployment_name, options.node_id, oldDeployments, twinDeployments, network);
     }
 
     @expose
@@ -294,17 +199,7 @@ class K8s extends BaseModule {
             throw Error(`There is no k8s deployment with name: ${options.deployment_name}`);
         }
         const kubernetes = new Kubernetes();
-        const twinDeploymentHandler = new TwinDeploymentHandler();
-        const deployments = await this._get(options.deployment_name);
-        for (const deployment of deployments) {
-            const twinDeployments = await kubernetes.deleteNode(deployment, [options.name]);
-            const contracts = await twinDeploymentHandler.handle(twinDeployments);
-            if (contracts["deleted"].length > 0 || contracts["updated"].length > 0) {
-                this.save(options.deployment_name, contracts);
-                return contracts;
-            }
-        }
-        throw Error(`Worker node with name ${options.name} is not found`);
+        return await this._deleteInstance(kubernetes, options.deployment_name, options.name);
     }
 }
 
