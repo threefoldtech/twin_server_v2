@@ -106,7 +106,13 @@ class BaseModule {
         return deployments;
     }
 
-    async _update(module: Kubernetes | Zdb, name: string, oldDeployments: Deployment[], twinDeployments: TwinDeployment[], network: Network = null) {
+    async _update(
+        module: Kubernetes | Zdb,
+        name: string,
+        oldDeployments: Deployment[],
+        twinDeployments: TwinDeployment[],
+        network: Network = null,
+    ) {
         const deploymentFactory = new DeploymentFactory();
         const twinDeploymentHandler = new TwinDeploymentHandler();
         let finalTwinDeployments = [];
@@ -118,7 +124,7 @@ class BaseModule {
         );
 
         for (let oldDeployment of oldDeployments) {
-            oldDeployment = deploymentFactory.fromObj(oldDeployments);
+            oldDeployment = deploymentFactory.fromObj(oldDeployment);
             const node_id = this._getNodeIdFromContractId(name, oldDeployment.contract_id);
             let deploymentFound = false;
             for (const twinDeployment of twinDeployments) {
@@ -150,7 +156,13 @@ class BaseModule {
         return { contracts: contracts };
     }
 
-    async _add(deployment_name: string, node_id: number, oldDeployments: Deployment[], twinDeployments: TwinDeployment[], network: Network = null) {
+    async _add(
+        deployment_name: string,
+        node_id: number,
+        oldDeployments: Deployment[],
+        twinDeployments: TwinDeployment[],
+        network: Network = null,
+    ) {
         const finalTwinDeployments = twinDeployments.filter(d => d.operation === Operations.update);
         const twinDeployment = twinDeployments.pop();
         const deploymentFactory = new DeploymentFactory();
@@ -189,7 +201,6 @@ class BaseModule {
         }
         throw Error(`instance with name ${name} is not found`);
     }
-
 
     async _delete(name: string) {
         const path = PATH.join(appPath, this.fileName);

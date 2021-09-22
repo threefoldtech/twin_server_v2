@@ -63,7 +63,7 @@ class Zdbs extends BaseModule {
             throw Error(`There is no zdb deployment with name: ${options.name}`);
         }
         const oldDeployments = await this._get(options.name);
-        let twinDeployments = this._createDeployment(options);
+        const twinDeployments = this._createDeployment(options);
         const zdb = new Zdb();
         return await this._update(zdb, options.name, oldDeployments, twinDeployments);
     }

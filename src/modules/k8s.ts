@@ -37,7 +37,11 @@ class K8s extends BaseModule {
         return ips;
     }
 
-    async _createDeployment(options: K8S, network: Network, masterIps: string[] = []): Promise<[TwinDeployment[], string]> {
+    async _createDeployment(
+        options: K8S,
+        network: Network,
+        masterIps: string[] = [],
+    ): Promise<[TwinDeployment[], string]> {
         let deployments = [];
         let wireguardConfig = "";
         const kubernetes = new Kubernetes();
@@ -154,8 +158,7 @@ class K8s extends BaseModule {
 
         //TODO: check that the master nodes are not changed
         const kubernetes = new Kubernetes();
-
-        let [twinDeployments, _] = await this._createDeployment(options, network, masterIps);
+        const [twinDeployments, _] = await this._createDeployment(options, network, masterIps);
         return await this._update(kubernetes, options.name, oldDeployments, twinDeployments, network);
     }
 
