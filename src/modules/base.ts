@@ -15,7 +15,7 @@ import { Network } from "../primitives/network";
 class BaseModule {
     fileName = "";
 
-    save(name: string, contracts: Record<string, unknown[]>, wgConfig: string = "", action: string = "add") {
+    save(name: string, contracts: Record<string, unknown[]>, wgConfig = "", action = "add") {
         const path = PATH.join(appPath, this.fileName);
         const data = loadFromFile(path);
         let deploymentData = { contracts: [], wireguard_config: "" };

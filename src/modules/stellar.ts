@@ -6,10 +6,10 @@ import { WalletImport, WalletBalanceByName, WalletBalanceByAddress, WalletTransf
 import { expose } from "../helpers/index";
 import { loadFromFile, updatejson, appPath } from "../helpers/jsonfs";
 
-const server = new StellarSdk.Server('https://horizon.stellar.org');
+const server = new StellarSdk.Server("https://horizon.stellar.org");
 
 class Stellar {
-    fileName: string = "stellar.json";
+    fileName = "stellar.json";
 
     save(name: string, secret: string) {
         const path = PATH.join(appPath, this.fileName);
@@ -53,8 +53,7 @@ class Stellar {
         this.delete(deleteWallet);
         try {
             return await this.import(options);
-        }
-        catch (e) {
+        } catch (e) {
             const oldSecret = options.secret;
             options.secret = secret;
             await this.import(options);
@@ -90,12 +89,12 @@ class Stellar {
     @expose
     async balance_by_address(options: WalletBalanceByAddress) {
         const account = await server.loadAccount(options.address);
-        let balances = [];
+        const balances = [];
         for (const balance of account.balances) {
             if (!balance.asset_code) {
                 balance.asset_code = "XLM";
             }
-            balances.push({ "asset": balance.asset_code, "amount": balance.balance });
+            balances.push({ asset: balance.asset_code, amount: balance.balance });
         }
         return balances;
     }
@@ -120,31 +119,32 @@ class Stellar {
             throw Error(`couldn't find this asset ${options.asset} on source wallet`);
         }
         const asset = new StellarSdk.Asset(options.asset, issuer);
-        let fee = await server.fetchBaseFee();
+        const fee = await server.fetchBaseFee();
         const memo = StellarSdk.Memo.text(options.memo);
         const transaction = new StellarSdk.TransactionBuilder(sourceAccount, {
             fee: fee,
             networkPassphrase: StellarSdk.Networks.PUBLIC,
-            memo: memo
+            memo: memo,
         })
-            .addOperation(StellarSdk.Operation.payment({
-                destination: options.target_address,
-                asset: asset,
-                amount: options.amount.toString()
-
-            }))
+            .addOperation(
+                StellarSdk.Operation.payment({
+                    destination: options.target_address,
+                    asset: asset,
+                    amount: options.amount.toString(),
+                }),
+            )
             .setTimeout(30)
             .build();
 
         transaction.sign(sourceKeypair);
-        console.log(transaction.toEnvelope().toXDR('base64'));
+        console.log(transaction.toEnvelope().toXDR("base64"));
         try {
             const transactionResult = await server.submitTransaction(transaction);
             console.log(JSON.stringify(transactionResult, null, 2));
             console.log("Success! View the transaction at: ", transactionResult._links.transaction.href);
             return transactionResult._links.transaction.href;
         } catch (e) {
-            console.log('An error has occured:', e);
+            console.log("An error has occured:", e);
             throw Error(e);
         }
     }

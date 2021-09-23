@@ -77,14 +77,12 @@ async function getNodeIdFromContractId(contractId: number): Promise<number> {
     try {
         const contract = await tfclient.contracts.get(contractId);
         nodeId = contract["node_id"];
-    }
-    catch (err) {
+    } catch (err) {
         throw Error(err);
-    }
-    finally {
+    } finally {
         tfclient.disconnect();
     }
     return nodeId;
-};
+}
 
 export { getNodeTwinId, getAccessNodes, getNodeIdFromContractId };

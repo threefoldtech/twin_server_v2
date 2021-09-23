@@ -133,7 +133,9 @@ class TwinDeploymentHandler {
         const promises = [];
         for (const twinDeployment of twinDeployments) {
             if ([Operations.deploy, Operations.update].includes(twinDeployment.operation)) {
-                console.log(`Waiting for deployment with contract_id: ${twinDeployment.deployment.contract_id} to be ready`);
+                console.log(
+                    `Waiting for deployment with contract_id: ${twinDeployment.deployment.contract_id} to be ready`,
+                );
                 promises.push(this.waitForDeployment(twinDeployment, timeout));
             }
         }
@@ -280,7 +282,9 @@ class TwinDeploymentHandler {
                 if (twinDeployment.network) {
                     await twinDeployment.network.save(contract["contract_id"], contract["node_id"]);
                 }
-                console.log(`A deployment created on node_id: ${twinDeployment.nodeId} with contract_id: ${contract["contract_id"]}`);
+                console.log(
+                    `A deployment created on node_id: ${twinDeployment.nodeId} with contract_id: ${contract["contract_id"]}`,
+                );
             } else if (twinDeployment.operation === Operations.update) {
                 twinDeployment.deployment.sign(config.twin_id, config.mnemonic);
                 console.log(`Updating deployment with contract_id: ${twinDeployment.deployment.contract_id}`);
