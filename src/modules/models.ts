@@ -1,4 +1,4 @@
-import { Deployment, ZdbModes, DeviceTypes } from "grid3_client"
+import { Deployment, ZdbModes, DeviceTypes } from "grid3_client";
 
 class Disks {
     name: string;
@@ -23,12 +23,12 @@ class Machines {
     entrypoint: string;
     metadata: string;
     description: string;
-    env: Object
+    env: Object;
 }
 
 class KubernetesNode {
     name: string;
-    node_id: number
+    node_id: number;
     cpu: number;
     memory: number;
     disk_size: number;
@@ -37,54 +37,54 @@ class KubernetesNode {
 }
 
 class K8S {
-    name: string
-    secret: string
-    network: Network
-    masters: KubernetesNode[]
-    workers: KubernetesNode[]
+    name: string;
+    secret: string;
+    network: Network;
+    masters: KubernetesNode[];
+    workers: KubernetesNode[];
     metadata: string;
-    description: string
-    ssh_key: string
+    description: string;
+    ssh_key: string;
 }
 
 class AddWorker extends KubernetesNode {
-    deployment_name: string
+    deployment_name: string;
 }
 
 class DeleteWorker {
-    deployment_name: string
-    name: string
+    deployment_name: string;
+    name: string;
 }
 
 class ZDB {
     name: string;
-    node_id: number
-    mode: ZdbModes
-    disk_size: number
-    disk_type: DeviceTypes
-    public: boolean
-    namespace: string
-    password: string
+    node_id: number;
+    mode: ZdbModes;
+    disk_size: number;
+    disk_type: DeviceTypes;
+    public: boolean;
+    namespace: string;
+    password: string;
 }
 
 class ZDBS {
-    name: string
+    name: string;
     zdbs: ZDB[];
-    metadata: string
-    description: string
+    metadata: string;
+    description: string;
 }
 
 class AddZDB extends ZDB {
-    deployment_name: string
+    deployment_name: string;
 }
 
-class DeleteZDB extends DeleteWorker { }
+class DeleteZDB extends DeleteWorker {}
 
 class ContractCreate {
     node_id: number;
     hash: string;
     data: string;
-    public_ip: number
+    public_ip: number;
 }
 
 class ContractGet {
@@ -98,7 +98,7 @@ class ContractUpdate {
 }
 
 class ContractCancel {
-    id: number
+    id: number;
 }
 
 class TwinCreate {
@@ -114,7 +114,32 @@ class TwinList {
 }
 
 class TwinDelete {
-    id: number
+    id: number;
+}
+
+class WalletImport {
+    name: string;
+    secret: string;
+}
+
+class WalletBalanceByName {
+    name: string;
+}
+
+class WalletBalanceByAddress {
+    address: string;
+}
+
+class WalletTransfer {
+    name: string;
+    target_address: string;
+    amount: number;
+    asset: string;
+    memo: string;
+}
+
+class DeleteWallet {
+    name: string;
 }
 
 // class ZosDeployment extends Deployment {
@@ -137,5 +162,10 @@ export {
     TwinCreate,
     TwinGet,
     TwinList,
-    TwinDelete
-}
+    TwinDelete,
+    WalletImport,
+    WalletBalanceByName,
+    WalletBalanceByAddress,
+    WalletTransfer,
+    DeleteWallet
+};
