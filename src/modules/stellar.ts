@@ -71,6 +71,9 @@ class Stellar {
     @expose
     async transfer(options: WalletTransfer) {
         const secret = this.getWalletSecret(options.name);
+        if (!secret) {
+            throw Error(`could not find a wallet with name ${options.name}`);
+        }
         const sourceKeypair = StellarSdk.Keypair.fromSecret(secret);
         const sourcePublicKey = sourceKeypair.publicKey();
         const sourceAccount = await server.loadAccount(sourcePublicKey);
