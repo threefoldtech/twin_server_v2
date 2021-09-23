@@ -138,9 +138,11 @@ class WalletTransfer {
     memo: string;
 }
 
-class DeleteWallet {
+class WalletDelete {
     name: string;
 }
+
+class WalletGet extends WalletDelete {}
 
 // class ZosDeployment extends Deployment {
 //     node_id: number;
@@ -167,5 +169,6 @@ export {
     WalletBalanceByName,
     WalletBalanceByAddress,
     WalletTransfer,
-    DeleteWallet
+    WalletDelete,
+    WalletGet
 };

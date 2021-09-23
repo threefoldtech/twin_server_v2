@@ -2,7 +2,7 @@ import * as PATH from "path";
 
 import { default as StellarSdk } from "stellar-sdk";
 
-import { WalletImport, WalletBalanceByName, WalletBalanceByAddress, WalletTransfer, DeleteWallet } from ".";
+import { WalletImport, WalletBalanceByName, WalletBalanceByAddress, WalletTransfer, WalletGet, WalletDelete } from ".";
 import { expose } from "../helpers/index";
 import { loadFromFile, updatejson, appPath } from "../helpers/jsonfs";
 
@@ -20,7 +20,7 @@ class Stellar {
         updatejson(path, name, secret);
     }
 
-    getWalletSecret(name) {
+    getWalletSecret(name: string) {
         const path = PATH.join(appPath, this.fileName);
         const data = loadFromFile(path);
         return data[name];
@@ -30,9 +30,41 @@ class Stellar {
     async import(options: WalletImport) {
         const walletKeypair = StellarSdk.Keypair.fromSecret(options.secret);
         const walletPublicKey = walletKeypair.publicKey();
-        const account = await server.loadAccount(walletPublicKey);
+        await server.loadAccount(walletPublicKey);
         this.save(options.name, options.secret);
         return walletPublicKey;
+    }
+
+    @expose
+    get(options: WalletGet) {
+        const secret = this.getWalletSecret(options.name);
+        const walletKeypair = StellarSdk.Keypair.fromSecret(secret);
+        return walletKeypair.publicKey(); // TODO: return wallet secret after adding security context on the server calls
+    }
+
+    @expose
+    async update(options: WalletImport) {
+        if (!this.exist(options.name)) {
+            throw Error(`Couldn't find a wallet with name ${options.name} to update`);
+        }
+        const secret = this.getWalletSecret(options.name);
+        const deleteWallet = new WalletDelete();
+        deleteWallet.name = options.name;
+        this.delete(deleteWallet);
+        try {
+            return await this.import(options);
+        }
+        catch (e) {
+            const oldSecret = options.secret;
+            options.secret = secret;
+            await this.import(options);
+            throw Error(`Couldn't import wallet with secret ${oldSecret} due to: ${e}`);
+        }
+    }
+
+    @expose
+    exist(name: string) {
+        return this.list().includes(name);
     }
 
     @expose
@@ -118,7 +150,7 @@ class Stellar {
     }
 
     @expose
-    delete(options: DeleteWallet) {
+    delete(options: WalletDelete) {
         const path = PATH.join(appPath, this.fileName);
         const data = loadFromFile(path);
         if (!data[options.name]) {
