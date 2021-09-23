@@ -159,7 +159,7 @@ class WalletDelete {
 class WalletGet extends WalletDelete {}
 
 
-class DeployGatewayFQDN{
+class DeployGatewayFQDN {
     name: string;
     node_id: number;
     fqdn: string;
@@ -167,16 +167,16 @@ class DeployGatewayFQDN{
     backends: string[];
 }
 
-class DeployGatewayName{
+class DeployGatewayName {
     name: string;
     node_id: number;
     tls_passthrough: boolean;
     backends: string[];
 }
-// class ZosDeployment extends Deployment {
-//     node_id: number;
-//     hash: string;
-// }
+
+class ZOS extends Deployment {
+    node_id: number;
+}
 
 export {
     Disks,
@@ -208,5 +208,6 @@ export {
     WalletDelete,
     WalletGet,
     DeployGatewayFQDN,
-    DeployGatewayName
+    DeployGatewayName,
+    ZOS
 };
