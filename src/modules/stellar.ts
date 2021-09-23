@@ -44,7 +44,7 @@ class Stellar {
 
     @expose
     async update(options: WalletImport) {
-        if (!this.exist(options.name)) {
+        if (!this.exist(options)) {
             throw Error(`Couldn't find a wallet with name ${options.name} to update`);
         }
         const secret = this.getWalletSecret(options.name);
@@ -63,8 +63,8 @@ class Stellar {
     }
 
     @expose
-    exist(name: string) {
-        return this.list().includes(name);
+    exist(options: WalletGet) {
+        return this.list().includes(options.name);
     }
 
     @expose
