@@ -51,6 +51,7 @@ class Network {
         if (!this.nodeExists(node_id)) {
             throw Error(`Node ${node_id} does not exist in the network. Please add it first`);
         }
+        console.log(`Adding access to node ${node_id}`);
         const accessNodes = await getAccessNodes();
         if (Object.keys(accessNodes).includes(node_id.toString())) {
             if (ipv4 && !accessNodes[node_id]["ipv4"]) {
@@ -87,6 +88,7 @@ class Network {
         if (this.nodeExists(node_id)) {
             return;
         }
+        console.log(`Adding node ${node_id} to network ${this.name}`);
         const keypair = await this.generateWireguardKeypair();
         let znet = new Znet();
         znet.subnet = this.getFreeSubnet();
@@ -119,6 +121,7 @@ class Network {
         if (!this.exists()) {
             return 0;
         }
+        console.log(`Deleting node ${node_id}`);
         let contract_id = 0;
         const nodes = [];
         for (const node of this.nodes) {
@@ -132,9 +135,7 @@ class Network {
         this.networks = this.networks.filter(net => net["node_id"] !== node_id);
         const net = this.networks.filter(net => net["node_id"] === node_id);
         this.reservedSubnets = this.reservedSubnets.filter(subnet => subnet === net[0].subnet);
-        // if (nodes.length === 0) {
-        //     this.delete()
-        // }
+
         return contract_id;
     }
 
@@ -169,6 +170,7 @@ class Network {
         if (!Object.keys(networks).includes(this.name)) {
             return;
         }
+        console.log(`Loading network ${this.name}`);
         const network = networks[this.name];
         if (network.ip_range !== this.ipRange) {
             throw Error(`The same network name ${this.name} with different ip range is already exist`);

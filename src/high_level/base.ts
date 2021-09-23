@@ -3,6 +3,7 @@ import { Addr } from "netaddr";
 
 import { DeploymentFactory } from "../primitives/deployment";
 import { Network } from "../primitives/network";
+import { getNodeIdFromContractId } from "../primitives/nodes";
 import { TwinDeployment, Operations } from "../high_level/models";
 import { default as config } from "../../config.json";
 
@@ -11,7 +12,7 @@ class HighLevelBase {
         deployment: Deployment,
         names: string[],
         types: WorkloadTypes[] = [WorkloadTypes.ipv4, WorkloadTypes.zmachine, WorkloadTypes.zmount, WorkloadTypes.zdb],
-    ) {
+    ): [Workload[], Workload[]] {
         let deletedMachineWorkloads = [];
         if (names.length === 0) {
             deletedMachineWorkloads = deployment.workloads.filter(item => item.type === WorkloadTypes.zmachine);
@@ -53,7 +54,7 @@ class HighLevelBase {
         remainingWorkloads: Workload[],
         deletedMachineWorkloads: Workload[],
         node_id: number,
-    ) {
+    ): Promise<[TwinDeployment[], Workload[], number[], string[]]> {
         const twinDeployments = [];
         const deletedNodes = [];
         const deletedIps = [];
@@ -127,14 +128,10 @@ class HighLevelBase {
         if (types.includes(WorkloadTypes.network)) {
             throw Error("network can't be deleted");
         }
-
-        const tfclient = new TFClient(config.url, config.mnemonic);
-        await tfclient.connect();
+        const node_id = await getNodeIdFromContractId(deployment.contract_id);
         let twinDeployments = [];
-
         const deploymentFactory = new DeploymentFactory();
-        const contract = await tfclient.contracts.get(deployment.contract_id);
-        const node_id = contract["node_id"];
+
         const numberOfWorkloads = deployment.workloads.length;
         deployment = deploymentFactory.fromObj(deployment);
         const filteredWorkloads = this._filterWorkloads(deployment, names, types);
@@ -157,7 +154,7 @@ class HighLevelBase {
             let network = null;
             for (const workload of remainingWorkloads) {
                 if (workload.type === WorkloadTypes.network) {
-                    network = new Network(workload.name, workload.data.ip_range);
+                    network = new Network(workload.name, workload.data["ip_range"]);
                     await network.load(true);
                     break;
                 }

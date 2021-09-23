@@ -15,7 +15,7 @@ import { Network } from "../primitives/network";
 class BaseModule {
     fileName = "";
 
-    save(name: string, contracts: Record<string, unknown[]>, wgConfig = "") {
+    save(name: string, contracts: Record<string, unknown[]>, wgConfig: string = "", action: string = "add") {
         const path = PATH.join(appPath, this.fileName);
         const data = loadFromFile(path);
         let deploymentData = { contracts: [], wireguard_config: "" };
@@ -30,6 +30,13 @@ class BaseModule {
             deploymentData.contracts = deploymentData.contracts.filter(
                 c => c["contract_id"] !== contract["contract_id"],
             );
+        }
+        if (action === "delete") {
+            for (const contract of contracts["updated"]) {
+                deploymentData.contracts = deploymentData.contracts.filter(
+                    c => c["contract_id"] !== contract["contract_id"],
+                );
+            }
         }
         if (wgConfig) {
             deploymentData["wireguard_config"] = wgConfig;
@@ -195,7 +202,7 @@ class BaseModule {
             const twinDeployments = await module.delete(deployment, [name]);
             const contracts = await twinDeploymentHandler.handle(twinDeployments);
             if (contracts["deleted"].length > 0 || contracts["updated"].length > 0) {
-                this.save(deployment_name, contracts);
+                this.save(deployment_name, contracts, "", "delete");
                 return contracts;
             }
         }

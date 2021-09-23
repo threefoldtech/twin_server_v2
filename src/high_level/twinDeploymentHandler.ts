@@ -19,7 +19,7 @@ class TwinDeploymentHandler {
         if (contract instanceof (Error)) {
             throw Error(`Failed to create contract ${contract}`);
         }
-        console.log(contract);
+        console.log(`Contract with id: ${contract["contract_id"]} has been created`);
         deployment.contract_id = contract["contract_id"];
         const payload = JSON.stringify(deployment);
         const node_twin_id = await getNodeTwinId(node_id);
@@ -46,7 +46,7 @@ class TwinDeploymentHandler {
         if (contract instanceof (Error)) {
             throw Error(`Failed to update contract ${contract}`);
         }
-        console.log(contract);
+        console.log(`Contract with id: ${contract["contract_id"]} has been updated`);
 
         const payload = JSON.stringify(deployment);
         const node_twin_id = await getNodeTwinId(contract["node_id"]);
@@ -133,6 +133,7 @@ class TwinDeploymentHandler {
         const promises = [];
         for (const twinDeployment of twinDeployments) {
             if ([Operations.deploy, Operations.update].includes(twinDeployment.operation)) {
+                console.log(`Waiting for deployment with contract_id: ${twinDeployment.deployment.contract_id} to be ready`);
                 promises.push(this.waitForDeployment(twinDeployment, timeout));
             }
         }
@@ -253,6 +254,7 @@ class TwinDeploymentHandler {
     }
 
     async handle(twinDeployments: TwinDeployment[]) {
+        console.log("Merging workloads");
         twinDeployments = this.merge(twinDeployments);
         const contracts = { created: [], updated: [], deleted: [] };
         for (const twinDeployment of twinDeployments) {
@@ -261,11 +263,13 @@ class TwinDeploymentHandler {
                     break;
                 }
                 if (workload.type === WorkloadTypes.network) {
+                    console.log(`Updating network workload with name: ${workload.name}`);
                     workload["data"] = twinDeployment.network.updateNetwork(workload.data);
                 }
             }
             if (twinDeployment.operation === Operations.deploy) {
                 twinDeployment.deployment.sign(config.twin_id, config.mnemonic);
+                console.log(`Deploying on node_id: ${twinDeployment.nodeId}`);
                 const contract = await this.deploy(
                     twinDeployment.deployment,
                     twinDeployment.nodeId,
@@ -276,19 +280,24 @@ class TwinDeploymentHandler {
                 if (twinDeployment.network) {
                     await twinDeployment.network.save(contract["contract_id"], contract["node_id"]);
                 }
+                console.log(`A deployment created on node_id: ${twinDeployment.nodeId} with contract_id: ${contract["contract_id"]}`);
             } else if (twinDeployment.operation === Operations.update) {
                 twinDeployment.deployment.sign(config.twin_id, config.mnemonic);
+                console.log(`Updating deployment with contract_id: ${twinDeployment.deployment.contract_id}`);
                 const contract = await this.update(twinDeployment.deployment, twinDeployment.publicIps);
                 contracts.updated.push(contract);
                 if (twinDeployment.network) {
                     await twinDeployment.network.save(contract["contract_id"], contract["node_id"]);
                 }
+                console.log(`Deployment updated with contract_id: ${contract["contract_id"]}`);
             } else if (twinDeployment.operation === Operations.delete) {
+                console.log(`Deleting deployment with contract_id: ${twinDeployment.deployment.contract_id}`);
                 const contract = await this.delete(twinDeployment.deployment.contract_id);
                 contracts.deleted.push({ contract_id: contract });
                 if (twinDeployment.network) {
                     await twinDeployment.network.save();
                 }
+                console.log(`Deployment deleted with contract_id: ${contract["contract_id"]}`);
             }
         }
         await this.waitForDeployments(twinDeployments);

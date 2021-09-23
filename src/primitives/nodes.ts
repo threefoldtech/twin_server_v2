@@ -1,7 +1,9 @@
 import { default as isIpPrivate } from "private-ip";
 import { default as IP } from "ip";
+import { TFClient } from "grid3_client";
 
 import { send } from "../helpers/requests";
+import { default as config } from "../../config.json";
 
 const graphqlURL = "https://tfchain.dev.threefold.io/graphql/graphql";
 
@@ -68,4 +70,21 @@ async function getAccessNodes(): Promise<Record<string, unknown>> {
     return accessNodes;
 }
 
-export { getNodeTwinId, getAccessNodes };
+async function getNodeIdFromContractId(contractId: number): Promise<number> {
+    const tfclient = new TFClient(config.url, config.mnemonic);
+    await tfclient.connect();
+    let nodeId;
+    try {
+        const contract = await tfclient.contracts.get(contractId);
+        nodeId = contract["node_id"];
+    }
+    catch (err) {
+        throw Error(err);
+    }
+    finally {
+        tfclient.disconnect();
+    }
+    return nodeId;
+};
+
+export { getNodeTwinId, getAccessNodes, getNodeIdFromContractId };
