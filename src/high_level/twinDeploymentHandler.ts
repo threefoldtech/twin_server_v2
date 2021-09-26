@@ -283,7 +283,7 @@ class TwinDeploymentHandler {
                     await twinDeployment.network.save(contract["contract_id"], contract["node_id"]);
                 }
                 console.log(
-                    `A deployment created on node_id: ${twinDeployment.nodeId} with contract_id: ${contract["contract_id"]}`,
+                    `A deployment has been created on node_id: ${twinDeployment.nodeId} with contract_id: ${contract["contract_id"]}`,
                 );
             } else if (twinDeployment.operation === Operations.update) {
                 twinDeployment.deployment.sign(config.twin_id, config.mnemonic);
@@ -293,7 +293,7 @@ class TwinDeploymentHandler {
                 if (twinDeployment.network) {
                     await twinDeployment.network.save(contract["contract_id"], contract["node_id"]);
                 }
-                console.log(`Deployment updated with contract_id: ${contract["contract_id"]}`);
+                console.log(`Deployment has been updated with contract_id: ${contract["contract_id"]}`);
             } else if (twinDeployment.operation === Operations.delete) {
                 console.log(`Deleting deployment with contract_id: ${twinDeployment.deployment.contract_id}`);
                 const contract = await this.delete(twinDeployment.deployment.contract_id);
@@ -301,7 +301,7 @@ class TwinDeploymentHandler {
                 if (twinDeployment.network) {
                     await twinDeployment.network.save();
                 }
-                console.log(`Deployment deleted with contract_id: ${contract["contract_id"]}`);
+                console.log(`Deployment has been deleted with contract_id: ${contract["contract_id"]}`);
             }
         }
         await this.waitForDeployments(twinDeployments);

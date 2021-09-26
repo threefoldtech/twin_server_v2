@@ -65,7 +65,9 @@ class HighLevelBase {
             const network = new Network(networkName, networkIpRange);
             await network.load(true);
 
-            const deletedIp = network.deleteReservedIp(node_id, workload.data["network"].interfaces[0].ip);
+            const machineIp = workload.data["network"].interfaces[0].ip;
+            console.log(`Deleting ip: ${machineIp} from node: ${node_id}, network ${network.name}`);
+            const deletedIp = network.deleteReservedIp(node_id, machineIp);
             if (network.getNodeReservedIps(node_id).length !== 0) {
                 deletedIps.push(deletedIp);
                 continue;

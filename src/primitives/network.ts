@@ -121,7 +121,7 @@ class Network {
         if (!this.exists()) {
             return 0;
         }
-        console.log(`Deleting node ${node_id}`);
+        console.log(`Deleting node ${node_id} from network ${this.name}`);
         let contract_id = 0;
         const nodes = [];
         for (const node of this.nodes) {
@@ -507,6 +507,7 @@ PersistentKeepalive = 25\nEndpoint = ${endpoint}`;
     }
 
     delete(): void {
+        console.log(`Deleting network ${this.name}`);
         const networks = this.getNetworks();
         delete networks[this.name];
         const path = PATH.join(appPath, "network.json");
@@ -514,6 +515,7 @@ PersistentKeepalive = 25\nEndpoint = ${endpoint}`;
     }
 
     async generatePeers(): Promise<void> {
+        console.log(`Generating peers for network ${this.name}`);
         for (const n of this.networks) {
             n.peers = [];
             for (const net of this.networks) {

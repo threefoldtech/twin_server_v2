@@ -106,6 +106,7 @@ class VirtualMachine extends HighLevelBase {
         // check the planetary
         const vm = new VM();
         const machine_ip = network.getFreeIP(nodeId);
+        console.log(`Creating a vm on node: ${nodeId}, network: ${network.name} with private ip: ${machine_ip}`);
         workloads.push(
             vm.create(
                 name,
