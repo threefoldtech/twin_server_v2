@@ -14,7 +14,6 @@
         "request": "^2.88.2",
         "request-promise-native": "^1.0.9",
         "stellar-sdk": "^8.3.0",
-        "tfgrid-api-client": "^0.1.1",
         "wireguard-wrapper": "^1.0.3"
     },
     "main": "dist/index.js",
