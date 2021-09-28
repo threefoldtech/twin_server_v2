@@ -80,18 +80,21 @@ class AddZDB extends ZDB {
 
 class DeleteZDB extends DeleteWorker {}
 
-class ContractCreate {
+class NodeContractCreate {
     node_id: number;
     hash: string;
     data: string;
     public_ip: number;
 }
 
+class NameContractCreate {
+    name: string;
+}
 class ContractGet {
     id: number;
 }
 
-class ContractUpdate {
+class NodeContractUpdate {
     id: number;
     hash: string;
     data: string;
@@ -157,9 +160,10 @@ export {
     ZDBS,
     AddZDB,
     DeleteZDB,
-    ContractCreate,
+    NodeContractCreate,
+    NameContractCreate,
     ContractGet,
-    ContractUpdate,
+    NodeContractUpdate,
     ContractCancel,
     TwinCreate,
     TwinGet,

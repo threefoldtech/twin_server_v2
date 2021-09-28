@@ -38,11 +38,17 @@ Module should be:
 
 ### Contracts
 
-- **Create**
+- **Create Node**
 
-   cmd: `twinserver.contracts.create`
+   cmd: `twinserver.contracts.create_node`
 
    payload: `'{"node_id": "<zos node id>", "hash": "<deployment challenge hash>", "data": "<deployment data>", "public_ip": <number of public IPs>}'`
+
+- **Create Name**
+
+   cmd: `twinserver.contracts.create_name`
+
+   payload: `'{"name": "<contract name>"}'`
 
 - **Get**
 
@@ -50,9 +56,9 @@ Module should be:
 
    payload: `'{"id": <contract id>}'`
 
-- **Update**
+- **Update Node**
 
-    cmd: `twinserver.contracts.update`
+    cmd: `twinserver.contracts.update_node`
 
     payload: `'{"id": <contract id>, "hash": "<deployment challenge hash>", "data": "<deployment data>"}'`
 
