@@ -6,3 +6,4 @@ export * from "./zos";
 export * from "./models";
 export * from "./zdb";
 export * from "./stellar";
+export * from "./gateway";
