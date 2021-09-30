@@ -3,7 +3,8 @@ const IP = require("ip")
 
 import { send } from "../helpers/requests"
 
-const graphqlURL = "https://explorer.devnet.grid.tf/graphql/"
+// Todo:: Must be configurable
+const graphqlURL = "https://tfchain.dev.threefold.io/graphql/"
 
 
 async function getNodeTwinId(node_id: number) {
