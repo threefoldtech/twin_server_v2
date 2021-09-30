@@ -1,17 +1,31 @@
-import { TFClient, WorkloadTypes, Deployment, MessageBusClient } from "grid3_client"
+import { TFClient, WorkloadTypes, Deployment, MessageBusClient, HTTPMessageBusClient } from "grid3_client"
 
 import { Operations, TwinDeployment } from "./models";
 import { Network, getNodeTwinId } from "../primitives/index";
 import { default as config } from "../../config.json"
 
+const process = require('process');
 
 class TwinDeploymentHandler {
     tfclient: TFClient;
-    rmb: MessageBusClient;
+    rmb: MessageBusClient | HTTPMessageBusClient;
 
     constructor() {
         this.tfclient = new TFClient(config.url, config.mnemonic)
-        this.rmb = new MessageBusClient();
+        // Get rmb proxy from argument
+        let rmb_proxy = ""
+        process.argv.forEach( (val,ind,arr) => {
+            if (val == "--proxy" || val == "-p") {
+              rmb_proxy = arr[ind+1]
+            }
+          });
+        if (rmb_proxy === "") {
+            // Use Normal MessageBusClient
+            this.rmb = new MessageBusClient();
+        }else{
+            // Use rmb proxy client
+            this.rmb = new HTTPMessageBusClient(rmb_proxy);
+        }
     }
 
     async deploy(deployment: Deployment, node_id: number, publicIps: number) {
@@ -26,7 +40,7 @@ class TwinDeploymentHandler {
         const node_twin_id = await getNodeTwinId(node_id)
         try {
             let msg = this.rmb.prepare("zos.deployment.deploy", [node_twin_id], 0, 2);
-            this.rmb.send(msg, payload)
+            msg = this.rmb.send(msg, payload)
             const result = await this.rmb.read(msg)
             if (result[0].err) {
                 throw Error(result[0].err);
@@ -55,7 +69,7 @@ class TwinDeploymentHandler {
         const node_twin_id = await getNodeTwinId(contract["node_id"])
         try {
             let msg = this.rmb.prepare("zos.deployment.update", [node_twin_id], 0, 2);
-            this.rmb.send(msg, payload)
+            msg = this.rmb.send(msg, payload)
             const result = await this.rmb.read(msg)
             if (result[0].err) {
                 throw Error(result[0].err);
@@ -91,7 +105,7 @@ class TwinDeploymentHandler {
         const node_twin_id = await getNodeTwinId(contract["node_id"])
         let msg = this.rmb.prepare("zos.deployment.get", [node_twin_id], 0, 2);
         const payload = { "contract_id": contract_id }
-        this.rmb.send(msg, JSON.stringify(payload))
+        msg = this.rmb.send(msg, JSON.stringify(payload))
         const result = await this.rmb.read(msg)
         if (result[0].err) {
             console.error(`Could not get deployment ${contract_id} due to error: ${result[0].err} `)
