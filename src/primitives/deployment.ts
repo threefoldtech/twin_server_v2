@@ -189,21 +189,11 @@ class DeploymentFactory {
             }else if (workload.type === WorkloadTypes.gatewayfqdnproxy){
                 let fqdngw = new GatewayFQDNProxy()
                 Object.assign(fqdngw, w.data);
-                let backends = []
-                for (let backend of fqdngw.backends){
-                    backends.push(backend);
-                }
-                fqdngw.backends = backends;
                 w.data = fqdngw;
                 workloads.push(w)
             }else if (workload.type === WorkloadTypes.gatewaynameproxy){
                 let namegw = new GatewayNameProxy()
                 Object.assign(namegw, w.data);
-                let backends = []
-                for (let backend of namegw.backends){
-                    backends.push(backend);
-                }
-                namegw.backends = backends;
                 w.data = namegw;
                 workloads.push(w)
             }
