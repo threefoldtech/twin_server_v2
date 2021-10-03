@@ -1,177 +1,177 @@
-import { Deployment, WorkloadTypes, TFClient, Workload } from "grid3_client"
-import { Addr } from "netaddr"
+import { Deployment, WorkloadTypes, TFClient, Workload } from "grid3_client";
+import { Addr } from "netaddr";
 
-import { DeploymentFactory } from "../primitives/deployment"
-import { Network } from "../primitives/network"
-import { TwinDeployment, Operations } from "../high_level/models"
-import { default as config } from "../../config.json"
-
+import { DeploymentFactory } from "../primitives/deployment";
+import { Network } from "../primitives/network";
+import { getNodeIdFromContractId } from "../primitives/nodes";
+import { TwinDeployment, Operations } from "../high_level/models";
+import { default as config } from "../../config.json";
 
 class HighLevelBase {
-
-    _filterWorkloads(deployment: Deployment,
+    _filterWorkloads(
+        deployment: Deployment,
         names: string[],
-        types: WorkloadTypes[] = [WorkloadTypes.ipv4, WorkloadTypes.zmachine, WorkloadTypes.zmount, WorkloadTypes.zdb]
-    ) {
-
-        let deletedMachineWorkloads = []
+        types: WorkloadTypes[] = [WorkloadTypes.ipv4, WorkloadTypes.zmachine, WorkloadTypes.zmount, WorkloadTypes.zdb],
+    ): [Workload[], Workload[]] {
+        let deletedMachineWorkloads = [];
         if (names.length === 0) {
-            deletedMachineWorkloads = deployment.workloads.filter(item => item.type === WorkloadTypes.zmachine)
+            deletedMachineWorkloads = deployment.workloads.filter(item => item.type === WorkloadTypes.zmachine);
         }
 
         if (names.length !== 0 && types.includes(WorkloadTypes.zmachine)) {
-            const Workloads = deployment.workloads.filter(item => item.type === WorkloadTypes.zmachine)
+            const Workloads = deployment.workloads.filter(item => item.type === WorkloadTypes.zmachine);
             for (const workload of Workloads) {
                 if (!names.includes(workload.name)) {
-                    continue
+                    continue;
                 }
                 for (const mount of workload.data["mounts"]) {
-                    names.push(mount.name)
+                    names.push(mount.name);
                 }
-                names.push(workload.data["network"].public_ip)
-                deletedMachineWorkloads.push(workload)
+                names.push(workload.data["network"].public_ip);
+                deletedMachineWorkloads.push(workload);
             }
         }
 
-        let remainingWorkloads = []
+        const remainingWorkloads = [];
         for (const workload of deployment.workloads) {
             if (workload.type === WorkloadTypes.network) {
-                remainingWorkloads.push(workload)
-                continue
+                remainingWorkloads.push(workload);
+                continue;
             }
             if (!types.includes(workload.type)) {
-                remainingWorkloads.push(workload)
-                continue
+                remainingWorkloads.push(workload);
+                continue;
             }
             if (names.length !== 0 && !names.includes(workload.name)) {
-                remainingWorkloads.push(workload)
+                remainingWorkloads.push(workload);
             }
-
         }
-        return [remainingWorkloads, deletedMachineWorkloads]
+        return [remainingWorkloads, deletedMachineWorkloads];
     }
 
-    async _deleteMachineNetwork(deployment: Deployment,
+    async _deleteMachineNetwork(
+        deployment: Deployment,
         remainingWorkloads: Workload[],
         deletedMachineWorkloads: Workload[],
-        node_id: number
-    ) {
-        let twinDeployments = []
-        let deletedNodes = []
-        let deletedIps = []
-        const deploymentFactory = new DeploymentFactory()
+        node_id: number,
+    ): Promise<[TwinDeployment[], Workload[], number[], string[]]> {
+        const twinDeployments = [];
+        const deletedNodes = [];
+        const deletedIps = [];
+        const deploymentFactory = new DeploymentFactory();
         for (const workload of deletedMachineWorkloads) {
-            const networkName = workload.data["network"].interfaces[0].network
-            const networkIpRange = Addr(workload.data["network"].interfaces[0].ip).mask(16).toString()
-            let network = new Network(networkName, networkIpRange)
-            await network.load(true)
+            const networkName = workload.data["network"].interfaces[0].network;
+            const networkIpRange = Addr(workload.data["network"].interfaces[0].ip).mask(16).toString();
+            const network = new Network(networkName, networkIpRange);
+            await network.load(true);
 
-            const deletedIp = network.deleteReservedIp(node_id, workload.data["network"].interfaces[0].ip)
+            const machineIp = workload.data["network"].interfaces[0].ip;
+            console.log(`Deleting ip: ${machineIp} from node: ${node_id}, network ${network.name}`);
+            const deletedIp = network.deleteReservedIp(node_id, machineIp);
             if (network.getNodeReservedIps(node_id).length !== 0) {
-                deletedIps.push(deletedIp)
-                continue
+                deletedIps.push(deletedIp);
+                continue;
             }
             if (network.hasAccessPoint(node_id) && network.nodes.length !== 1) {
-                deletedIps.push(deletedIp)
-                continue
+                deletedIps.push(deletedIp);
+                continue;
             }
 
-            const contract_id = network.deleteNode(node_id)
+            const contract_id = network.deleteNode(node_id);
             if (contract_id === deployment.contract_id) {
                 if (remainingWorkloads.length === 1) {
-                    twinDeployments.push(new TwinDeployment(deployment, Operations.delete, 0, 0, network))
-                    remainingWorkloads = []
+                    twinDeployments.push(new TwinDeployment(deployment, Operations.delete, 0, 0, network));
+                    remainingWorkloads = [];
+                } else {
+                    remainingWorkloads = remainingWorkloads.filter(item => item.name !== networkName);
+                    deletedIps.push(deletedIp);
+                    deletedNodes.push(node_id);
                 }
-                else {
-                    remainingWorkloads = remainingWorkloads.filter(item => item.name !== networkName)
-                    deletedIps.push(deletedIp)
-                    deletedNodes.push(node_id)
-                }
-            }
-            else {
+            } else {
                 // check that the deployment doesn't have another workloads
                 for (let d of network.deployments) {
-                    d = deploymentFactory.fromObj(d)
+                    d = deploymentFactory.fromObj(d);
                     if (d.contract_id !== contract_id) {
-                        continue
+                        continue;
                     }
                     if (d.workloads.length === 1) {
-                        twinDeployments.push(new TwinDeployment(d, Operations.delete, 0, 0, network))
-                    }
-                    else {
-                        d.workloads = d.workloads.filter(item => item.name !== networkName)
-                        twinDeployments.push(new TwinDeployment(d, Operations.update, 0, 0, network))
+                        twinDeployments.push(new TwinDeployment(d, Operations.delete, 0, 0, network));
+                    } else {
+                        d.workloads = d.workloads.filter(item => item.name !== networkName);
+                        twinDeployments.push(new TwinDeployment(d, Operations.update, 0, 0, network));
                     }
                 }
             }
             // in case of the network got more accesspoints on different nodes this won't be valid
             if (network.nodes.length === 1 && network.getNodeReservedIps(network.nodes[0].node_id).length === 0) {
-                const contract_id = network.deleteNode(network.nodes[0].node_id)
+                const contract_id = network.deleteNode(network.nodes[0].node_id);
                 for (let d of network.deployments) {
-                    d = deploymentFactory.fromObj(d)
+                    d = deploymentFactory.fromObj(d);
                     if (d.contract_id !== contract_id) {
-                        continue
+                        continue;
                     }
                     if (d.workloads.length === 1) {
-                        twinDeployments.push(new TwinDeployment(d, Operations.delete, 0, 0, network))
-                    }
-                    else {
-                        d.workloads = d.workloads.filter(item => item.name !== networkName)
-                        twinDeployments.push(new TwinDeployment(d, Operations.update, 0, 0, network))
+                        twinDeployments.push(new TwinDeployment(d, Operations.delete, 0, 0, network));
+                    } else {
+                        d.workloads = d.workloads.filter(item => item.name !== networkName);
+                        twinDeployments.push(new TwinDeployment(d, Operations.update, 0, 0, network));
                     }
                 }
             }
         }
-        return [twinDeployments, remainingWorkloads, deletedNodes, deletedIps]
+        return [twinDeployments, remainingWorkloads, deletedNodes, deletedIps];
     }
 
-    async _delete(deployment: Deployment,
+    async _delete(
+        deployment: Deployment,
         names: string[],
-        types: WorkloadTypes[] = [WorkloadTypes.ipv4, WorkloadTypes.zmachine, WorkloadTypes.zmount, WorkloadTypes.zdb]
+        types: WorkloadTypes[] = [WorkloadTypes.ipv4, WorkloadTypes.zmachine, WorkloadTypes.zmount, WorkloadTypes.zdb],
     ): Promise<TwinDeployment[]> {
-
         if (types.includes(WorkloadTypes.network)) {
-            throw Error("network can't be deleted")
+            throw Error("network can't be deleted");
         }
+        const node_id = await getNodeIdFromContractId(deployment.contract_id);
+        let twinDeployments = [];
+        const deploymentFactory = new DeploymentFactory();
 
-        const tfclient = new TFClient(config.url, config.mnemonic)
-        await tfclient.connect()
-        let twinDeployments = []
-
-        const deploymentFactory = new DeploymentFactory()
-        const contract = await tfclient.contracts.get(deployment.contract_id)
-        const node_id = contract["node_id"]
-        const numberOfWorkloads = deployment.workloads.length
-        deployment = deploymentFactory.fromObj(deployment)
-        let [remainingWorkloads, deletedMachineWorkloads] = this._filterWorkloads(deployment, names, types)
+        const numberOfWorkloads = deployment.workloads.length;
+        deployment = deploymentFactory.fromObj(deployment);
+        const filteredWorkloads = this._filterWorkloads(deployment, names, types);
+        let remainingWorkloads = filteredWorkloads[0];
+        const deletedMachineWorkloads = filteredWorkloads[1];
 
         if (remainingWorkloads.length === 0) {
-            twinDeployments.push(new TwinDeployment(deployment, Operations.delete, 0, 0))
+            twinDeployments.push(new TwinDeployment(deployment, Operations.delete, 0, 0));
         }
-        let [newTwinDeployments, newRemainingWorkloads, deletedNodes, deletedIps] = await this._deleteMachineNetwork(deployment, remainingWorkloads, deletedMachineWorkloads, node_id)
-        twinDeployments = twinDeployments.concat(newTwinDeployments)
-        remainingWorkloads = newRemainingWorkloads
+        const [newTwinDeployments, newRemainingWorkloads, deletedNodes, deletedIps] = await this._deleteMachineNetwork(
+            deployment,
+            remainingWorkloads,
+            deletedMachineWorkloads,
+            node_id,
+        );
+        twinDeployments = twinDeployments.concat(newTwinDeployments);
+        remainingWorkloads = newRemainingWorkloads;
 
         if (remainingWorkloads.length !== 0 && remainingWorkloads.length < numberOfWorkloads) {
-            let network = null
+            let network = null;
             for (const workload of remainingWorkloads) {
                 if (workload.type === WorkloadTypes.network) {
-                    network = new Network(workload.name, workload.data.ip_range)
-                    await network.load(true)
-                    break
+                    network = new Network(workload.name, workload.data["ip_range"]);
+                    await network.load(true);
+                    break;
                 }
             }
             for (const deleteNode of deletedNodes) {
-                network.deleteNode(deleteNode)
+                network.deleteNode(deleteNode);
             }
             for (const deleteIp of deletedIps) {
-                network.deleteReservedIp(node_id, deleteIp)
+                network.deleteReservedIp(node_id, deleteIp);
             }
-            deployment.workloads = remainingWorkloads
-            twinDeployments.push(new TwinDeployment(deployment, Operations.update, 0, 0, network))
+            deployment.workloads = remainingWorkloads;
+            twinDeployments.push(new TwinDeployment(deployment, Operations.update, 0, 0, network));
         }
-        return twinDeployments
+        return twinDeployments;
     }
 }
 
-export { HighLevelBase }
+export { HighLevelBase };

@@ -24,16 +24,15 @@ class Server {
     }
 
     register() {
-        for (let module of Object.getOwnPropertyNames(modules).filter(item => typeof modules[item] === 'function')) {
+        for (const module of Object.getOwnPropertyNames(modules).filter(item => typeof modules[item] === "function")) {
             const obj = new modules[module]();
             const props = Object.getPrototypeOf(obj);
             const methods = Object.getOwnPropertyNames(props);
-            for (let method of methods) {
+            for (const method of methods) {
                 if (isExposed(obj, method) == true) {
                     this.server.withHandler(`twinserver.${module}.${method}`, this.wrapFunc);
                 }
             }
-
         }
     }
     run() {

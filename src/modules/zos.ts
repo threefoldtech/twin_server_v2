@@ -1,20 +1,21 @@
-import { WorkloadTypes } from "grid3_client"
+import { WorkloadTypes } from "grid3_client";
 
-import { expose } from "../helpers/index"
-import { default as config } from "../../config.json"
-import { TwinDeploymentHandler } from "../high_level/twinDeploymentHandler"
-import { DeploymentFactory } from "../primitives/deployment"
+import { ZOS } from "./models";
+import { expose } from "../helpers/index";
+import { default as config } from "../../config.json";
+import { TwinDeploymentHandler } from "../high_level/twinDeploymentHandler";
+import { DeploymentFactory } from "../primitives/deployment";
 
 class Zos {
     @expose
-    async deploy(options) {
+    async deploy(options: ZOS) {
         // get node_id from the deployment
-        const node_id = options.node_id
-        delete options.node_id
+        const node_id = options.node_id;
+        delete options.node_id;
 
-        const deploymentFactory = new DeploymentFactory()
-        let deployment = deploymentFactory.fromObj(options)
-        deployment.sign(deployment.twin_id, config.mnemonic)
+        const deploymentFactory = new DeploymentFactory();
+        const deployment = deploymentFactory.fromObj(options);
+        deployment.sign(deployment.twin_id, config.mnemonic);
 
         let publicIps = 0;
         for (const workload of deployment.workloads) {
@@ -22,9 +23,10 @@ class Zos {
                 publicIps++;
             }
         }
-        let twinDeploymentHandler = new TwinDeploymentHandler()
-        return await twinDeploymentHandler.deploy(deployment, node_id, publicIps)
+        console.log(`Deploying on node_id: ${node_id} with number of public IPs: ${publicIps}`);
+        const twinDeploymentHandler = new TwinDeploymentHandler();
+        return await twinDeploymentHandler.deploy(deployment, node_id, publicIps);
     }
 }
 
-export { Zos as zos }
+export { Zos as zos };

@@ -11,6 +11,10 @@ class Network {
     ip_range: string;
 }
 
+class BaseGetDelete {
+    name: string;
+}
+
 class Machines {
     name: string;
     node_id: number;
@@ -23,8 +27,12 @@ class Machines {
     entrypoint: string;
     metadata: string;
     description: string;
-    env: Object;
+    env: Record<string, unknown>;
 }
+
+class MachinesGet extends BaseGetDelete {}
+
+class MachinesDelete extends BaseGetDelete {}
 
 class KubernetesNode {
     name: string;
@@ -33,7 +41,6 @@ class KubernetesNode {
     memory: number;
     disk_size: number;
     public_ip: boolean;
-
 }
 
 class K8S {
@@ -46,6 +53,10 @@ class K8S {
     description: string;
     ssh_key: string;
 }
+
+class K8SGet extends BaseGetDelete {}
+
+class K8SDelete extends BaseGetDelete {}
 
 class AddWorker extends KubernetesNode {
     deployment_name: string;
@@ -73,6 +84,10 @@ class ZDBS {
     metadata: string;
     description: string;
 }
+
+class ZDBGet extends BaseGetDelete {}
+
+class ZDBDelete extends BaseGetDelete {}
 
 class AddZDB extends ZDB {
     deployment_name: string;
@@ -112,10 +127,6 @@ class TwinGet {
     id: number;
 }
 
-class TwinList {
-
-}
-
 class TwinDelete {
     id: number;
 }
@@ -147,8 +158,7 @@ class WalletDelete {
 
 class WalletGet extends WalletDelete {}
 
-
-class DeployGatewayFQDN{
+class DeployGatewayFQDN {
     name: string;
     node_id: number;
     fqdn: string;
@@ -156,23 +166,30 @@ class DeployGatewayFQDN{
     backends: string[];
 }
 
-class DeployGatewayName{
+class DeployGatewayName {
     name: string;
     node_id: number;
     tls_passthrough: boolean;
     backends: string[];
 }
-// class ZosDeployment extends Deployment {
-//     node_id: number;
-//     hash: string;
-// }
+
+class ZOS extends Deployment {
+    node_id: number;
+}
 
 export {
+    Disks,
     Machines,
+    MachinesGet,
+    MachinesDelete,
     K8S,
+    K8SGet,
+    K8SDelete,
     AddWorker,
     DeleteWorker,
     ZDBS,
+    ZDBGet,
+    ZDBDelete,
     AddZDB,
     DeleteZDB,
     NodeContractCreate,
@@ -182,7 +199,6 @@ export {
     ContractCancel,
     TwinCreate,
     TwinGet,
-    TwinList,
     TwinDelete,
     WalletImport,
     WalletBalanceByName,
@@ -191,5 +207,6 @@ export {
     WalletDelete,
     WalletGet,
     DeployGatewayFQDN,
-    DeployGatewayName
+    DeployGatewayName,
+    ZOS,
 };

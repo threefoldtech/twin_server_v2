@@ -3,7 +3,7 @@
         "module": "commonjs",
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
-        "target": "ES5",
+        "target": "esnext",
         "declaration": true,
         "outDir": "./dist",
         "resolveJsonModule": true,

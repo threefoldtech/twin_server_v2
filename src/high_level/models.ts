@@ -1,20 +1,20 @@
-import { Deployment } from "grid3_client"
-import { Network } from "../primitives/network"
-
+import { Deployment } from "grid3_client";
+import { Network } from "../primitives/network";
 
 enum Operations {
     deploy = "deploy",
     update = "update",
-    delete = "delete"
+    delete = "delete",
 }
 
 class TwinDeployment {
-    constructor(public deployment: Deployment,
+    constructor(
+        public deployment: Deployment,
         public operation: Operations,
         public publicIps: number,
         public nodeId: number,
-        public network: Network = null
-    ) { }
+        public network: Network = null,
+    ) {}
 }
 
-export { TwinDeployment, Operations }
+export { TwinDeployment, Operations };
