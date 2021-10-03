@@ -5,6 +5,8 @@ import {
     SignatureRequirement,
     Zdb,
     WorkloadTypes,
+    GatewayFQDNProxy,
+    GatewayNameProxy,
     ZmachineNetwork,
     Zmachine,
     Zmount,
@@ -183,6 +185,16 @@ class DeploymentFactory {
                 }
                 zmachine.mounts = mounts
                 w.data = zmachine
+                workloads.push(w)
+            }else if (workload.type === WorkloadTypes.gatewayfqdnproxy){
+                let fqdngw = new GatewayFQDNProxy()
+                Object.assign(fqdngw, w.data);
+                w.data = fqdngw;
+                workloads.push(w)
+            }else if (workload.type === WorkloadTypes.gatewaynameproxy){
+                let namegw = new GatewayNameProxy()
+                Object.assign(namegw, w.data);
+                w.data = namegw;
                 workloads.push(w)
             }
         }
