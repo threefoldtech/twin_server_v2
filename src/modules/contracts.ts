@@ -4,7 +4,6 @@ import { NodeContractCreate, NameContractCreate, ContractGet, NodeContractUpdate
 import { expose } from "../helpers/index";
 import { default as config } from "../../config.json";
 
-
 class Contracts {
     client: TFClient;
     constructor() {
@@ -13,7 +12,9 @@ class Contracts {
     @expose
     async create_node(options: NodeContractCreate) {
         await this.client.connect();
-        console.log(`Creating contract with node_id:${options.node_id}, hash: ${options.hash}, data: ${options.data}, number of public ips: ${options.public_ip}`);
+        console.log(
+            `Creating contract with node_id:${options.node_id}, hash: ${options.hash}, data: ${options.data}, number of public ips: ${options.public_ip}`,
+        );
         return await this.client.contracts.createNode(options.node_id, options.hash, options.data, options.public_ip);
     }
     @expose

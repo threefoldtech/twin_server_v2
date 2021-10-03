@@ -158,7 +158,6 @@ class WalletDelete {
 
 class WalletGet extends WalletDelete {}
 
-
 class DeployGatewayFQDN {
     name: string;
     node_id: number;
@@ -209,5 +208,5 @@ export {
     WalletGet,
     DeployGatewayFQDN,
     DeployGatewayName,
-    ZOS
+    ZOS,
 };
