@@ -6,7 +6,7 @@
         "@types/request": "^2.48.7",
         "@types/request-promise-native": "^1.0.18",
         "appdata-path": "^1.0.0",
-        "grid3_client": "git+https://github.com/threefoldtech/grid3_client_ts.git#development_gateways",
+        "grid3_client": "git+https://github.com/threefoldtech/grid3_client_ts.git#development",
         "ip": "^1.1.5",
         "netaddr": "^1.1.0",
         "private-ip": "^2.2.1",
