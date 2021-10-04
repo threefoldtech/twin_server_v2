@@ -1,19 +1,22 @@
 import { BaseModule } from "./base";
 import { ZDBS, DeleteZDB, AddZDB, ZDBGet, ZDBDelete } from "./models";
-import { Zdb } from "../high_level/zdb";
+import { ZdbHL } from "grid3_client";
 import { expose } from "../helpers/expose";
-import { DeploymentFactory } from "../primitives/deployment";
-import { TwinDeployment, Operations } from "../high_level/models";
-import { TwinDeploymentHandler } from "../high_level/twinDeploymentHandler";
+import { TwinDeployment } from "grid3_client";
+import { default as config } from "../../config.json";
 
 class Zdbs extends BaseModule {
     fileName = "zdbs.json";
+    zdb: ZdbHL;
+    constructor() {
+        super();
+        this.zdb = new ZdbHL(config.twin_id, config.url, config.mnemonic, this.rmbClient);
+    }
 
     _createDeployment(options: ZDBS): TwinDeployment[] {
-        const zdbFactory = new Zdb();
         const twinDeployments = [];
         for (const instance of options.zdbs) {
-            const twinDeployment = zdbFactory.create(
+            const twinDeployment = this.zdb.create(
                 instance.name,
                 instance.node_id,
                 instance.namespace,
@@ -36,8 +39,7 @@ class Zdbs extends BaseModule {
             throw Error(`Another zdb deployment with the same name ${options.name} is already exist`);
         }
         const twinDeployments = this._createDeployment(options);
-        const twinDeploymentHandler = new TwinDeploymentHandler();
-        const contracts = await twinDeploymentHandler.handle(twinDeployments);
+        const contracts = await this.twinDeploymentHandler.handle(twinDeployments);
         this.save(options.name, contracts);
         return { contracts: contracts };
     }
@@ -64,8 +66,7 @@ class Zdbs extends BaseModule {
         }
         const oldDeployments = await this._get(options.name);
         const twinDeployments = this._createDeployment(options);
-        const zdb = new Zdb();
-        return await this._update(zdb, options.name, oldDeployments, twinDeployments);
+        return await this._update(this.zdb, options.name, oldDeployments, twinDeployments);
     }
 
     @expose
@@ -74,8 +75,7 @@ class Zdbs extends BaseModule {
             throw Error(`There is no zdb deployment with name: ${options.deployment_name}`);
         }
         const oldDeployments = await this._get(options.deployment_name);
-        const zdbFactory = new Zdb();
-        const twinDeployment = zdbFactory.create(
+        const twinDeployment = this.zdb.create(
             options.name,
             options.node_id,
             options.namespace,
@@ -96,8 +96,7 @@ class Zdbs extends BaseModule {
         if (!this.exists(options.deployment_name)) {
             throw Error(`There is no zdb deployment with name: ${options.deployment_name}`);
         }
-        const zdb = new Zdb();
-        return await this._deleteInstance(zdb, options.deployment_name, options.name);
+        return await this._deleteInstance(this.zdb, options.deployment_name, options.name);
     }
 }
 

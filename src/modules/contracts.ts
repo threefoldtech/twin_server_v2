@@ -1,7 +1,7 @@
 import { TFClient } from "grid3_client";
 
 import { NodeContractCreate, NameContractCreate, ContractGet, NodeContractUpdate, ContractCancel } from "./models";
-import { expose } from "../helpers/index";
+import { expose } from "../helpers/expose";
 import { default as config } from "../../config.json";
 
 class Contracts {

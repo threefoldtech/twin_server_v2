@@ -1,19 +1,32 @@
 import * as PATH from "path";
 
-import { MessageBusClient, Deployment } from "grid3_client";
+import { Deployment } from "grid3_client";
 
-import { HighLevelBase } from "../high_level/base";
-import { TwinDeploymentHandler } from "../high_level/twinDeploymentHandler";
-import { TwinDeployment, Operations } from "../high_level/models";
-import { Kubernetes } from "../high_level/kubernetes";
-import { Zdb } from "../high_level/zdb";
-import { loadFromFile, updatejson, appPath } from "../helpers/jsonfs";
-import { getNodeTwinId } from "../primitives/nodes";
-import { DeploymentFactory } from "../primitives/deployment";
-import { Network } from "../primitives/network";
+import { HighLevelBase } from "grid3_client";
+import { TwinDeploymentHandler } from "grid3_client";
+import { TwinDeployment, Operations } from "grid3_client";
+import { Kubernetes } from "grid3_client";
+import { ZdbHL } from "grid3_client";
+import { loadFromFile, updatejson, appPath } from "grid3_client";
+import { getNodeTwinId } from "grid3_client";
+import { DeploymentFactory } from "grid3_client";
+import { Network } from "grid3_client";
+import { getRMBClient } from "../clients/rmb";
+import { MessageBusClientInterface } from "rmb-redis-client";
+import { default as config } from "../../config.json";
 
 class BaseModule {
     fileName = "";
+    rmbClient: MessageBusClientInterface;
+    deploymentFactory: DeploymentFactory;
+    twinDeploymentHandler: TwinDeploymentHandler;
+
+    constructor() {
+        this.rmbClient = getRMBClient();
+        this.deploymentFactory = new DeploymentFactory(config.twin_id, config.url, config.mnemonic);
+        this.twinDeploymentHandler = new TwinDeploymentHandler(this.rmbClient, config.twin_id, config.url, config.mnemonic);
+
+    }
 
     save(name: string, contracts: Record<string, unknown[]>, wgConfig = "", action = "add") {
         const path = PATH.join(appPath, this.fileName);
@@ -97,14 +110,13 @@ class BaseModule {
             return [];
         }
         const deployments = [];
-        const rmb = new MessageBusClient();
         for (const contract of data[name]["contracts"]) {
             const node_twin_id = await getNodeTwinId(contract["node_id"]);
             const payload = JSON.stringify({ contract_id: contract["contract_id"] });
 
-            const msg = rmb.prepare("zos.deployment.get", [node_twin_id], 0, 2);
-            rmb.send(msg, payload);
-            const result = await rmb.read(msg);
+            const msg = this.rmbClient.prepare("zos.deployment.get", [node_twin_id], 0, 2);
+            const messgae = await this.rmbClient.send(msg, payload);
+            const result = await this.rmbClient.read(messgae);
             if (result[0].err) {
                 throw Error(result[0].err);
             }
@@ -114,31 +126,29 @@ class BaseModule {
     }
 
     async _update(
-        module: Kubernetes | Zdb,
+        module: Kubernetes | ZdbHL,
         name: string,
         oldDeployments: Deployment[],
         twinDeployments: TwinDeployment[],
         network: Network = null,
     ) {
-        const deploymentFactory = new DeploymentFactory();
-        const twinDeploymentHandler = new TwinDeploymentHandler();
         let finalTwinDeployments = [];
         finalTwinDeployments = twinDeployments.filter(d => d.operation === Operations.update);
-        twinDeployments = twinDeploymentHandler.deployMerge(twinDeployments);
+        twinDeployments = this.twinDeploymentHandler.deployMerge(twinDeployments);
         const deploymentNodeIds = this._getDeploymentNodeIds(name);
         finalTwinDeployments = finalTwinDeployments.concat(
             twinDeployments.filter(d => !deploymentNodeIds.includes(d.nodeId)),
         );
 
         for (let oldDeployment of oldDeployments) {
-            oldDeployment = deploymentFactory.fromObj(oldDeployment);
+            oldDeployment = this.deploymentFactory.fromObj(oldDeployment);
             const node_id = this._getNodeIdFromContractId(name, oldDeployment.contract_id);
             let deploymentFound = false;
             for (const twinDeployment of twinDeployments) {
                 if (twinDeployment.nodeId !== node_id) {
                     continue;
                 }
-                oldDeployment = await deploymentFactory.UpdateDeployment(
+                oldDeployment = await this.deploymentFactory.UpdateDeployment(
                     oldDeployment,
                     twinDeployment.deployment,
                     network,
@@ -155,7 +165,7 @@ class BaseModule {
                 finalTwinDeployments = finalTwinDeployments.concat(tDeployments);
             }
         }
-        const contracts = await twinDeploymentHandler.handle(finalTwinDeployments);
+        const contracts = await this.twinDeploymentHandler.handle(finalTwinDeployments);
         if (contracts.created.length === 0 && contracts.updated.length === 0 && contracts.deleted.length === 0) {
             return "Nothing found to update";
         }
@@ -172,35 +182,32 @@ class BaseModule {
     ) {
         const finalTwinDeployments = twinDeployments.filter(d => d.operation === Operations.update);
         const twinDeployment = twinDeployments.pop();
-        const deploymentFactory = new DeploymentFactory();
         const contract_id = this._getContractIdFromNodeId(deployment_name, node_id);
         if (contract_id) {
             for (let oldDeployment of oldDeployments) {
-                oldDeployment = deploymentFactory.fromObj(oldDeployment);
+                oldDeployment = this.deploymentFactory.fromObj(oldDeployment);
                 if (oldDeployment.contract_id !== contract_id) {
                     continue;
                 }
-                const newDeployment = deploymentFactory.fromObj(oldDeployment);
+                const newDeployment = this.deploymentFactory.fromObj(oldDeployment);
                 newDeployment.workloads = newDeployment.workloads.concat(twinDeployment.deployment.workloads);
-                const deployment = await deploymentFactory.UpdateDeployment(oldDeployment, newDeployment, network);
+                const deployment = await this.deploymentFactory.UpdateDeployment(oldDeployment, newDeployment, network);
                 twinDeployment.deployment = deployment;
                 twinDeployment.operation = Operations.update;
                 break;
             }
         }
         finalTwinDeployments.push(twinDeployment);
-        const twinDeploymentHandler = new TwinDeploymentHandler();
-        const contracts = await twinDeploymentHandler.handle(finalTwinDeployments);
+        const contracts = await this.twinDeploymentHandler.handle(finalTwinDeployments);
         this.save(deployment_name, contracts);
         return { contracts: contracts };
     }
 
-    async _deleteInstance(module: Kubernetes | Zdb, deployment_name: string, name: string) {
-        const twinDeploymentHandler = new TwinDeploymentHandler();
+    async _deleteInstance(module: Kubernetes | ZdbHL, deployment_name: string, name: string) {
         const deployments = await this._get(deployment_name);
         for (const deployment of deployments) {
             const twinDeployments = await module.delete(deployment, [name]);
-            const contracts = await twinDeploymentHandler.handle(twinDeployments);
+            const contracts = await this.twinDeploymentHandler.handle(twinDeployments);
             if (contracts["deleted"].length > 0 || contracts["updated"].length > 0) {
                 this.save(deployment_name, contracts, "", "delete");
                 return contracts;
@@ -216,12 +223,11 @@ class BaseModule {
         if (!Object.keys(data).includes(name)) {
             return contracts;
         }
-        const twinDeploymentHandler = new TwinDeploymentHandler();
         const deployments = await this._get(name);
-        const highlvl = new HighLevelBase();
+        const highlvl = new HighLevelBase(config.twin_id, config.url, config.mnemonic, this.rmbClient);
         for (const deployment of deployments) {
             const twinDeployments = await highlvl._delete(deployment, []);
-            const contract = await twinDeploymentHandler.handle(twinDeployments);
+            const contract = await this.twinDeploymentHandler.handle(twinDeployments);
             contracts.deleted = contracts.deleted.concat(contract["deleted"]);
             contracts.updated = contracts.updated.concat(contract["updated"]);
         }

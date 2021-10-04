@@ -1,7 +1,7 @@
 import { TFClient } from "grid3_client";
 
 import { TwinCreate, TwinGet, TwinDelete } from "./models";
-import { expose } from "../helpers/index";
+import { expose } from "../helpers/expose";
 import { default as config } from "../../config.json";
 
 class Twins {

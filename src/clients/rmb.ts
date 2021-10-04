@@ -1,0 +1,45 @@
+import { MessageBusClient, MessageBusClientInterface } from "rmb-redis-client";
+import { HTTPMessageBusClient } from "rmb-http-client";
+import { argv, env } from "process";
+
+import { default as config } from "../../config.json";
+
+
+function getRmbProxy(): string {
+    let rmb_proxy = "";
+    // Check for rmb proxy value from arguments
+    argv.forEach((val, ind, arr) => {
+        if (val == "--proxy" || val == "-p") {
+            rmb_proxy = arr[ind + 1];
+        }
+    });
+
+    if (rmb_proxy) {
+        return rmb_proxy;
+    }
+
+    // Check for rmb proxy value from config
+    if (!config.rmb_proxy) {
+        return config.rmb_proxy;
+    }
+
+    // Check for rmb proxy value from env
+    if (!env.RMB_PROXY) {
+        return env.RMB_PROXY;
+    }
+    return rmb_proxy;
+}
+
+// MsgBusClientInterface
+function getRMBClient(): MessageBusClientInterface {
+    let rmb_proxy = getRmbProxy();
+    if (rmb_proxy) {
+        return new HTTPMessageBusClient(rmb_proxy);
+    } else {
+        return new MessageBusClient();
+    }
+
+}
+
+
+export { getRMBClient };

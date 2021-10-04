@@ -3,14 +3,21 @@ import { Addr } from "netaddr";
 
 import { AddWorker, DeleteWorker, K8S, K8SDelete, K8SGet } from "./models";
 import { BaseModule } from "./base";
-import { expose } from "../helpers/index";
-import { TwinDeploymentHandler } from "../high_level/twinDeploymentHandler";
-import { TwinDeployment, Operations } from "../high_level/models";
-import { Kubernetes } from "../high_level/kubernetes";
-import { Network } from "../primitives/network";
+import { expose } from "../helpers/expose";
+import { TwinDeployment } from "grid3_client";
+import { Kubernetes } from "grid3_client";
+import { Network } from "grid3_client";
+import { default as config } from "../../config.json";
+
 
 class K8s extends BaseModule {
     fileName = "kubernetes.json";
+    kubernetes: Kubernetes;
+
+    constructor() {
+        super();
+        this.kubernetes = new Kubernetes(config.twin_id, config.url, config.mnemonic, this.rmbClient);
+    }
 
     _getMastersWorkload(deployments): Workload[] {
         const workloads = [];
@@ -44,10 +51,9 @@ class K8s extends BaseModule {
     ): Promise<[TwinDeployment[], string]> {
         let deployments = [];
         let wireguardConfig = "";
-        const kubernetes = new Kubernetes();
 
         for (const master of options.masters) {
-            const [twinDeployments, wgConfig] = await kubernetes.add_master(
+            const [twinDeployments, wgConfig] = await this.kubernetes.add_master(
                 master.name,
                 master.node_id,
                 options.secret,
@@ -74,7 +80,7 @@ class K8s extends BaseModule {
             }
         }
         for (const worker of options.workers) {
-            const [twinDeployments, _] = await kubernetes.add_worker(
+            const [twinDeployments, _] = await this.kubernetes.add_worker(
                 worker.name,
                 worker.node_id,
                 options.secret,
@@ -104,12 +110,11 @@ class K8s extends BaseModule {
             throw Error(`Another k8s deployment with the same name ${options.name} is already exist`);
         }
 
-        const network = new Network(options.network.name, options.network.ip_range);
+        const network = new Network(options.network.name, options.network.ip_range, this.rmbClient);
         await network.load(true);
 
         const [deployments, wireguardConfig] = await this._createDeployment(options, network);
-        const twinDeploymentHandler = new TwinDeploymentHandler();
-        const contracts = await twinDeploymentHandler.handle(deployments);
+        const contracts = await this.twinDeploymentHandler.handle(deployments);
         this.save(options.name, contracts, wireguardConfig);
         return { contracts: contracts, wireguard_config: wireguardConfig };
     }
@@ -153,13 +158,12 @@ class K8s extends BaseModule {
         }
 
         const networkName = options.network.name;
-        const network = new Network(networkName, options.network.ip_range);
+        const network = new Network(networkName, options.network.ip_range, this.rmbClient);
         await network.load(true);
 
         //TODO: check that the master nodes are not changed
-        const kubernetes = new Kubernetes();
         const [twinDeployments, _] = await this._createDeployment(options, network, masterIps);
-        return await this._update(kubernetes, options.name, oldDeployments, twinDeployments, network);
+        return await this._update(this.kubernetes, options.name, oldDeployments, twinDeployments, network);
     }
 
     @expose
@@ -168,7 +172,6 @@ class K8s extends BaseModule {
             throw Error(`There is no k8s deployment with name: ${options.deployment_name}`);
         }
         const oldDeployments = await this._get(options.deployment_name);
-        const kubernetes = new Kubernetes();
         const masterWorkloads = this._getMastersWorkload(oldDeployments);
         if (masterWorkloads.length === 0) {
             throw Error("Couldn't get master node");
@@ -176,9 +179,9 @@ class K8s extends BaseModule {
         const masterWorkload = masterWorkloads[0];
         const networkName = masterWorkload.data["network"].interfaces[0].network;
         const networkIpRange = Addr(masterWorkload.data["network"].interfaces[0].ip).mask(16).toString();
-        const network = new Network(networkName, networkIpRange);
+        const network = new Network(networkName, networkIpRange, this.rmbClient);
         await network.load(true);
-        const [twinDeployments, _] = await kubernetes.add_worker(
+        const [twinDeployments, _] = await this.kubernetes.add_worker(
             options.name,
             options.node_id,
             masterWorkload.data["env"]["K3S_TOKEN"],
@@ -201,8 +204,7 @@ class K8s extends BaseModule {
         if (!this.exists(options.deployment_name)) {
             throw Error(`There is no k8s deployment with name: ${options.deployment_name}`);
         }
-        const kubernetes = new Kubernetes();
-        return await this._deleteInstance(kubernetes, options.deployment_name, options.name);
+        return await this._deleteInstance(this.kubernetes, options.deployment_name, options.name);
     }
 }
 

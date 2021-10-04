@@ -3,8 +3,8 @@ import * as PATH from "path";
 import { default as StellarSdk } from "stellar-sdk";
 
 import { WalletImport, WalletBalanceByName, WalletBalanceByAddress, WalletTransfer, WalletGet, WalletDelete } from ".";
-import { expose } from "../helpers/index";
-import { loadFromFile, updatejson, appPath } from "../helpers/jsonfs";
+import { expose } from "../helpers/expose";
+import { loadFromFile, updatejson, appPath } from "grid3_client";
 
 const server = new StellarSdk.Server("https://horizon.stellar.org");
 

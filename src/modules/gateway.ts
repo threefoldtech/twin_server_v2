@@ -1,27 +1,31 @@
 import { BaseModule } from "./base";
 import { DeployGatewayFQDN, DeployGatewayName } from "./models";
-import { GatewayHL } from "../high_level/gateway";
+import { GatewayHL } from "grid3_client";
 import { expose } from "../helpers/expose";
-import { TwinDeploymentHandler } from "../high_level/twinDeploymentHandler";
+import { default as config } from "../../config.json";
 
 class Gateway extends BaseModule {
     fileName = "gateway.json";
+    gateway: GatewayHL;
+
+    constructor() {
+        super();
+        this.gateway = new GatewayHL(config.twin_id, config.url, config.mnemonic, this.rmbClient);
+    }
 
     @expose
     async deploy_fqdn(options: DeployGatewayFQDN) {
         if (this.exists(options.name)) {
             throw Error(`Another gateway deployment with the same name ${options.name} is already exist`);
         }
-        const fqdn = new GatewayHL();
-        const twinDeployments = await fqdn.create(
+        const twinDeployments = await this.gateway.create(
             options.name,
             options.node_id,
             options.tls_passthrough,
             options.backends,
             options.fqdn,
         );
-        const twinDeploymentHandler = new TwinDeploymentHandler();
-        const contracts = await twinDeploymentHandler.handle(twinDeployments);
+        const contracts = await this.twinDeploymentHandler.handle(twinDeployments);
         this.save(options.name, contracts);
         return { contracts: contracts };
     }
@@ -31,15 +35,13 @@ class Gateway extends BaseModule {
         if (this.exists(options.name)) {
             throw Error(`Another gateway deployment with the same name ${options.name} is already exist`);
         }
-        const name = new GatewayHL();
-        const twinDeployments = await name.create(
+        const twinDeployments = await this.gateway.create(
             options.name,
             options.node_id,
             options.tls_passthrough,
             options.backends,
         );
-        const twinDeploymentHandler = new TwinDeploymentHandler();
-        const contracts = await twinDeploymentHandler.handle(twinDeployments);
+        const contracts = await this.twinDeploymentHandler.handle(twinDeployments);
         this.save(options.name, contracts);
         return { contracts: contracts };
     }

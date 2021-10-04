@@ -2,14 +2,19 @@ import { WorkloadTypes } from "grid3_client";
 
 import { BaseModule } from "./base";
 import { Machines, MachinesDelete, MachinesGet } from "./models";
-import { Network } from "../primitives/network";
-import { DeploymentFactory } from "../primitives/deployment";
+import { Network } from "grid3_client";
+import { VirtualMachine } from "grid3_client";
 import { expose } from "../helpers/expose";
-import { VirtualMachine } from "../high_level/machine";
-import { TwinDeploymentHandler } from "../high_level/twinDeploymentHandler";
+import { default as config } from "../../config.json";
+
 
 class Machine extends BaseModule {
     fileName = "machines.json";
+    vm: VirtualMachine;
+    constructor() {
+        super();
+        this.vm = new VirtualMachine(config.twin_id, config.url, config.mnemonic, this.rmbClient);
+    }
 
     @expose
     async deploy(options: Machines) {
@@ -18,11 +23,10 @@ class Machine extends BaseModule {
         }
 
         const networkName = options.network.name;
-        const network = new Network(networkName, options.network.ip_range);
+        const network = new Network(networkName, options.network.ip_range, this.rmbClient);
         await network.load(true);
 
-        const vm = new VirtualMachine();
-        const [twinDeployments, wgConfig] = await vm.create(
+        const [twinDeployments, wgConfig] = await this.vm.create(
             options.name,
             options.node_id,
             options.flist,
@@ -37,8 +41,7 @@ class Machine extends BaseModule {
             options.description,
         );
 
-        const twinDeploymentHandler = new TwinDeploymentHandler();
-        const contracts = await twinDeploymentHandler.handle(twinDeployments);
+        const contracts = await this.twinDeploymentHandler.handle(twinDeployments);
         this.save(options.name, contracts, wgConfig);
         return { contracts: contracts, wireguard_config: wgConfig };
     }
@@ -67,8 +70,7 @@ class Machine extends BaseModule {
             throw Error("node_id can't be changed");
         }
         const deploymentObj = (await this._get(options.name)).pop();
-        const deploymentFactory = new DeploymentFactory();
-        const oldDeployment = deploymentFactory.fromObj(deploymentObj);
+        const oldDeployment = this.deploymentFactory.fromObj(deploymentObj);
 
         for (const workload of oldDeployment.workloads) {
             if (workload.type !== WorkloadTypes.network) {
@@ -80,11 +82,10 @@ class Machine extends BaseModule {
         }
 
         const networkName = options.network.name;
-        const network = new Network(networkName, options.network.ip_range);
+        const network = new Network(networkName, options.network.ip_range, this.rmbClient);
         await network.load(true);
 
-        const vm = new VirtualMachine();
-        const twinDeployment = await vm.update(
+        const twinDeployment = await this.vm.update(
             oldDeployment,
             options.name,
             options.node_id,
@@ -100,9 +101,8 @@ class Machine extends BaseModule {
             options.description,
         );
 
-        const twinDeploymentHandler = new TwinDeploymentHandler();
         console.log(JSON.stringify(twinDeployment));
-        const contracts = await twinDeploymentHandler.handle([twinDeployment]);
+        const contracts = await this.twinDeploymentHandler.handle([twinDeployment]);
         return { contracts: contracts };
     }
 }

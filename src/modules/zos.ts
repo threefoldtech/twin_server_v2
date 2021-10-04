@@ -1,10 +1,12 @@
 import { WorkloadTypes } from "grid3_client";
 
+import { getRMBClient } from "../clients/rmb";
+
 import { ZOS } from "./models";
-import { expose } from "../helpers/index";
+import { expose } from "../helpers/expose";
 import { default as config } from "../../config.json";
-import { TwinDeploymentHandler } from "../high_level/twinDeploymentHandler";
-import { DeploymentFactory } from "../primitives/deployment";
+import { TwinDeploymentHandler } from "grid3_client";
+import { DeploymentFactory } from "grid3_client";
 
 class Zos {
     @expose
@@ -13,7 +15,7 @@ class Zos {
         const node_id = options.node_id;
         delete options.node_id;
 
-        const deploymentFactory = new DeploymentFactory();
+        const deploymentFactory = new DeploymentFactory(config.twin_id, config.url, config.mnemonic);
         const deployment = deploymentFactory.fromObj(options);
         deployment.sign(deployment.twin_id, config.mnemonic);
 
@@ -24,7 +26,8 @@ class Zos {
             }
         }
         console.log(`Deploying on node_id: ${node_id} with number of public IPs: ${publicIps}`);
-        const twinDeploymentHandler = new TwinDeploymentHandler();
+        const rmbClient = getRMBClient();
+        const twinDeploymentHandler = new TwinDeploymentHandler(rmbClient, config.twin_id, config.url, config.mnemonic);
         return await twinDeploymentHandler.deploy(deployment, node_id, publicIps);
     }
 }
