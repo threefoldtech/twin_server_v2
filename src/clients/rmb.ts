@@ -19,12 +19,12 @@ function getRmbProxy(): string {
     }
 
     // Check for rmb proxy value from config
-    if (!config.rmb_proxy) {
+    if (config.rmb_proxy) {
         return config.rmb_proxy;
     }
 
     // Check for rmb proxy value from env
-    if (!env.RMB_PROXY) {
+    if (env.RMB_PROXY) {
         return env.RMB_PROXY;
     }
     return rmb_proxy;
