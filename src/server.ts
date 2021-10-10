@@ -1,7 +1,7 @@
 import * as FS from "fs";
 import * as PATH from "path";
 
-import { MessageBusServer } from "rmb-redis-client";
+import { MessageBusServer } from "ts-rmb-redis-client";
 
 import { isExposed } from "./helpers/expose";
 import { dumpToFile, appPath } from "grid3_client";

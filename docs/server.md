@@ -52,8 +52,8 @@ async function main() {
     const payload = JSON.stringify({ 'id': 1 })
     const rmb = new MessageBusClient();
     const msg = rmb.prepare(cmd, [config.twin_id], 0, 2);
-    rmb.send(msg, payload);
-    const result = await rmb.read(msg)
+    const message = await rmb.send(msg, payload);
+    const result = await rmb.read(message)
     console.log(result)
 }
 main()
