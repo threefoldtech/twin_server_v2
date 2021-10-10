@@ -12,7 +12,7 @@
         "stellar-sdk": "^8.3.0",
         "ts-rmb-client-base": "0.0.1",
         "ts-rmb-http-client": "^0.1.5",
-        "ts-rmb-redis-client": "0.0.2"
+        "ts-rmb-redis-client": "0.0.1"
     },
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
