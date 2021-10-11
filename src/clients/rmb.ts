@@ -1,6 +1,6 @@
 import { MessageBusClientInterface } from "ts-rmb-client-base";
 import { MessageBusClient } from "ts-rmb-redis-client";
-// import { HTTPMessageBusClient } from "ts-rmb-http-client";
+import { HTTPMessageBusClient } from "ts-rmb-http-client";
 import { argv, env } from "process";
 
 import { default as config } from "../../config.json";
@@ -35,7 +35,7 @@ function getRmbProxy(): string {
 function getRMBClient(): MessageBusClientInterface {
     let rmb_proxy = getRmbProxy();
     if (rmb_proxy) {
-        // return new HTTPMessageBusClient(rmb_proxy);
+        return new HTTPMessageBusClient(rmb_proxy);
     } else {
         return new MessageBusClient();
     }
