@@ -1,18 +1,18 @@
-import { ZDBS, DeleteZDB, AddZDB, ZDBGet, ZDBDelete } from "grid3_client";
-import { Zdbs } from "grid3_client";
+import { ZDBSModel, DeleteZDBModel, AddZDBModel, ZDBGetModel, ZDBDeleteModel } from "grid3_client";
+import { ZdbsModule } from "grid3_client";
 import { expose } from "../helpers/expose";
 import { default as config } from "../../config.json";
 import { getRMBClient } from "../clients/rmb";
 
-class ZdbsModule {
-    zdbs: Zdbs;
+class Zdbs {
+    zdbs: ZdbsModule;
     constructor() {
         const rmbClient = getRMBClient();
-        this.zdbs = new Zdbs(config.twin_id, config.url, config.mnemonic, rmbClient);
+        this.zdbs = new ZdbsModule(config.twin_id, config.url, config.mnemonic, rmbClient);
     }
 
     @expose
-    async deploy(options: ZDBS) {
+    async deploy(options: ZDBSModel) {
         return await this.zdbs.deploy(options);
     }
 
@@ -22,29 +22,29 @@ class ZdbsModule {
     }
 
     @expose
-    async get(options: ZDBGet) {
+    async get(options: ZDBGetModel) {
         return await this.zdbs.get(options);
     }
 
     @expose
-    async delete(options: ZDBDelete) {
+    async delete(options: ZDBDeleteModel) {
         return await this.zdbs.delete(options);
     }
 
     @expose
-    async update(options: ZDBS) {
+    async update(options: ZDBSModel) {
         return await this.zdbs.update(options);
     }
 
     @expose
-    async add_zdb(options: AddZDB) {
-        return await this.zdbs.add_zdb(options);
+    async add_zdb(options: AddZDBModel) {
+        return await this.zdbs.addZdb(options);
     }
 
     @expose
-    async delete_zdb(options: DeleteZDB) {
-        return await this.zdbs.delete_zdb(options);
+    async delete_zdb(options: DeleteZDBModel) {
+        return await this.zdbs.deleteZdb(options);
     }
 };
 
-export { ZdbsModule as zdbs };
+export { Zdbs as zdbs };

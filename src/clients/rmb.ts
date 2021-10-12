@@ -35,7 +35,7 @@ function getRmbProxy(): string {
 function getRMBClient(): MessageBusClientInterface {
     let rmb_proxy = getRmbProxy();
     if (rmb_proxy) {
-        return new HTTPMessageBusClient(rmb_proxy);
+        return new HTTPMessageBusClient(config.twin_id, rmb_proxy);
     } else {
         return new MessageBusClient();
     }
