@@ -9,8 +9,8 @@
 ## Installation
 
 ```bash
-npm install typescript -g
-npm install
+npm install typescript yarn -g
+yarn install
 
 ```
 
@@ -22,14 +22,15 @@ Add substrate url and account's mnemonics in config.json before running the serv
 {
     "url": "<substrate url>",
     "mnemonic": "<your account mnemonics>", 
-    "twin_id": <your twin id created on substrate>
+    "twin_id": "<your twin id created on substrate>",
+    "rmb_proxy": "<RMB proxy url>" // in case http rmb proxy needs to be used instead of redis rmb
 }
 ```
 
 ## Building
 
 ```bash
-tsc --build tsconfig.json
+yarn build
 ```
 
 ## Running
@@ -44,7 +45,7 @@ This is an example of getting a twin.
 Put the following content in a file `test_twin.ts`
 
 ```ts
-import { MessageBusClient } from "grid3_client"
+import { MessageBusClient } from "ts-rmb-redis-client"
 
 async function main() {
     const myTwinId = 8    // change to your twin id
