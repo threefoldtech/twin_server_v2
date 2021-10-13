@@ -28,7 +28,7 @@ Module should be:
 
    cmd: `twinserver.twins.list`
 
-   payload: `'""'`
+   payload: `""`
 
 - **Delete**
 
@@ -126,7 +126,7 @@ Module should be:
 
 cmd: `twinserver.machines.list`
 
-payload: `'""'`
+payload: `""`
 
 - **Get**
 
@@ -239,7 +239,7 @@ single master and multiple workers.
 
 cmd: `twinserver.k8s.list`
 
-payload: `'""'`
+payload: `""`
 
 - **Get**
 
@@ -328,7 +328,7 @@ payload:
 
 cmd: `twinserver.zdbs.list`
 
-payload: `'""'`
+payload: `""`
 
 - **Get**
 
@@ -375,3 +375,86 @@ payload:
         "name": "hamada1",
     }
 ```
+
+### Stellar
+
+- **Import**
+It will return the wallet address after importing the wallet and saving it.
+
+cmd: `twinserver.stellar.import`
+
+payload:
+
+```json
+{
+    "name": "mywallet",
+    "secret": "<wallet secret>",
+}
+```
+
+- **Get**
+It will return the wallet address.
+
+cmd: `twinserver.stellar.get`
+
+payload: `{"name": "<wallet name>"}`
+
+- **Update**
+It will return the new wallet address after updating the wallet and saving it.
+
+cmd: `twinserver.stellar.update`
+
+payload:
+
+```json
+{
+    "name": "mywallet",
+    "secret": "<wallet secret>",
+}
+```
+
+- **Exists**
+
+cmd: `twinserver.stellar.exists`
+
+payload: `{"name": "<wallet name>"}`
+
+- **List**
+
+cmd: `twinserver.stellar.list`
+
+payload: `""`
+
+- **Balance by name**
+
+cmd: `twinserver.stellar.balance_by_name`
+
+payload: `{"name": "<wallet name>"}`
+
+- **Balance by address**
+
+cmd: `twinserver.stellar.balance_by_address`
+
+payload: `{"address": "<wallet name>"}`
+
+- **Transfer**
+
+cmd: `twinserver.stellar.transfer`
+
+payload:
+
+```json
+{
+    "name": "<wallet name>",
+    "target_address": "<target wallet address>",
+    "amount": 10,
+    "asset": "TFT",
+    "memo": "try1",
+}
+```
+
+- **Delete**
+
+cmd: `twinserver.stellar.delete`
+
+payload: `{"name": "<wallet name>"}`
