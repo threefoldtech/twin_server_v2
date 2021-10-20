@@ -27,16 +27,10 @@ Add substrate url and account's mnemonics in config.json before running the serv
 }
 ```
 
-## Building
-
-```bash
-yarn build
-```
-
 ## Running
 
 ```bash
-node dist/src/server.js
+yarn run
 ```
 
 ## Usage
@@ -60,4 +54,4 @@ async function main() {
 main()
 ```
 
-And then run this file by `tsc test_twin.ts && node test_twin.js`
+And then run this file by `ts-node test_twin.ts`

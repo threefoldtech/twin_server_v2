@@ -11,11 +11,9 @@ class TFGridClient extends TFClient {
             await this.connect();
             console.log(`Executing method: ${method.name} with args: ${args}`);
             result = await method.apply(context, args);
-        }
-        catch (e) {
+        } catch (e) {
             throw Error(e);
-        }
-        finally {
+        } finally {
             await this.disconnect();
         }
         return result;

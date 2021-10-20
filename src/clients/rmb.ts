@@ -5,7 +5,6 @@ import { argv, env } from "process";
 
 import { default as config } from "../../config.json";
 
-
 function getRmbProxy(): string {
     let rmb_proxy = "";
     // Check for rmb proxy value from arguments
@@ -33,14 +32,12 @@ function getRmbProxy(): string {
 
 // MsgBusClientInterface
 function getRMBClient(): MessageBusClientInterface {
-    let rmb_proxy = getRmbProxy();
+    const rmb_proxy = getRmbProxy();
     if (rmb_proxy) {
         return new HTTPMessageBusClient(config.twin_id, rmb_proxy);
     } else {
         return new MessageBusClient();
     }
-
 }
-
 
 export { getRMBClient };

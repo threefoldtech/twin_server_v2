@@ -45,6 +45,6 @@ class Zdbs {
     async delete_zdb(options: DeleteZDBModel) {
         return await this.zdbs.deleteZdb(options);
     }
-};
+}
 
 export { Zdbs as zdbs };

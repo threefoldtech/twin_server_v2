@@ -4,7 +4,6 @@ import { K8sModule } from "grid3_client";
 import { default as config } from "../../config.json";
 import { getRMBClient } from "../clients/rmb";
 
-
 class K8s {
     kubernetes: K8sModule;
 

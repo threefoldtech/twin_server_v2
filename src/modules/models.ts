@@ -1,6 +1,5 @@
 import { Deployment, ZdbModes, DeviceTypes } from "grid3_client";
 
-
 class NodeContractCreate {
     node_id: number;
     hash: string;
@@ -63,7 +62,6 @@ class WalletDelete {
 }
 
 class WalletGet extends WalletDelete {}
-
 
 class ZOS extends Deployment {
     node_id: number;

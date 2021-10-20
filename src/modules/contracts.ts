@@ -13,7 +13,12 @@ class Contracts {
 
     @expose
     async create_node(options: NodeContractCreate) {
-        return await this.client.execute(this.context, this.client.contracts.createNode, [options.node_id, options.hash, options.data, options.public_ip]);
+        return await this.client.execute(this.context, this.client.contracts.createNode, [
+            options.node_id,
+            options.hash,
+            options.data,
+            options.public_ip,
+        ]);
     }
     @expose
     async create_name(options: NameContractCreate) {
@@ -25,7 +30,11 @@ class Contracts {
     }
     @expose
     async update_node(options: NodeContractUpdate) {
-        return await this.client.execute(this.context, this.client.contracts.updateNode, [options.id, options.data, options.hash]);
+        return await this.client.execute(this.context, this.client.contracts.updateNode, [
+            options.id,
+            options.data,
+            options.hash,
+        ]);
     }
     @expose
     async cancel(options: ContractCancel) {

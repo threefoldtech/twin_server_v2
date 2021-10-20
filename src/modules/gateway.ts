@@ -15,7 +15,6 @@ class Gateway {
     @expose
     async deploy_fqdn(options: DeployGatewayFQDNModel) {
         return await this.gateway.deploy_fqdn(options);
-
     }
 
     @expose

@@ -1,4 +1,10 @@
-import { MachinesModel, MachinesDeleteModel, MachinesGetModel, AddMachineModel, DeleteMachineModel } from "grid3_client";
+import {
+    MachinesModel,
+    MachinesDeleteModel,
+    MachinesGetModel,
+    AddMachineModel,
+    DeleteMachineModel,
+} from "grid3_client";
 import { MachineModule } from "grid3_client";
 import { expose } from "../helpers/expose";
 import { default as config } from "../../config.json";
@@ -45,7 +51,6 @@ class Machines {
     async delete_machine(options: DeleteMachineModel) {
         return await this.vm.deleteMachine(options);
     }
-
 }
 
 export { Machines as machines };
