@@ -1,37 +1,30 @@
-import { TFClient } from "grid3_client";
+import { TFGridClient } from "../clients/tfgrid";
 
 import { TwinCreate, TwinGet, TwinDelete } from "./models";
-import { expose } from "../helpers/index";
-import { default as config } from "../../config.json";
+import { expose } from "../helpers/expose";
 
 class Twins {
-    client: TFClient;
+    client: TFGridClient;
+    context;
     constructor() {
-        this.client = new TFClient(config.url, config.mnemonic);
+        this.client = new TFGridClient();
+        this.context = this.client.twins;
     }
     @expose
     async create(options: TwinCreate) {
-        await this.client.connect();
-        console.log(`Creating twin with ip: ${options.ip}`);
-        return await this.client.twins.create(options.ip);
+        return await this.client.execute(this.context, this.client.twins.create, [options.ip]);
     }
     @expose
     async get(options: TwinGet) {
-        await this.client.connect();
-        console.log(`Getting twin with id: ${options.id}`);
-        return await this.client.twins.get(options.id);
+        return await this.client.execute(this.context, this.client.twins.get, [options.id]);
     }
     @expose
     async list() {
-        await this.client.connect();
-        console.log("List all twins");
-        return await this.client.twins.list();
+        return await this.client.execute(this.context, this.client.twins.list, []);
     }
     @expose
     async delete(options: TwinDelete) {
-        await this.client.connect();
-        console.log(`Deleting twin with id: ${options.id}`);
-        return await this.client.twins.delete(options.id);
+        return await this.client.execute(this.context, this.client.twins.delete, [options.id]);
     }
 }
 

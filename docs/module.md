@@ -28,7 +28,7 @@ Module should be:
 
    cmd: `twinserver.twins.list`
 
-   payload: `'""'`
+   payload: `""`
 
 - **Delete**
 
@@ -78,62 +78,111 @@ Module should be:
 
 **Note:** `node_id` will be optional when the grid3_proxy_server is ready to be used.
 
-### Generic Machine
+### Generic Machines
 
 - **Deploy**
 
-    cmd: `twinserver.machine.deploy`
+    cmd: `twinserver.machines.deploy`
 
     payload:
 
 ```json
 {
-    "node_id": 5,
-    "disks": [
-        {
-            "name": "hamadadisk",
-            "size": 10,
-            "mountpoint": "/hamada"
-        }
-    ],
-    "network": {
-        "ip_range": "10.200.0.0/16",
-        "name": "hamada"
-    },
-    "public_ip": true,
-    "cpu": 1,
-    "memory": 1024,
-    "name": "hamada",
-    "flist": "https://hub.grid.tf/tf-official-apps/base:latest.flist",
-    "entrypoint": "/sbin/zinit init",
-    "metadata": "",
-    "description": "",
-    "env": {
-        "SSH_KEY": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDmm8OzLt+lTdGaMUwMFcw0P+vr+a/h/UsR//EzzeQsgNtC0bdls4MawVEhb3hNcycEQNd2P/+tXdLC4qcaJ6iABYip4xqqAeY098owGDYhUKYwmnMyo+NwSgpjZs8taOhMxh5XHRI+Ifr4l/GmzbqExS0KVD21PI+4sdiLspbcnVBlg9Eg9enM///zx6rSkulrca/+MnSYHboC5+y4XLYboArD/gpWy3zwIUyxX/1MjJwPeSnd5LFBIWvPGrm3cl+dAtADwTZRkt5Yuet8y5HI73Q5/NSlCdYXMtlsKBLpJu3Ar8nz1QfSQL7dB8pa7/sf/s8wO17rXqWQgZG6JzvZ root@ahmed-Inspiron-3576"
-    }
-}
+        "name": "wed1310t1",
+        "network": {
+            "ip_range": "10.203.0.0/16",
+            "name": "wed159n3"
+        },
+        "machines": [{
+            "name": "wed1310t2",
+            "node_id": 3,
+            "disks": [
+                {
+                    "name": "wed1310d2",
+                    "size": 10,
+                    "mountpoint": "/hamada"
+                }
+            ],
+            "public_ip": false,
+            "planetary": true,
+            "cpu": 1,
+            "memory": 1024,
+            "rootfs_size": 1,
+            "flist": "https://hub.grid.tf/tf-official-apps/base:latest.flist",
+            "entrypoint": "/sbin/zinit init",
+            "env": {
+                "SSH_KEY": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDmm8OzLt+lTdGaMUwMFcw0P+vr+a/h/UsR//EzzeQsgNtC0bdls4MawVEhb3hNcycEQNd2P/+tXdLC4qcaJ6iABYip4xqqAeY098owGDYhUKYwmnMyo+NwSgpjZs8taOhMxh5XHRI+Ifr4l/GmzbqExS0KVD21PI+4sdiLspbcnVBlg9Eg9enM///zx6rSkulrca/+MnSYHboC5+y4XLYboArD/gpWy3zwIUyxX/1MjJwPeSnd5LFBIWvPGrm3cl+dAtADwTZRkt5Yuet8y5HI73Q5/NSlCdYXMtlsKBLpJu3Ar8nz1QfSQL7dB8pa7/sf/s8wO17rXqWQgZG6JzvZ root@ahmed-Inspiron-3576"
+            }
+        }],
+        "metadata": "",
+        "description": ""
+    };
 
 ```
 
-**Note:** disk size in GB, memory in MB, disk name should be different than the machine name
+**Note:** disk size and rootfs_size in GB, memory in MB, disk name should be different than the machine name
 
 - **List**
 
-cmd: `twinserver.machine.list`
+cmd: `twinserver.machines.list`
 
-payload: `'""'`
+payload: `""`
 
 - **Get**
 
-cmd: `twinserver.machine.get`
+cmd: `twinserver.machines.get`
 
 payload: `{"name": "<deployment name>"}`
 
 - **Delete**
 
-cmd: `twinserver.machine.delete`
+cmd: `twinserver.machines.delete`
 
 payload: `{"name": "<deployment name>"}`
+
+- **Add machine**
+
+cmd: `twinserver.machines.add_machine`
+
+payload:
+
+```json
+{
+        "deployment_name": "wed1310t1",
+        "name": "wed1310m4",
+        "node_id": 2,
+        "disks": [
+            {
+                "name": "wed1310d4",
+                "size": 10,
+                "mountpoint": "/hamada"
+            }
+        ],
+        "public_ip": false,
+        "planetary": true,
+        "cpu": 1,
+        "memory": 1024,
+        "rootfs_size": 1,
+        "flist": "https://hub.grid.tf/tf-official-apps/base:latest.flist",
+        "entrypoint": "/sbin/zinit init",
+        "env": {
+            "SSH_KEY": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDmm8OzLt+lTdGaMUwMFcw0P+vr+a/h/UsR//EzzeQsgNtC0bdls4MawVEhb3hNcycEQNd2P/+tXdLC4qcaJ6iABYip4xqqAeY098owGDYhUKYwmnMyo+NwSgpjZs8taOhMxh5XHRI+Ifr4l/GmzbqExS0KVD21PI+4sdiLspbcnVBlg9Eg9enM///zx6rSkulrca/+MnSYHboC5+y4XLYboArD/gpWy3zwIUyxX/1MjJwPeSnd5LFBIWvPGrm3cl+dAtADwTZRkt5Yuet8y5HI73Q5/NSlCdYXMtlsKBLpJu3Ar8nz1QfSQL7dB8pa7/sf/s8wO17rXqWQgZG6JzvZ root@ahmed-Inspiron-3576"
+        }
+    }
+```
+
+- **Delete machine**
+
+cmd: `twinserver.machines.delete_machine`
+
+payload:
+
+```json
+{
+        "deployment_name": "wed1310t1",
+        "name": "wed1310m2",
+    }
+```
 
 ### Kubernetes
 
@@ -159,8 +208,10 @@ single master and multiple workers.
                 "node_id": 3,
                 "cpu": 1,
                 "memory": 1024,
+                "rootfs_size": 1,
                 "disk_size": 15,
-                "public_ip": true
+                "public_ip": true,
+                "planetary": true
             }
         ],
         "workers": [
@@ -169,8 +220,11 @@ single master and multiple workers.
                 "node_id": 2,
                 "cpu": 1,
                 "memory": 1024,
+                "rootfs_size": 1,
                 "disk_size": 15,
-                "public_ip": false
+                "public_ip": false,
+                "planetary": true
+
             }
         ],
         "metadata": "",
@@ -179,13 +233,13 @@ single master and multiple workers.
     }
 ```
 
-**Note:** disk size in GB, memory in MB, masters and workers names should be different
+**Note:** disk size and rootfs_size in GB, memory in MB, masters and workers names should be different
 
 - **List**
 
 cmd: `twinserver.k8s.list`
 
-payload: `'""'`
+payload: `""`
 
 - **Get**
 
@@ -212,8 +266,11 @@ payload:
         "node_id": 5,
         "cpu": 2,
         "memory": 1024,
+        "rootfs_size": 1,
         "disk_size": 15,
-        "public_ip": false
+        "public_ip": false,
+        "planetary": true
+        
     }
 ```
 
@@ -271,7 +328,7 @@ payload:
 
 cmd: `twinserver.zdbs.list`
 
-payload: `'""'`
+payload: `""`
 
 - **Get**
 
@@ -318,3 +375,86 @@ payload:
         "name": "hamada1",
     }
 ```
+
+### Stellar
+
+- **Import**
+It will return the wallet address after importing the wallet and saving it.
+
+cmd: `twinserver.stellar.import`
+
+payload:
+
+```json
+{
+    "name": "mywallet",
+    "secret": "<wallet secret>",
+}
+```
+
+- **Get**
+It will return the wallet address.
+
+cmd: `twinserver.stellar.get`
+
+payload: `{"name": "<wallet name>"}`
+
+- **Update**
+It will return the new wallet address after updating the wallet and saving it.
+
+cmd: `twinserver.stellar.update`
+
+payload:
+
+```json
+{
+    "name": "mywallet",
+    "secret": "<wallet secret>",
+}
+```
+
+- **Exists**
+
+cmd: `twinserver.stellar.exists`
+
+payload: `{"name": "<wallet name>"}`
+
+- **List**
+
+cmd: `twinserver.stellar.list`
+
+payload: `""`
+
+- **Balance by name**
+
+cmd: `twinserver.stellar.balance_by_name`
+
+payload: `{"name": "<wallet name>"}`
+
+- **Balance by address**
+
+cmd: `twinserver.stellar.balance_by_address`
+
+payload: `{"address": "<wallet name>"}`
+
+- **Transfer**
+
+cmd: `twinserver.stellar.transfer`
+
+payload:
+
+```json
+{
+    "name": "<wallet name>",
+    "target_address": "<target wallet address>",
+    "amount": 10,
+    "asset": "TFT",
+    "memo": "try1",
+}
+```
+
+- **Delete**
+
+cmd: `twinserver.stellar.delete`
+
+payload: `{"name": "<wallet name>"}`

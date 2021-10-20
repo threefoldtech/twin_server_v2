@@ -3,19 +3,12 @@
     "author": "Ahmed Hanafy",
     "version": "0.0.1",
     "dependencies": {
-        "@types/private-ip": "^1.0.0",
-        "@types/request": "^2.48.7",
-        "@types/request-promise-native": "^1.0.18",
-        "appdata-path": "^1.0.0",
         "grid3_client": "git+https://github.com/threefoldtech/grid3_client_ts.git#development",
-        "ip": "^1.1.5",
-        "netaddr": "^1.1.0",
-        "private-ip": "^2.2.1",
         "reflect-metadata": "^0.1.13",
-        "request": "^2.88.2",
-        "request-promise-native": "^1.0.9",
         "stellar-sdk": "^8.3.0",
-        "wireguard-wrapper": "^1.0.3"
+        "ts-rmb-client-base": "0.0.1",
+        "ts-rmb-http-client": "^0.1.6",
+        "ts-rmb-redis-client": "^0.0.3"
     },
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
@@ -28,6 +21,10 @@
         "eslint": "^7.32.0",
         "eslint-plugin-prettier": "^4.0.0",
         "prettier": "^2.4.1",
+        "ts-node": "^10.3.0",
         "typescript": "^4.4.3"
+    },
+    "scripts": {
+        "run": "ts-node src/server.ts"
     }
 }
