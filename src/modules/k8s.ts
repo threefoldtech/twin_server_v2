@@ -1,15 +1,14 @@
-import { AddWorkerModel, DeleteWorkerModel, K8SModel, K8SDeleteModel, K8SGetModel } from "grid3_client";
-import { expose } from "../helpers/expose";
-import { K8sModule } from "grid3_client";
-import { default as config } from "../../config.json";
-import { getRMBClient } from "../clients/rmb";
+import { K8sModule, AddWorkerModel, DeleteWorkerModel, K8SModel, K8SDeleteModel, K8SGetModel } from "grid3_client";
 
-class K8s {
+import { expose } from "../helpers/expose";
+import { Base } from "./base";
+
+class K8s extends Base {
     kubernetes: K8sModule;
 
     constructor() {
-        const rmbClient = getRMBClient();
-        this.kubernetes = new K8sModule(config.twin_id, config.url, config.mnemonic, rmbClient);
+        super();
+        this.kubernetes = this.client.k8s;
     }
 
     @expose

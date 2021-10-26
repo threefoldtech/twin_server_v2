@@ -1,4 +1,4 @@
-import { Deployment, ZdbModes, DeviceTypes } from "grid3_client";
+import { Deployment } from "grid3_client";
 
 class NodeContractCreate {
     node_id: number;

@@ -7,3 +7,4 @@ export * from "./models";
 export * from "./zdb";
 export * from "./stellar";
 export * from "./gateway";
+export * from "./qsfs_zdbs";

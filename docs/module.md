@@ -103,6 +103,15 @@ Module should be:
                     "mountpoint": "/hamada"
                 }
             ],
+            "qsfs_disks":[
+                {
+                    "qsfs_zdbs_name": "hamada",
+                    "name": "mon2410t2",
+                    "prefix": "hamada",
+                    "encryption_key": "hamada",
+                    "mountpoint": "/ahmed",
+                }
+            ],
             "public_ip": false,
             "planetary": true,
             "cpu": 1,
@@ -303,18 +312,14 @@ payload:
             "node_id": 3,
             "mode": "seq",
             "disk_size": 10,
-            "disk_type": "hdd",
             "public": true,
-            "namespace": "hamadaspace",
             "password": "hamadaellol",
         }, {
             "name": "zdb2",
             "node_id": 3,
             "mode": "seq",
             "disk_size": 10,
-            "disk_type": "hdd",
             "public": true,
-            "namespace": "hamadaspace",
             "password": "hamadaellol",
         }],
         "metadata": "",
@@ -355,9 +360,7 @@ payload:
         "node_id": 2,
         "mode": "seq",
         "disk_size": 10,
-        "disk_type": "hdd",
         "public": true,
-        "namespace": "hamadaspace",
         "password": "hamada12345",
 
     }
@@ -375,6 +378,46 @@ payload:
         "name": "hamada1",
     }
 ```
+
+### QSFS Zdbs
+
+- **Deploy**
+
+    cmd: `twinserver.qsfs_zdbs.deploy`
+
+    payload:
+
+```json
+{
+        "name": "hamada",
+        "count": 3,
+        "node_ids": [3, 5],
+        "disk_size": 10,
+        "password": "hamadaellol",
+        "metadata": "",
+        "description": ""
+    }
+```
+
+**Note:** disk size in GB
+
+- **List**
+
+cmd: `twinserver.qsfs_zdbs.list`
+
+payload: `""`
+
+- **Get**
+
+cmd: `twinserver.qsfs_zdbs.get`
+
+payload: `{"name": "<deployment name>"}`
+
+- **Delete**
+
+cmd: `twinserver.qsfs_zdbs.delete`
+
+payload: `{"name": "<deployment name>"}`
 
 ### Stellar
 

@@ -3,7 +3,7 @@
     "author": "Ahmed Hanafy",
     "version": "0.0.1",
     "dependencies": {
-        "grid3_client": "git+https://github.com/threefoldtech/grid3_client_ts.git#development",
+        "grid3_client": "git+https://github.com/threefoldtech/grid3_client_ts.git#development_qsfs",
         "reflect-metadata": "^0.1.13",
         "stellar-sdk": "^8.3.0",
         "ts-rmb-client-base": "0.0.1",
