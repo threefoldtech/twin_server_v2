@@ -108,6 +108,9 @@ Module should be:
                     "qsfs_zdbs_name": "hamada",
                     "name": "mon2410t2",
                     "prefix": "hamada",
+                    "cache": 1, // in GB
+                    "minimal_shards": 2, 
+                    "expected_shards": 4,
                     "encryption_key": "hamada",
                     "mountpoint": "/ahmed",
                 }
