@@ -44,17 +44,6 @@ if (!(config.url && config.mnemonic && config.twin_id)) {
     throw new Error(`Invalid config`);
 }
 
-const requiredFiles = ["network.json", "zdbs.json", "machines.json", "kubernetes.json", "stellar.json", "gateway.json"];
-if (!FS.existsSync(appPath)) {
-    FS.mkdirSync(appPath);
-}
-for (const file of requiredFiles) {
-    const path = PATH.join(appPath, file);
-    if (!FS.existsSync(path)) {
-        dumpToFile(path, {});
-    }
-}
-
 const server = new Server();
 server.register();
 server.run();

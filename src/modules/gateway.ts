@@ -1,15 +1,14 @@
-import { GWModule } from "grid3_client";
-import { DeployGatewayFQDNModel, DeployGatewayNameModel } from "grid3_client";
-import { expose } from "../helpers/expose";
-import { default as config } from "../../config.json";
-import { getRMBClient } from "../clients/rmb";
+import { GWModule, DeployGatewayFQDNModel, DeployGatewayNameModel } from "grid3_client";
 
-class Gateway {
+import { expose } from "../helpers/expose";
+import { Base } from "./base";
+
+class Gateway extends Base {
     gateway: GWModule;
 
     constructor() {
-        const rmbClient = getRMBClient();
-        this.gateway = new GWModule(config.twin_id, config.url, config.mnemonic, rmbClient);
+        super();
+        this.gateway = this.client.gateway;
     }
 
     @expose

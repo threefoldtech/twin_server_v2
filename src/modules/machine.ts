@@ -1,20 +1,20 @@
 import {
+    MachineModule,
     MachinesModel,
     MachinesDeleteModel,
     MachinesGetModel,
     AddMachineModel,
     DeleteMachineModel,
 } from "grid3_client";
-import { MachineModule } from "grid3_client";
-import { expose } from "../helpers/expose";
-import { default as config } from "../../config.json";
-import { getRMBClient } from "../clients/rmb";
 
-class Machines {
+import { expose } from "../helpers/expose";
+import { Base } from "./base";
+
+class Machines extends Base {
     vm: MachineModule;
     constructor() {
-        const rmbClient = getRMBClient();
-        this.vm = new MachineModule(config.twin_id, config.url, config.mnemonic, rmbClient);
+        super();
+        this.vm = this.client.machines;
     }
 
     @expose

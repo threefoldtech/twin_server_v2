@@ -1,14 +1,14 @@
-import { ZDBSModel, DeleteZDBModel, AddZDBModel, ZDBGetModel, ZDBDeleteModel } from "grid3_client";
-import { ZdbsModule } from "grid3_client";
-import { expose } from "../helpers/expose";
-import { default as config } from "../../config.json";
-import { getRMBClient } from "../clients/rmb";
+import { ZdbsModule, ZDBSModel, DeleteZDBModel, AddZDBModel, ZDBGetModel, ZDBDeleteModel } from "grid3_client";
 
-class Zdbs {
+import { expose } from "../helpers/expose";
+import { Base } from "./base";
+
+class Zdbs extends Base {
     zdbs: ZdbsModule;
+
     constructor() {
-        const rmbClient = getRMBClient();
-        this.zdbs = new ZdbsModule(config.twin_id, config.url, config.mnemonic, rmbClient);
+        super();
+        this.zdbs = this.client.zdbs;
     }
 
     @expose
