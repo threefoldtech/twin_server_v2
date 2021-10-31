@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- [RMB server](https://github.com/threefoldtech/rmb) // it is also posible to use rmb proxy instead of installing this. see below the configuration part
+- [RMB server](https://github.com/threefoldtech/rmb)
 - node 14.4.0 or higher
 - npm 6.14.5 or higher
 
