@@ -32,7 +32,7 @@ Add substrate url and account's mnemonics in config.json before running the serv
 ## Running
 
 ```bash
-yarn run run
+yarn run server
 ```
 
 ## Usage
